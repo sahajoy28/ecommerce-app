@@ -1,0 +1,85 @@
+{
+  "hash": "d185dda1",
+  "configHash": "fcd1bc26",
+  "lockfileHash": "e6ab7647",
+  "browserHash": "9cf7f18e",
+  "optimized": {
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "52c181c7",
+      "needsInterop": true
+    },
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "996222cc",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "f7966fd2",
+      "needsInterop": true
+    },
+    "react-redux": {
+      "src": "../../node_modules/react-redux/dist/react-redux.mjs",
+      "file": "react-redux.js",
+      "fileHash": "d13e49e0",
+      "needsInterop": false
+    },
+    "@fluentui/react-components": {
+      "src": "../../node_modules/@fluentui/react-components/lib/index.js",
+      "file": "@fluentui_react-components.js",
+      "fileHash": "5ff1eadb",
+      "needsInterop": false
+    },
+    "react-router-dom": {
+      "src": "../../node_modules/react-router-dom/dist/index.js",
+      "file": "react-router-dom.js",
+      "fileHash": "3cddb74b",
+      "needsInterop": false
+    },
+    "@reduxjs/toolkit": {
+      "src": "../../node_modules/@reduxjs/toolkit/dist/redux-toolkit.modern.mjs",
+      "file": "@reduxjs_toolkit.js",
+      "fileHash": "e5211b9c",
+      "needsInterop": false
+    },
+    "axios": {
+      "src": "../../node_modules/axios/index.js",
+      "file": "axios.js",
+      "fileHash": "7edb5b64",
+      "needsInterop": false
+    },
+    "styled-components": {
+      "src": "../../node_modules/styled-components/dist/styled-components.browser.esm.js",
+      "file": "styled-components.js",
+      "fileHash": "23662652",
+      "needsInterop": false
+    },
+    "@fluentui/react-icons": {
+      "src": "../../node_modules/@fluentui/react-icons/lib/index.js",
+      "file": "@fluentui_react-icons.js",
+      "fileHash": "9ed9ae2e",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-PPRRMKON": {
+      "file": "chunk-PPRRMKON.js"
+    },
+    "chunk-45HHUCCT": {
+      "file": "chunk-45HHUCCT.js"
+    },
+    "chunk-VJHJBREC": {
+      "file": "chunk-VJHJBREC.js"
+    },
+    "chunk-TWJRYSII": {
+      "file": "chunk-TWJRYSII.js"
+    },
+    "chunk-DC5AMYBS": {
+      "file": "chunk-DC5AMYBS.js"
+    }
+  }
+}
