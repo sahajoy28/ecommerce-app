@@ -215,7 +215,7 @@ export const OrderPage = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [selectedAddress, setSelectedAddress] = useState<string | null>(
-    user?.addresses.find(a => a.isDefault)?.id || user?.addresses[0]?.id || null
+    user?.addresses?.find(a => a.isDefault)?.id || user?.addresses?.[0]?.id || null
   );
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -312,13 +312,13 @@ export const OrderPage = () => {
           {/* Delivery Address */}
           <Section>
             <SectionTitle>Delivery Address</SectionTitle>
-            {user.addresses.length > 0 ? (
+            {(user.addresses?.length || 0) > 0 ? (
               <AddressSection>
                 <RadioGroup
                   value={selectedAddress || ""}
                   onChange={(_, data) => setSelectedAddress(data.value)}
                 >
-                  {user.addresses.map(address => (
+                  {user.addresses?.map(address => (
                     <AddressCard
                       key={address.id}
                       isSelected={selectedAddress === address.id}

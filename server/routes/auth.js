@@ -1,17 +1,82 @@
 import express from 'express';
+import User from '../models/User.js';
+import { verify, generateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
 /**
- * POST /api/auth/login
- * Mock authentication endpoint
- * For now this is a mock implementation
- * Later will be connected to MongoDB with JWT
+ * POST /api/auth/signup
+ * Register a new user
  */
-router.post('/login', (req, res) => {
+router.post('/signup', async (req, res, next) => {
+  try {
+    const { name, email, password } = req.body;
+
+    // Validation
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide name, email, and password'
+      });
+    }
+
+    // Check if user exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message: 'Email already registered'
+      });
+    }
+
+    // Create user
+    const user = await User.create({
+      name,
+      email,
+      password
+    });
+
+    // Generate token
+    const token = generateToken(user._id);
+
+    console.log(`✅ User registered: ${email}`);
+
+    res.status(201).json({
+      success: true,
+      message: 'Account created successfully',
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email
+      }
+    });
+  } catch (error) {
+    console.error('❌ Signup error:', error.message);
+    
+    if (error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: 'Email already registered'
+      });
+    }
+
+    next({
+      status: 500,
+      message: error.message || 'Registration failed'
+    });
+  }
+});
+
+/**
+ * POST /api/auth/login
+ * Login user with email and password
+ */
+router.post('/login', async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
+    // Validation
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -19,111 +84,88 @@ router.post('/login', (req, res) => {
       });
     }
 
-    console.log(`🔐 Login attempt: ${email}`);
+    // Find user (include password field)
+    const user = await User.findOne({ email }).select('+password');
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
+      });
+    }
 
-    // Mock user data - replace with database query later
-    const mockUser = {
-      id: '1',
-      email,
-      name: 'Test User',
-      role: 'user',
-      createdAt: new Date().toISOString()
-    };
+    // Check password
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
+      });
+    }
 
-    // Mock token - replace with JWT generation later
-    const token = `mock_token_${Date.now()}`;
+    // Generate token
+    const token = generateToken(user._id);
+
+    console.log(`🔐 Login successful: ${email}`);
 
     res.json({
       success: true,
       message: 'Login successful',
       token,
-      user: mockUser
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email
+      }
     });
   } catch (error) {
     console.error('❌ Login error:', error.message);
-    res.status(500).json({
-      success: false,
+    next({
+      status: 500,
       message: 'Authentication failed'
     });
   }
 });
 
 /**
- * POST /api/auth/register
- * Mock registration endpoint
- * For now this is a mock implementation
- * Later will be connected to MongoDB with password hashing
+ * GET /api/auth/me
+ * Get current logged-in user (protected route)
  */
-router.post('/register', (req, res) => {
+router.get('/me', verify, async (req, res, next) => {
   try {
-    const { email, password, name } = req.body;
-
-    if (!email || !password || !name) {
-      return res.status(400).json({
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({
         success: false,
-        message: 'Email, password, and name are required'
+        message: 'User not found'
       });
     }
 
-    console.log(`📝 Registration attempt: ${email}`);
-
-    // Mock user creation - replace with database operation later
-    const newUser = {
-      id: `user_${Date.now()}`,
-      email,
-      name,
-      role: 'user',
-      createdAt: new Date().toISOString()
-    };
-
-    // Mock token - replace with JWT generation later
-    const token = `mock_token_${Date.now()}`;
-
-    res.status(201).json({
+    res.json({
       success: true,
-      message: 'Registration successful',
-      token,
-      user: newUser
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email
+      }
     });
   } catch (error) {
-    console.error('❌ Registration error:', error.message);
-    res.status(500).json({
-      success: false,
-      message: 'Registration failed'
+    next({
+      status: 500,
+      message: 'Failed to fetch user'
     });
   }
 });
 
 /**
  * POST /api/auth/logout
- * Mock logout endpoint
+ * Logout user (frontend should delete token from localStorage)
  */
 router.post('/logout', (req, res) => {
-  console.log(`👋 User logged out`);
-
+  console.log('👋 User logged out');
+  
   res.json({
     success: true,
-    message: 'Logout successful'
-  });
-});
-
-/**
- * GET /api/auth/me
- * Get current user (mock)
- * In production, validate JWT token here
- */
-router.get('/me', (req, res) => {
-  // In production, extract user from JWT token in Authorization header
-  const mockUser = {
-    id: '1',
-    email: 'user@example.com',
-    name: 'Test User',
-    role: 'user'
-  };
-
-  res.json({
-    success: true,
-    user: mockUser
+    message: 'Logged out successfully'
   });
 });
 

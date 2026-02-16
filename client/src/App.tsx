@@ -10,7 +10,9 @@ import { OrderPage } from "./pages/OrderPage";
 import { WishlistPage } from "./pages/WishlistPage";
 import { AddressForm } from "./components/AddressForm";
 import styled from "styled-components";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAppSelector } from "./app/hooks";
+import { authApi } from "./services/apiClient";
 
 const AppWrapper = styled.div`
   display: flex;
@@ -25,6 +27,15 @@ const MainContent = styled.main`
 
 function App() {
   const [showFilters, setShowFilters] = useState(true);
+  const { token } = useAppSelector((state) => state.auth);
+
+  useEffect(() => {
+    if (token) {
+      authApi.setAuthToken(token);
+    } else {
+      authApi.clearAuthToken();
+    }
+  }, [token]);
 
   const toggleFilters = () => {
     setShowFilters(!showFilters);

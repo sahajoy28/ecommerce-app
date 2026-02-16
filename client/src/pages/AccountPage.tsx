@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styled from "styled-components";
-import { Button, Input, Label, Text, Dialog, DialogSurface, DialogBody, DialogTitle, DialogActions } from "@fluentui/react-components";
+import { Button, Input, Label, Text, Dialog, DialogSurface, DialogBody, DialogTitle, DialogActions, Tab, TabList } from "@fluentui/react-components";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
-import { logout, addAddress, removeAddress, setDefaultAddress } from "../features/auth/authSlice";
-import { Delete24Filled, CheckmarkCircle24Filled } from "@fluentui/react-icons";
+import { logout } from "../features/auth/authSlice";
+import { Delete24Filled, CheckmarkCircle24Filled, Heart24Filled, Heart24Regular } from "@fluentui/react-icons";
+import { userAPI } from "../services/userAPI";
 
 const Container = styled.div`
   max-width: 1000px;
@@ -262,6 +263,7 @@ export const AccountPage = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [addresses, setAddresses] = useState<any[]>([]);
   const [newAddress, setNewAddress] = useState({
     name: "",
     email: "",
@@ -278,39 +280,75 @@ export const AccountPage = () => {
     return null;
   }
 
+  useEffect(() => {
+    loadAddresses();
+  }, []);
+
+  const loadAddresses = async () => {
+    try {
+      const response = await userAPI.getAddresses();
+      if (response.success) {
+        setAddresses(response.addresses);
+      }
+    } catch (error) {
+      console.error("Failed to load addresses", error);
+    }
+  };
+
   const handleLogout = () => {
     dispatch(logout());
     navigate("/");
   };
 
-  const handleAddAddress = () => {
+  const handleAddAddress = async () => {
     if (!newAddress.name || !newAddress.address || !newAddress.city || !newAddress.zip) {
       alert("Please fill in all required fields");
       return;
     }
 
-    dispatch(addAddress(newAddress));
-    setNewAddress({
-      name: "",
-      email: "",
-      phone: "",
-      address: "",
-      city: "",
-      state: "",
-      zip: "",
-      isDefault: false
-    });
-    setDialogOpen(false);
-  };
-
-  const handleRemoveAddress = (id: string) => {
-    if (confirm("Are you sure you want to delete this address?")) {
-      dispatch(removeAddress(id));
+    try {
+      const response = await userAPI.addAddress(newAddress);
+      if (response.success) {
+        setAddresses(response.addresses);
+        setNewAddress({
+          name: "",
+          email: "",
+          phone: "",
+          address: "",
+          city: "",
+          state: "",
+          zip: "",
+          isDefault: false
+        });
+        setDialogOpen(false);
+      }
+    } catch (error) {
+      alert("Failed to add address");
     }
   };
 
-  const handleSetDefault = (id: string) => {
-    dispatch(setDefaultAddress(id));
+  const handleRemoveAddress = async (id: string) => {
+    if (confirm("Are you sure you want to delete this address?")) {
+      try {
+        const response = await userAPI.deleteAddress(id);
+        if (response.success) {
+          setAddresses(response.addresses);
+        }
+      } catch (error) {
+        console.error("Failed to delete address", error);
+      }
+    }
+  };
+
+  const handleSetDefault = async (id: string) => {
+    try {
+      const response = await userAPI.updateAddress(id, { isDefault: true });
+      if (response.success) {
+        setAddresses(response.addresses);
+      }
+    } catch (error) {
+      console.error("Failed to set default address", error);
+    }
   };
 
   return (
@@ -347,10 +385,10 @@ export const AccountPage = () => {
       {/* Addresses Section */}
       <TabSection>
         <SectionTitle>Saved Addresses</SectionTitle>
-        {user.addresses.length > 0 ? (
+        {addresses.length > 0 ? (
           <AddressGrid>
-            {user.addresses.map(address => (
-              <AddressCard key={address.id} isDefault={address.isDefault}>
+            {addresses.map(address => (
+              <AddressCard key={address._id || address.id} isDefault={address.isDefault}>
                 {address.isDefault && (
                   <DefaultBadge>
                     <CheckmarkCircle24Filled /> Default
@@ -367,7 +405,7 @@ export const AccountPage = () => {
                     <ActionButton
                       appearance="subtle"
                       size="small"
-                      onClick={() => handleSetDefault(address.id)}
+                      onClick={() => handleSetDefault(address._id || address.id)}
                     >
                       Set as Default
                     </ActionButton>
@@ -376,7 +414,7 @@ export const AccountPage = () => {
                     appearance="subtle"
                     size="small"
                     icon={<Delete24Filled />}
-                    onClick={() => handleRemoveAddress(address.id)}
+                    onClick={() => handleRemoveAddress(address._id || address.id)}
                   />
                 </AddressActions>
               </AddressCard>
@@ -393,9 +431,9 @@ export const AccountPage = () => {
       {/* Orders Section */}
       <TabSection>
         <SectionTitle>Order History</SectionTitle>
-        {user.orders.length > 0 ? (
+        {(user?.orders?.length || 0) > 0 ? (
           <OrdersGrid>
-            {user.orders.map(order => (
+            {user?.orders?.map(order => (
               <OrderCard key={order.id}>
                 <OrderHeader>
                   <OrderId>Order {order.id}</OrderId>

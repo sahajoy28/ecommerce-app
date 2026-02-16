@@ -100,7 +100,7 @@ export const AuthPage = () => {
   const [success, setSuccess] = useState("");
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const isAuthenticated = useAppSelector(state => state.auth.isAuthenticated);
+  const { isAuthenticated, loading, error: authError } = useAppSelector(state => state.auth);
 
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [signupForm, setSignupForm] = useState({
@@ -124,7 +124,7 @@ export const AuthPage = () => {
     setError("");
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!loginForm.email || !loginForm.password) {
       setError("Please fill in all fields");
       return;
@@ -135,22 +135,20 @@ export const AuthPage = () => {
       return;
     }
 
-    // Mock login - in real app, you'd verify credentials
-    const mockUser = {
-      id: "user_123",
-      name: "User",
-      email: loginForm.email,
-      password: loginForm.password,
-      addresses: [],
-      orders: []
-    };
-
-    dispatch(login(mockUser));
-    setSuccess("Login successful!");
-    setTimeout(() => navigate("/account"), 1500);
+    try {
+      const result = await dispatch(login({ 
+        email: loginForm.email, 
+        password: loginForm.password 
+      })).unwrap();
+      
+      setSuccess("Login successful!");
+      setTimeout(() => navigate("/account"), 1500);
+    } catch (err: any) {
+      setError(err || "Login failed");
+    }
   };
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     if (!signupForm.name || !signupForm.email || !signupForm.password || !signupForm.confirmPassword) {
       setError("Please fill in all fields");
       return;
@@ -171,14 +169,18 @@ export const AuthPage = () => {
       return;
     }
 
-    dispatch(signup({
-      name: signupForm.name,
-      email: signupForm.email,
-      password: signupForm.password
-    }));
+    try {
+      const result = await dispatch(signup({
+        name: signupForm.name,
+        email: signupForm.email,
+        password: signupForm.password
+      })).unwrap();
 
-    setSuccess("Account created successfully!");
-    setTimeout(() => navigate("/account"), 1500);
+      setSuccess("Account created successfully!");
+      setTimeout(() => navigate("/account"), 1500);
+    } catch (err: any) {
+      setError(err || "Signup failed");
+    }
   };
 
   return (
@@ -220,8 +222,8 @@ export const AuthPage = () => {
               />
             </FormGroup>
             <ButtonGroup>
-              <SubmitButton appearance="primary" onClick={handleLogin}>
-                Login
+              <SubmitButton appearance="primary" onClick={handleLogin} disabled={loading}>
+                {loading ? "Logging in..." : "Login"}
               </SubmitButton>
             </ButtonGroup>
           </>
@@ -268,8 +270,8 @@ export const AuthPage = () => {
               />
             </FormGroup>
             <ButtonGroup>
-              <SubmitButton appearance="primary" onClick={handleSignup}>
-                Sign Up
+              <SubmitButton appearance="primary" onClick={handleSignup} disabled={loading}>
+                {loading ? "Creating Account..." : "Sign Up"}
               </SubmitButton>
             </ButtonGroup>
           </>
