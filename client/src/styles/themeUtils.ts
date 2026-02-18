@@ -70,8 +70,6 @@ const darkNeutral = {
 export const getThemeColors = (theme: ThemeMode, accentColor: AccentColor) => {
   const accentPalette = accentPalettes[accentColor];
   const neutral = theme === 'light' ? lightNeutral : darkNeutral;
-  const bgColor = theme === 'light' ? neutral[0] : neutral[0];
-  const textColor = theme === 'light' ? neutral[900] : neutral[900];
 
   return {
     primary: accentPalette,
@@ -87,13 +85,14 @@ export const getThemeColors = (theme: ThemeMode, accentColor: AccentColor) => {
     info: '#06b6d4',
     neutral,
     background: {
+      // Use lighter dark shades for better contrast in dark mode
       primary: theme === 'light' ? neutral[0] : neutral[50],
       secondary: theme === 'light' ? neutral[50] : neutral[100],
       tertiary: theme === 'light' ? neutral[100] : neutral[200],
     },
     text: {
-      primary: theme === 'light' ? neutral[900] : neutral[900],
-      secondary: theme === 'light' ? neutral[700] : neutral[700],
+      primary: theme === 'light' ? neutral[900] : neutral[50],
+      secondary: theme === 'light' ? neutral[700] : neutral[200],
       tertiary: theme === 'light' ? neutral[500] : neutral[400],
     },
   };

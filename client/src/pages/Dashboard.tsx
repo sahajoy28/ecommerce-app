@@ -84,13 +84,13 @@ const SidebarWrapper = styled.div<{ isOpen: boolean }>`
     top: 72px;
     bottom: 0;
     width: 280px;
-    border-right: 1px solid ${colors.neutral[200]};
+    border-right: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
     border-bottom: none;
     padding: ${spacing[4]};
     z-index: 100;
     transform: translateX(${props => props.isOpen ? '0' : '-100%'});
     transition: transform ${transitions.base};
-    background: ${colors.neutral[0]};
+    background: var(--color-neutral-0, ${colors.neutral[0]});
     overflow-y: auto;
 
     > div {
@@ -99,7 +99,7 @@ const SidebarWrapper = styled.div<{ isOpen: boolean }>`
       box-shadow: none;
       position: static;
       top: auto;
-      background: ${colors.neutral[0]};
+      background: var(--color-neutral-0, ${colors.neutral[0]});
     }
   }
 
@@ -111,12 +111,12 @@ const SidebarWrapper = styled.div<{ isOpen: boolean }>`
     bottom: 0;
     width: 100%;
     max-width: 100%;
-    border-right: 1px solid ${colors.neutral[200]};
+    border-right: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
     padding: ${spacing[3]};
     z-index: 100;
     transform: translateX(${props => props.isOpen ? '0' : '-100%'});
     transition: transform ${transitions.base};
-    background: ${colors.neutral[0]};
+    background: var(--color-neutral-0, ${colors.neutral[0]});
     overflow-y: auto;
 
     > div {
@@ -125,7 +125,7 @@ const SidebarWrapper = styled.div<{ isOpen: boolean }>`
       box-shadow: none;
       position: static;
       top: auto;
-      background: ${colors.neutral[0]};
+      background: var(--color-neutral-0, ${colors.neutral[0]});
     }
   }
 `;
@@ -178,20 +178,20 @@ const ProductGrid = styled.div`
 const NoResults = styled.div`
   text-align: center;
   padding: ${spacing[16]} ${spacing[6]};
-  background: ${colors.neutral[0]};
+  background: var(--color-neutral-0, ${colors.neutral[0]});
   border-radius: ${borderRadius.xl};
-  color: ${colors.neutral[600]};
+  color: var(--color-text-secondary, ${colors.neutral[600]});
   font-size: ${typography.fontSize.lg};
-  border: 1px dashed ${colors.neutral[300]};
+  border: 1px dashed var(--color-neutral-300, ${colors.neutral[300]});
 
   h2 {
-    color: ${colors.neutral[700]};
+    color: var(--color-text-primary, ${colors.neutral[700]});
     margin-bottom: ${spacing[3]};
-    font-size: ${typography.fontSize["3xl"]};
+    font-size: ${typography.fontSize['3xl']};
   }
 
   p {
-    color: ${colors.neutral[600]};
+    color: var(--color-text-secondary, ${colors.neutral[600]});
   }
 
   ${media.mobile} {
@@ -246,13 +246,13 @@ const ResultsInfo = styled.div`
   justify-content: space-between;
   padding: ${spacing[3]} ${spacing[3]};
   font-size: ${typography.fontSize.sm};
-  color: ${colors.neutral[700]};
+  color: var(--color-text-primary, ${colors.neutral[700]});
   font-weight: ${typography.fontWeight.medium};
-  background: ${colors.neutral[0]};
+  background: var(--color-neutral-0, ${colors.neutral[0]});
   border-radius: ${borderRadius.md};
 
   strong {
-    color: ${colors.neutral[900]};
+    color: var(--color-text-primary, ${colors.neutral[900]});
     font-weight: ${typography.fontWeight.bold};
   }
 

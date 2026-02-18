@@ -25,7 +25,7 @@ const PageTitle = styled.h1`
   margin: 0 0 ${spacing[8]} 0;
   font-size: ${typography.fontSize["5xl"]};
   font-weight: ${typography.fontWeight.extrabold};
-  color: ${colors.neutral[900]};
+  color: var(--color-text-primary, ${colors.neutral[900]});
   background: ${colors.gradients.primary};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -42,24 +42,24 @@ const EmptyCart = styled.div`
   padding: ${spacing[16]} ${spacing[6]};
   background: ${colors.gradients.cool};
   border-radius: ${borderRadius.xl};
-  color: ${colors.neutral[0]};
+  color: var(--color-neutral-0, ${colors.neutral[0]});
 
   h2 {
-    color: ${colors.neutral[0]};
+    color: var(--color-neutral-0, ${colors.neutral[0]});
     margin-bottom: ${spacing[3]};
     font-size: ${typography.fontSize["3xl"]};
     font-weight: ${typography.fontWeight.bold};
   }
 
   p {
-    color: ${colors.neutral[100]};
+    color: var(--color-neutral-100, ${colors.neutral[100]});
     margin-bottom: ${spacing[6]};
     font-size: ${typography.fontSize.lg};
   }
 
   button {
-    background: ${colors.neutral[0]};
-    color: ${colors.primary.main};
+    background: var(--color-neutral-0, ${colors.neutral[0]});
+    color: var(--color-primary, ${colors.primary.main});
     font-weight: ${typography.fontWeight.bold};
   }
 
@@ -84,7 +84,7 @@ const CartContent = styled.div`
 
 const CartTable = styled.div`
   width: 100%;
-  border: 1px solid ${colors.neutral[200]};
+  border: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
   border-radius: ${borderRadius.lg};
   overflow: hidden;
   box-shadow: ${shadows.sm};
@@ -95,8 +95,8 @@ const CartHeader = styled.div`
   grid-template-columns: 100px 1fr 120px 120px 60px;
   gap: ${spacing[4]};
   padding: ${spacing[4]};
-  background: ${colors.neutral[50]};
-  color: ${colors.neutral[600]};
+  background: var(--color-neutral-50, ${colors.neutral[50]});
+  color: var(--color-text-secondary, ${colors.neutral[600]});
   font-weight: ${typography.fontWeight.semibold};
   font-size: ${typography.fontSize.base};
   border-bottom: 1px solid ${colors.neutral[200]};
@@ -140,7 +140,7 @@ const ProductImage = styled.img`
   height: 100px;
   object-fit: contain;
   border-radius: ${borderRadius.md};
-  background: ${colors.neutral[100]};
+  background: var(--color-neutral-100, ${colors.neutral[100]});
   padding: ${spacing[2]};
 
   ${media.mobile} {
@@ -157,7 +157,7 @@ const ProductInfo = styled.div`
 
 const ProductName = styled.div`
   font-weight: ${typography.fontWeight.semibold};
-  color: ${colors.neutral[900]};
+  color: var(--color-text-primary, ${colors.neutral[900]});
   font-size: ${typography.fontSize.base};
   line-height: ${typography.lineHeight.tight};
 
@@ -167,7 +167,7 @@ const ProductName = styled.div`
 `;
 
 const ProductCategory = styled.div`
-  color: ${colors.neutral[500]};
+  color: var(--color-text-tertiary, ${colors.neutral[500]});
   font-size: ${typography.fontSize.sm};
   text-transform: uppercase;
   letter-spacing: ${typography.letterSpacing.wide};
@@ -180,7 +180,7 @@ const QuantityControl = styled.div`
   justify-content: center;
   gap: ${spacing[2]};
   font-weight: ${typography.fontWeight.semibold};
-  color: ${colors.neutral[900]};
+  color: var(--color-text-primary, ${colors.neutral[900]});
 
   ${media.mobile} {
     font-size: ${typography.fontSize.sm};
@@ -216,8 +216,8 @@ const RemoveButton = styled(Button)`
 `;
 
 const CartSummary = styled.div`
-  background: ${colors.neutral[0]};
-  border: 1px solid ${colors.neutral[200]};
+  background: var(--color-neutral-0, ${colors.neutral[0]});
+  border: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
   border-radius: ${borderRadius.lg};
   padding: ${spacing[6]};
   box-shadow: ${shadows.sm};
@@ -238,7 +238,7 @@ const SummaryTitle = styled.h2`
   margin: 0 0 ${spacing[5]} 0;
   font-size: ${typography.fontSize.xl};
   font-weight: ${typography.fontWeight.bold};
-  color: ${colors.neutral[900]};
+  color: var(--color-text-primary, ${colors.neutral[900]});
 `;
 
 const SummaryItem = styled.div<{ $highlighted?: boolean }>`
@@ -246,10 +246,10 @@ const SummaryItem = styled.div<{ $highlighted?: boolean }>`
   justify-content: space-between;
   align-items: center;
   padding: ${spacing[3]} 0;
-  border-bottom: ${props => props.$highlighted ? `2px solid ${colors.primary.light}` : `1px solid ${colors.neutral[200]}`};
+  border-bottom: ${props => props.$highlighted ? `2px solid var(--color-primary-light, ${colors.primary.light})` : `1px solid var(--color-neutral-200, ${colors.neutral[200]})`};
   font-size: ${props => props.$highlighted ? typography.fontSize.lg : typography.fontSize.base};
   font-weight: ${props => props.$highlighted ? typography.fontWeight.bold : typography.fontWeight.medium};
-  color: ${props => props.$highlighted ? colors.primary.main : colors.neutral[900]};
+  color: ${props => props.$highlighted ? `var(--color-primary, ${colors.primary.main})` : `var(--color-text-primary, ${colors.neutral[900]})`};
 
   &:last-child {
     border-bottom: none;

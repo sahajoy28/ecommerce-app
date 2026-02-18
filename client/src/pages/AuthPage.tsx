@@ -22,7 +22,7 @@ const Container = styled.div`
 `;
 
 const FormWrapper = styled.div`
-  background: ${colors.neutral[0]};
+  background: var(--color-neutral-0, ${colors.neutral[0]});
   border-radius: ${borderRadius.lg};
   box-shadow: ${shadows.lg};
   width: 100%;
@@ -43,7 +43,7 @@ const TabContainer = styled.div`
   display: flex;
   gap: ${spacing[3]};
   margin-bottom: ${spacing[8]};
-  border-bottom: 2px solid ${colors.neutral[200]};
+  border-bottom: 2px solid var(--color-neutral-200, ${colors.neutral[200]});
 `;
 
 const Tab = styled.button<{ isActive: boolean }>`
@@ -53,14 +53,14 @@ const Tab = styled.button<{ isActive: boolean }>`
   cursor: pointer;
   font-size: ${typography.fontSize.lg};
   font-weight: ${props => props.isActive ? typography.fontWeight.semibold : typography.fontWeight.medium};
-  color: ${props => props.isActive ? colors.primary.main : colors.neutral[500]};
-  border-bottom: ${props => props.isActive ? `3px solid ${colors.primary.main}` : "none"};
+  color: ${props => props.isActive ? `var(--color-primary, ${colors.primary.main})` : `var(--color-text-tertiary, ${colors.neutral[500]})`};
+  border-bottom: ${props => props.isActive ? `3px solid var(--color-primary, ${colors.primary.main})` : "none"};
   margin-bottom: -2px;
   transition: all ${transitions.fast};
   min-height: 44px;
 
   &:hover {
-    color: ${colors.primary.main};
+    color: var(--color-primary, ${colors.primary.main});
   }
 
   ${media.mobile} {
@@ -73,7 +73,7 @@ const FormTitle = styled.h2`
   margin: 0 0 ${spacing[6]} 0;
   font-size: ${typography.fontSize["2xl"]};
   font-weight: ${typography.fontWeight.extrabold};
-  color: ${colors.neutral[900]};
+  color: var(--color-text-primary, ${colors.neutral[900]});
 
   ${media.mobile} {
     font-size: ${typography.fontSize.xl};

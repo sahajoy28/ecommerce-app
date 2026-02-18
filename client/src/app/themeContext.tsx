@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAppSelector } from './hooks';
 import { userPreferencesAPI } from '../services/userPreferencesAPI';
 
+
 export type ThemeMode = 'light' | 'dark';
 export type AccentColor = 'blue' | 'orange' | 'purple' | 'green' | 'red';
 
@@ -33,11 +34,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (user) {
       userPreferencesAPI
         .getPreferences()
-        .then(prefs => {
+        .then((prefs) => {
           if (prefs?.theme) setModeState(prefs.theme);
-          if (prefs?.accentColor) setAccentColorState(prefs.accentColor);
+          if (prefs && prefs.accentColor) setAccentColorState(prefs.accentColor);
         })
-        .catch(err => {
+        .catch((err) => {
           console.error('Failed to load user preferences:', err);
         });
     }

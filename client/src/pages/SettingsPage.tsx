@@ -6,7 +6,7 @@ const SettingsContainer = styled.div`
   max-width: 600px;
   margin: 0 auto;
   padding: ${spacing[6]};
-  background: ${colors.neutral[0]};
+  background: var(--color-neutral-0, ${colors.neutral[0]});
   min-height: 100vh;
 
   ${media.tablet} {
@@ -22,7 +22,7 @@ const PageTitle = styled.h1`
   font-size: ${typography.fontSize['4xl']};
   font-weight: ${typography.fontWeight.extrabold};
   margin-bottom: ${spacing[6]};
-  color: ${colors.neutral[900]};
+  color: var(--color-text-primary, ${colors.neutral[900]});
 
   ${media.mobile} {
     font-size: ${typography.fontSize['2xl']};
@@ -33,9 +33,9 @@ const PageTitle = styled.h1`
 const SettingSection = styled.div`
   margin-bottom: ${spacing[8]};
   padding: ${spacing[6]};
-  background: ${colors.neutral[50]};
+  background: var(--color-neutral-50, ${colors.neutral[50]});
   border-radius: ${borderRadius.lg};
-  border: 1px solid ${colors.neutral[200]};
+  border: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
 
   ${media.mobile} {
     padding: ${spacing[4]};
@@ -47,7 +47,7 @@ const SectionTitle = styled.h2`
   font-size: ${typography.fontSize['2xl']};
   font-weight: ${typography.fontWeight.bold};
   margin-bottom: ${spacing[4]};
-  color: ${colors.neutral[800]};
+  color: var(--color-text-primary, ${colors.neutral[800]});
 
   ${media.mobile} {
     font-size: ${typography.fontSize.lg};
@@ -56,7 +56,7 @@ const SectionTitle = styled.h2`
 
 const SectionDescription = styled.p`
   font-size: ${typography.fontSize.base};
-  color: ${colors.neutral[600]};
+  color: var(--color-text-secondary, ${colors.neutral[600]});
   margin-bottom: ${spacing[4]};
 `;
 
@@ -77,18 +77,18 @@ interface OptionButtonProps {
 
 const OptionButton = styled.button<OptionButtonProps>`
   padding: ${spacing[4]};
-  border: 2px solid ${props => props.isActive ? colors.primary.main : colors.neutral[300]};
-  background: ${props => props.isActive ? colors.primary.lighter : colors.neutral[0]};
+  border: 2px solid ${props => props.isActive ? 'var(--color-primary, ' + colors.primary.main + ')' : 'var(--color-neutral-300, ' + colors.neutral[300] + ')'};
+  background: ${props => props.isActive ? 'var(--color-primary-lighter, ' + colors.primary.lighter + ')' : 'var(--color-neutral-0, ' + colors.neutral[0] + ')'};
   border-radius: ${borderRadius.md};
   cursor: pointer;
   transition: all ${transitions.fast};
   font-weight: ${typography.fontWeight.semibold};
-  color: ${props => props.isActive ? colors.primary.dark : colors.neutral[700]};
+  color: ${props => props.isActive ? 'var(--color-primary-dark, ' + colors.primary.dark + ')' : 'var(--color-text-primary, ' + colors.neutral[700] + ')'};
   font-size: ${typography.fontSize.sm};
 
   &:hover {
-    border-color: ${colors.primary.main};
-    background: ${colors.primary.lighter};
+    border-color: var(--color-primary, ${colors.primary.main});
+    background: var(--color-primary-lighter, ${colors.primary.lighter});
   }
 
   &:active {
@@ -108,7 +108,7 @@ const ColorPreview = styled.div<{ color: string }>`
   background: ${props => props.color};
   margin-right: ${spacing[2]};
   display: inline-block;
-  border: 2px solid ${colors.neutral[300]};
+  border: 2px solid var(--color-neutral-300, ${colors.neutral[300]});
 `;
 
 const ColorOption = styled.div`
@@ -120,10 +120,10 @@ const ColorOption = styled.div`
 
 const SaveMessage = styled.div`
   padding: ${spacing[3]} ${spacing[4]};
-  background: #ecfdf5;
+  background: var(--color-primary-lighter, #ecfdf5);
   border: 1px solid #d1fae5;
   border-radius: ${borderRadius.md};
-  color: #065f46;
+  color: var(--color-primary-dark, #065f46);
   text-align: center;
   margin-top: ${spacing[4]};
   font-weight: ${typography.fontWeight.medium};

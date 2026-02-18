@@ -14,7 +14,7 @@ export const FilterContext = React.createContext<{toggleFilters: () => void} | n
 export const useFilterToggle = () => useContext(FilterContext);
 
 const Wrapper = styled.header`
-  background: var(--color-neutral-0, #ffffff);
+  background: var(--color-bg-primary, ${colors.neutral[0]});
   backdrop-filter: blur(12px);
   padding: ${spacing[3]} ${spacing[6]};
   display: flex;
@@ -94,7 +94,7 @@ const Logo = styled(Link)`
   text-decoration: none;
   font-weight: ${typography.fontWeight.extrabold};
   font-size: ${typography.fontSize.xl};
-  color: ${colors.neutral[900]};
+  color: var(--color-text-primary, ${colors.neutral[900]});
   display: flex;
   align-items: center;
   gap: ${spacing[1]};
@@ -103,7 +103,7 @@ const Logo = styled(Link)`
 
   &:hover {
     transform: scale(1.05);
-    color: ${colors.primary.main};
+    color: var(--color-primary, ${colors.primary.main});
   }
 
   ${media.mobile} {
@@ -116,7 +116,7 @@ const FilterToggleButton = styled.button`
   border: none;
   cursor: pointer;
   font-size: ${typography.fontSize["2xl"]};
-  color: ${colors.neutral[700]};
+  color: var(--color-text-primary, ${colors.neutral[700]});
   padding: ${spacing[2]};
   transition: all ${transitions.fast};
   border-radius: ${borderRadius.md};
@@ -127,8 +127,8 @@ const FilterToggleButton = styled.button`
   min-height: 44px;
 
   &:hover {
-    background: ${colors.neutral[100]};
-    color: ${colors.primary.main};
+    background: var(--color-neutral-100, ${colors.neutral[100]});
+    color: var(--color-primary, ${colors.primary.main});
     transform: scale(1.1);
   }
 
@@ -142,7 +142,7 @@ const IconButton = styled.button`
   border: none;
   cursor: pointer;
   font-size: ${typography.fontSize.xl};
-  color: ${colors.neutral[700]};
+  color: var(--color-text-primary, ${colors.neutral[700]});
   padding: ${spacing[2]};
   transition: all ${transitions.fast};
   border-radius: ${borderRadius.md};
@@ -151,8 +151,8 @@ const IconButton = styled.button`
   justify-content: center;
 
   &:hover {
-    background: ${colors.neutral[100]};
-    color: ${colors.primary.main};
+    background: var(--color-neutral-100, ${colors.neutral[100]});
+    color: var(--color-primary, ${colors.primary.main});
     transform: scale(1.1);
   }
 
@@ -183,7 +183,7 @@ const NavLink = styled(Button)<{ isActive?: boolean }>`
   background: none;
   border: none;
   cursor: pointer;
-  color: ${colors.neutral[700]};
+  color: var(--color-text-primary, ${colors.neutral[700]});
   font-weight: ${typography.fontWeight.medium};
   padding: ${spacing[2]} ${spacing[2]};
   transition: all ${transitions.fast};
@@ -195,7 +195,7 @@ const NavLink = styled(Button)<{ isActive?: boolean }>`
   font-size: ${typography.fontSize.sm};
 
   &:hover {
-    background: ${colors.neutral[100]};
+    background: var(--color-neutral-100, ${colors.neutral[100]});
   }
 
   ${media.mobile} {
@@ -217,8 +217,8 @@ const BadgeCount = styled.span`
   justify-content: center;
   min-width: 20px;
   height: 20px;
-  background: ${colors.primary.main};
-  color: ${colors.neutral[0]};
+  background: var(--color-primary, ${colors.primary.main});
+  color: var(--color-neutral-0, ${colors.neutral[0]});
   border-radius: ${borderRadius.full};
   font-size: ${typography.fontSize.xs};
   font-weight: ${typography.fontWeight.bold};
@@ -237,7 +237,7 @@ const BadgeCount = styled.span`
 const Divider = styled.div`
   width: 1px;
   height: 24px;
-  background: ${colors.neutral[300]};
+  background: var(--color-neutral-300, ${colors.neutral[300]});
   margin: 0 ${spacing[1]};
 
   ${media.mobile} {
@@ -248,8 +248,8 @@ const Divider = styled.div`
 const AuthButton = styled(Button)`
   font-weight: ${typography.fontWeight.semibold};
   transition: all ${transitions.fast};
-  background: ${colors.primary.main};
-  color: ${colors.neutral[0]};
+  background: var(--color-primary, ${colors.primary.main});
+  color: var(--color-neutral-0, ${colors.neutral[0]});
   border: none;
   padding: ${spacing[2]} ${spacing[3]};
   border-radius: ${borderRadius.md};
@@ -257,7 +257,7 @@ const AuthButton = styled(Button)`
   font-size: ${typography.fontSize.sm};
 
   &:hover {
-    background: ${colors.primary.dark};
+    background: var(--color-primary-dark, ${colors.primary.dark});
     transform: translateY(-1px);
   }
 

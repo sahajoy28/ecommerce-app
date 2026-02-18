@@ -193,6 +193,10 @@ export const UserMenu = ({ userName, onSettingsClick }: UserMenuProps) => {
           </>
         )}
         
+        <DropdownItem as={Link} to="/account">
+          👤 Account
+        </DropdownItem>
+        
         <DropdownButton onClick={handleSettingsClick}>
           ⚙️ Settings
         </DropdownButton>

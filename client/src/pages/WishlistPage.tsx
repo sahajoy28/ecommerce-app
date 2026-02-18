@@ -9,7 +9,7 @@ import { colors, spacing, typography, shadows, borderRadius, transitions, media 
 import { Link } from "react-router-dom";
 
 const WishlistContainer = styled.div`
-  background: ${colors.neutral[50]};
+  background: var(--color-neutral-50, ${colors.neutral[50]});
   min-height: 100vh;
   padding: 0;
   display: flex;
@@ -17,9 +17,9 @@ const WishlistContainer = styled.div`
 `;
 
 const Header = styled.div`
-  background: ${colors.neutral[0]};
+  background: var(--color-neutral-0, ${colors.neutral[0]});
   padding: ${spacing[8]} ${spacing[6]} ${spacing[4]};
-  color: ${colors.neutral[900]};
+  color: var(--color-text-primary, ${colors.neutral[900]});
   
   ${media.tablet} {
     padding: ${spacing[6]} ${spacing[4]};
@@ -34,7 +34,7 @@ const HeaderTitle = styled.h1`
   margin: 0 0 ${spacing[2]} 0;
   font-size: ${typography.fontSize["4xl"]};
   font-weight: ${typography.fontWeight.extrabold};
-  color: ${colors.neutral[900]};
+  color: var(--color-text-primary, ${colors.neutral[900]});
   letter-spacing: -0.02em;
 
   ${media.tablet} {
@@ -49,7 +49,7 @@ const HeaderTitle = styled.h1`
 const HeaderSubtitle = styled.p`
   margin: 0;
   font-size: ${typography.fontSize.lg};
-  color: ${colors.neutral[500]};
+  color: var(--color-text-tertiary, ${colors.neutral[500]});
 
   ${media.mobile} {
     font-size: ${typography.fontSize.base};
@@ -59,16 +59,16 @@ const HeaderSubtitle = styled.p`
 const BackLink = styled.a`
   display: inline-block;
   margin-top: ${spacing[4]};
-  color: ${colors.primary.main};
+  color: var(--color-primary, ${colors.primary.main});
   font-weight: ${typography.fontWeight.semibold};
   text-decoration: none;
   transition: all ${transitions.fast};
   padding: ${spacing[2]} ${spacing[4]};
-  background: ${colors.neutral[100]};
+  background: var(--color-neutral-100, ${colors.neutral[100]});
   border-radius: ${borderRadius.full};
 
   &:hover {
-    background: ${colors.neutral[200]};
+    background: var(--color-neutral-200, ${colors.neutral[200]});
     transform: translateY(-1px);
   }
 `;
@@ -89,26 +89,26 @@ const ContentArea = styled.div`
 const EmptyState = styled.div`
   text-align: center;
   padding: ${spacing[16]} ${spacing[6]};
-  background: linear-gradient(135deg, ${colors.neutral[50]} 0%, ${colors.neutral[100]} 100%);
+  background: linear-gradient(135deg, var(--color-neutral-50, ${colors.neutral[50]}) 0%, var(--color-neutral-100, ${colors.neutral[100]}) 100%);
   border-radius: ${borderRadius.xl};
-  color: ${colors.neutral[600]};
-  border: 2px dashed ${colors.neutral[300]};
+  color: var(--color-text-secondary, ${colors.neutral[600]});
+  border: 2px dashed var(--color-neutral-300, ${colors.neutral[300]});
 
   h2 {
-    color: ${colors.neutral[700]};
+    color: var(--color-text-primary, ${colors.neutral[700]});
     margin-bottom: ${spacing[3]};
     font-size: ${typography.fontSize["3xl"]};
   }
 
   p {
-    color: ${colors.neutral[600]};
+    color: var(--color-text-secondary, ${colors.neutral[600]});
     margin-bottom: ${spacing[4]};
   }
 
   a {
     display: inline-block;
-    background: #0066ff;
-    color: ${colors.neutral[0]};
+    background: var(--color-primary, #0066ff);
+    color: var(--color-neutral-0, ${colors.neutral[0]});
     padding: ${spacing[3]} ${spacing[6]};
     border-radius: ${borderRadius.md};
     text-decoration: none;
@@ -116,7 +116,7 @@ const EmptyState = styled.div`
     transition: all ${transitions.fast};
 
     &:hover {
-      background: #0052cc;
+      background: var(--color-primary-dark, #0052cc);
       transform: translateY(-2px);
       box-shadow: ${shadows.lg};
     }
@@ -157,15 +157,15 @@ const WishlistItem = styled.div`
   gap: ${spacing[3]};
   align-items: center;
   padding: ${spacing[2]} ${spacing[3]};
-  background: ${colors.neutral[0]};
-  border: 1px solid ${colors.neutral[200]};
+  background: var(--color-neutral-0, ${colors.neutral[0]});
+  border: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
   border-radius: ${borderRadius.md};
   transition: all ${transitions.base};
   box-shadow: ${shadows.sm};
 
   &:hover {
     box-shadow: ${shadows.md};
-    border-color: ${colors.primary.light};
+    border-color: var(--color-primary-light, ${colors.primary.light});
   }
 
   ${media.mobile} {
@@ -180,7 +180,7 @@ const ProductImage = styled.img`
   height: 80px;
   object-fit: cover;
   border-radius: ${borderRadius.sm};
-  background: ${colors.neutral[100]};
+  background: var(--color-neutral-100, ${colors.neutral[100]});
   flex-shrink: 0;
 
   ${media.mobile} {
@@ -200,7 +200,7 @@ const ProductDetails = styled.div`
 const ProductName = styled(Link)`
   font-size: ${typography.fontSize.base};
   font-weight: ${typography.fontWeight.semibold};
-  color: ${colors.neutral[900]};
+  color: var(--color-text-primary, ${colors.neutral[900]});
   text-decoration: none;
   transition: color ${transitions.fast};
   white-space: nowrap;
@@ -208,7 +208,7 @@ const ProductName = styled(Link)`
   text-overflow: ellipsis;
 
   &:hover {
-    color: ${colors.primary.main};
+    color: var(--color-primary, ${colors.primary.main});
   }
 `;
 
@@ -220,14 +220,14 @@ const ProductPrice = styled.div`
 
 const ProductCategory = styled.span`
   font-size: ${typography.fontSize.xs};
-  color: ${colors.neutral[500]};
+  color: var(--color-text-tertiary, ${colors.neutral[500]});
   text-transform: capitalize;
 `;
 
 const Price = styled.span`
   font-size: ${typography.fontSize.base};
   font-weight: ${typography.fontWeight.bold};
-  color: ${colors.primary.main};
+  color: var(--color-primary, ${colors.primary.main});
 `;
 
 const SavedBadge = styled.span`
@@ -266,14 +266,14 @@ const ResultsInfo = styled.div`
   justify-content: space-between;
   padding: ${spacing[3]} ${spacing[3]};
   font-size: ${typography.fontSize.sm};
-  color: ${colors.neutral[700]};
+  color: var(--color-text-primary, ${colors.neutral[700]});
   font-weight: ${typography.fontWeight.medium};
-  background: ${colors.neutral[0]};
+  background: var(--color-neutral-0, ${colors.neutral[0]});
   border-radius: ${borderRadius.md};
   margin-bottom: ${spacing[4]};
 
   strong {
-    color: ${colors.neutral[900]};
+    color: var(--color-text-primary, ${colors.neutral[900]});
     font-weight: ${typography.fontWeight.bold};
   }
 

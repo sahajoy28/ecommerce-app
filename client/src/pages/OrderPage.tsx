@@ -27,7 +27,7 @@ const BackButton = styled(Link)`
   display: inline-flex;
   align-items: center;
   gap: ${spacing[2]};
-  color: ${colors.primary.main};
+  color: var(--color-primary, ${colors.primary.main});
   text-decoration: none;
   margin-bottom: ${spacing[6]};
   font-weight: ${typography.fontWeight.semibold};
@@ -47,7 +47,7 @@ const PageTitle = styled.h1`
   margin: 0 0 ${spacing[8]} 0;
   font-size: ${typography.fontSize["4xl"]};
   font-weight: ${typography.fontWeight.extrabold};
-  color: ${colors.neutral[900]};
+  color: var(--color-text-primary, ${colors.neutral[900]});
 
   ${media.mobile} {
     font-size: ${typography.fontSize["2xl"]};
@@ -76,8 +76,8 @@ const MainContent = styled.div`
 `;
 
 const Section = styled.div`
-  background: ${colors.neutral[0]};
-  border: 1px solid ${colors.neutral[200]};
+  background: var(--color-neutral-0, ${colors.neutral[0]});
+  border: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
   border-radius: ${borderRadius.md};
   padding: ${spacing[6]};
   box-shadow: ${shadows.sm};
@@ -91,8 +91,8 @@ const SectionTitle = styled.h2`
   margin: 0 0 ${spacing[4]} 0;
   font-size: ${typography.fontSize.xl};
   font-weight: ${typography.fontWeight.semibold};
-  color: ${colors.neutral[900]};
-  border-bottom: 2px solid ${colors.primary.main};
+  color: var(--color-text-primary, ${colors.neutral[900]});
+  border-bottom: 2px solid var(--color-primary, ${colors.primary.main});
   padding-bottom: ${spacing[2]};
   display: inline-block;
 `;
@@ -109,7 +109,7 @@ const OrderItemRow = styled.div`
   gap: ${spacing[4]};
   align-items: center;
   padding: ${spacing[3]};
-  background: ${colors.neutral[50]};
+  background: var(--color-neutral-50, ${colors.neutral[50]});
   border-radius: ${borderRadius.md};
 
   ${media.tablet} {
@@ -129,7 +129,7 @@ const ItemImage = styled.img`
   height: 80px;
   object-fit: contain;
   border-radius: ${borderRadius.md};
-  background: ${colors.neutral[100]};
+  background: var(--color-neutral-100, ${colors.neutral[100]});
   padding: ${spacing[1]};
 
   ${media.mobile} {

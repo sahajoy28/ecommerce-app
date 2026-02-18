@@ -29,7 +29,7 @@ const Header = styled.div`
   align-items: center;
   margin-bottom: ${spacing[8]};
   padding-bottom: ${spacing[6]};
-  border-bottom: 2px solid ${colors.neutral[200]};
+  border-bottom: 2px solid var(--color-neutral-200, ${colors.neutral[200]});
   flex-wrap: wrap;
   gap: ${spacing[4]};
 
@@ -44,7 +44,7 @@ const Title = styled.h1`
   margin: 0;
   font-size: ${typography.fontSize["3xl"]};
   font-weight: ${typography.fontWeight.extrabold};
-  color: ${colors.neutral[900]};
+  color: var(--color-text-primary, ${colors.neutral[900]});
 
   ${media.mobile} {
     font-size: ${typography.fontSize["2xl"]};
@@ -68,8 +68,8 @@ const SectionTitle = styled.h2`
   margin: 0 0 ${spacing[5]} 0;
   font-size: ${typography.fontSize["2xl"]};
   font-weight: ${typography.fontWeight.semibold};
-  color: ${colors.neutral[900]};
-  border-bottom: 2px solid ${colors.primary.main};
+  color: var(--color-text-primary, ${colors.neutral[900]});
+  border-bottom: 2px solid var(--color-primary, ${colors.primary.main});
   padding-bottom: ${spacing[3]};
   display: inline-block;
 
@@ -79,8 +79,8 @@ const SectionTitle = styled.h2`
 `;
 
 const UserInfoCard = styled.div`
-  background: ${colors.neutral[0]};
-  border: 1px solid ${colors.neutral[200]};
+  background: var(--color-neutral-0, ${colors.neutral[0]});
+  border: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
   padding: ${spacing[4]};
   border-radius: ${borderRadius.md};
   margin-bottom: ${spacing[4]};
@@ -92,7 +92,7 @@ const InfoRow = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: ${spacing[2]} 0;
-  border-bottom: 1px solid ${colors.neutral[200]};
+  border-bottom: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
 
   &:last-child {
     border-bottom: none;
@@ -107,12 +107,12 @@ const InfoRow = styled.div`
 
 const InfoLabel = styled.span`
   font-weight: ${typography.fontWeight.semibold};
-  color: ${colors.neutral[600]};
+  color: var(--color-text-secondary, ${colors.neutral[600]});
   min-width: 120px;
 `;
 
 const InfoValue = styled.span`
-  color: ${colors.neutral[900]};
+  color: var(--color-text-primary, ${colors.neutral[900]});
 `;
 
 const AddressGrid = styled.div`
@@ -128,11 +128,11 @@ const AddressGrid = styled.div`
 `;
 
 const AddressCard = styled.div<{ isDefault: boolean }>`
-  border: 1px solid ${props => props.isDefault ? colors.primary.main : colors.neutral[200]};
+  border: 1px solid ${props => props.isDefault ? `var(--color-primary, ${colors.primary.main})` : `var(--color-neutral-200, ${colors.neutral[200]})`};
   box-shadow: ${props => props.isDefault ? shadows.md : shadows.sm};
   border-radius: ${borderRadius.md};
   padding: ${spacing[3]};
-  background: ${props => props.isDefault ? `linear-gradient(135deg, ${colors.primary.lighter} 0%, ${colors.neutral[50]} 100%)` : colors.neutral[0]};
+  background: ${props => props.isDefault ? `linear-gradient(135deg, var(--color-primary-lighter, ${colors.primary.lighter}) 0%, var(--color-neutral-50, ${colors.neutral[50]}) 100%)` : `var(--color-neutral-0, ${colors.neutral[0]})`};
   position: relative;
 `;
 
@@ -143,7 +143,7 @@ const DefaultBadge = styled.div`
   display: flex;
   align-items: center;
   gap: ${spacing[1]};
-  background: ${colors.primary.main};
+  background: var(--color-primary, ${colors.primary.main});
   color: white;
   padding: ${spacing[1]} ${spacing[3]};
   border-radius: ${borderRadius.full};
@@ -158,13 +158,13 @@ const AddressInfo = styled.div`
 
 const AddressName = styled.div`
   font-weight: ${typography.fontWeight.semibold};
-  color: ${colors.neutral[900]};
+  color: var(--color-text-primary, ${colors.neutral[900]});
   margin-bottom: ${spacing[2]};
 `;
 
 const AddressDetail = styled.div`
   font-size: ${typography.fontSize.sm};
-  color: ${colors.neutral[600]};
+  color: var(--color-text-secondary, ${colors.neutral[600]});
   line-height: ${typography.lineHeight.normal};
 `;
 
@@ -198,10 +198,10 @@ const OrdersGrid = styled.div`
 `;
 
 const OrderCard = styled.div`
-  border: 1px solid ${colors.neutral[200]};
+  border: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
   border-radius: ${borderRadius.md};
   padding: ${spacing[4]};
-  background: ${colors.neutral[0]};
+  background: var(--color-neutral-0, ${colors.neutral[0]});
   transition: box-shadow ${transitions.fast};
   box-shadow: ${shadows.sm};
 

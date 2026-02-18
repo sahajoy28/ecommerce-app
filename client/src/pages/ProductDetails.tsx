@@ -31,7 +31,7 @@ const BackButton = styled(Link)`
   display: inline-flex;
   align-items: center;
   gap: ${spacing[2]};
-  color: ${colors.primary.main};
+  color: var(--color-primary, ${colors.primary.main});
   text-decoration: none;
   margin-bottom: ${spacing[6]};
   font-weight: ${typography.fontWeight.semibold};
@@ -39,7 +39,7 @@ const BackButton = styled(Link)`
   padding: ${spacing[2]} ${spacing[3]};
 
   &:hover {
-    color: ${colors.primary.dark};
+    color: var(--color-primary-dark, ${colors.primary.dark});
     gap: ${spacing[3]};
   }
 `;
@@ -48,11 +48,11 @@ const ProductWrapper = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: ${spacing[8]};
-  background: ${colors.neutral[0]};
+  background: var(--color-neutral-0, ${colors.neutral[0]});
   padding: ${spacing[8]};
   border-radius: ${borderRadius.lg};
   box-shadow: ${shadows.md};
-  border: 1px solid ${colors.neutral[200]};
+  border: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
   margin-bottom: ${spacing[8]};
 
   ${media.tablet} {
@@ -115,7 +115,7 @@ const Title = styled.h1`
   margin: 0;
   font-size: ${typography.fontSize["5xl"]};
   font-weight: ${typography.fontWeight.extrabold};
-  color: ${colors.neutral[900]};
+  color: var(--color-text-primary, ${colors.neutral[900]});
   line-height: ${typography.lineHeight.tight};
 
   ${media.tablet} {
@@ -141,19 +141,19 @@ const Price = styled.div`
 `;
 
 const Description = styled.p`
-  color: ${colors.neutral[600]};
+  color: var(--color-text-secondary, ${colors.neutral[600]});
   line-height: ${typography.lineHeight.normal};
   margin: 0;
   font-size: ${typography.fontSize.md};
   padding: ${spacing[4]};
-  background: ${colors.neutral[50]};
+  background: var(--color-neutral-50, ${colors.neutral[50]});
   border-radius: ${borderRadius.md};
-  border-left: 4px solid ${colors.primary.main};
+  border-left: 4px solid var(--color-primary, ${colors.primary.main});
 `;
 
 const AvailabilityBox = styled.div`
   padding: ${spacing[4]};
-  background: linear-gradient(135deg, ${colors.primary.lighter} 0%, ${colors.secondary.lighter} 100%);
+  background: linear-gradient(135deg, var(--color-primary-lighter, ${colors.primary.lighter}) 0%, ${colors.secondary.lighter} 100%);
   border-radius: ${borderRadius.md};
   border-left: 4px solid ${colors.success};
 `;
@@ -190,17 +190,17 @@ const ButtonGroup = styled.div`
 const NotFound = styled.div`
   text-align: center;
   padding: ${spacing[16]} ${spacing[6]};
-  background: ${colors.neutral[0]};
+  background: var(--color-neutral-0, ${colors.neutral[0]});
   border-radius: ${borderRadius.lg};
 
   h2 {
     font-size: ${typography.fontSize["3xl"]};
     margin-bottom: ${spacing[3]};
-    color: ${colors.neutral[900]};
+    color: var(--color-text-primary, ${colors.neutral[900]});
   }
 
   p {
-    color: ${colors.neutral[600]};
+    color: var(--color-text-secondary, ${colors.neutral[600]});
     margin-bottom: ${spacing[6]};
     font-size: ${typography.fontSize.lg};
   }
@@ -226,8 +226,8 @@ const SectionTitle = styled.h2`
   margin: 0 0 ${spacing[6]} 0;
   font-size: ${typography.fontSize["3xl"]};
   font-weight: ${typography.fontWeight.extrabold};
-  color: ${colors.neutral[900]};
-  border-bottom: 3px solid ${colors.primary.main};
+  color: var(--color-text-primary, ${colors.neutral[900]});
+  border-bottom: 3px solid var(--color-primary, ${colors.primary.main});
   padding-bottom: ${spacing[3]};
   display: inline-block;
 
@@ -255,7 +255,7 @@ const EmptyRelated = styled.div`
   grid-column: 1 / -1;
   text-align: center;
   padding: ${spacing[8]};
-  color: ${colors.neutral[500]};
+  color: var(--color-text-tertiary, ${colors.neutral[500]});
   font-size: ${typography.fontSize.base};
 `;
 
