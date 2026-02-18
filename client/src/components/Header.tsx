@@ -24,10 +24,20 @@ const Wrapper = styled.header`
   z-index: 1000;
   border-bottom: 1px solid ${colors.neutral[200]};
   box-shadow: ${shadows.sm};
+  flex-wrap: nowrap;
+
+  ${media.tablet} {
+    padding: ${spacing[2]} ${spacing[4]};
+    gap: ${spacing[3]};
+    flex-wrap: wrap;
+  }
 
   ${media.mobile} {
     padding: ${spacing[2]} ${spacing[3]};
     gap: ${spacing[2]};
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
   }
 `;
 
@@ -47,13 +57,21 @@ const CenterSection = styled.div`
   max-width: 500px;
   display: flex;
   align-items: center;
+  min-width: 0;
 
   ${media.tablet} {
-    max-width: 350px;
+    max-width: 100%;
+    flex-basis: 100%;
+    margin-top: ${spacing[2]};
+    order: 3;
   }
 
   ${media.mobile} {
-    max-width: 200px;
+    max-width: 100%;
+    width: 100%;
+    flex-basis: 100%;
+    margin-top: ${spacing[2]};
+    order: 3;
   }
 `;
 
@@ -98,9 +116,11 @@ const FilterToggleButton = styled.button`
   padding: ${spacing[2]};
   transition: all ${transitions.fast};
   border-radius: ${borderRadius.md};
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
 
   &:hover {
     background: ${colors.neutral[100]};
@@ -110,10 +130,6 @@ const FilterToggleButton = styled.button`
 
   &:active {
     transform: scale(0.95);
-  }
-
-  ${media.tablet} {
-    display: flex;
   }
 `;
 

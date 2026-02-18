@@ -187,7 +187,7 @@ export const FilterSidebar = () => {
     <SidebarContainer>
       <FilterSection>
         <SectionTitle>
-          {t("filters.categories")}
+          📂 {t("filters.categories")}
           {selectedCategory && <FilterCount>{categories.length}</FilterCount>}
         </SectionTitle>
         {categories.map(category => (
@@ -205,7 +205,7 @@ export const FilterSidebar = () => {
 
       <FilterSection>
         <SectionTitle>
-          {t("filters.minimumRating")}
+          ⭐ {t("filters.minimumRating")}
           {minRating > 0 && <FilterCount>⭐{minRating.toFixed(1)}</FilterCount>}
         </SectionTitle>
         <RatingInput value={minRating} onChange={handleRatingChange} />
@@ -213,7 +213,7 @@ export const FilterSidebar = () => {
 
       <FilterSection>
         <SectionTitle>
-          {t("filters.priceRange")}
+          💰 {t("filters.priceRange")}
           {priceRange < maxPrice && <FilterCount>${priceRange.toFixed(0)}</FilterCount>}
         </SectionTitle>
         <PriceDisplay>

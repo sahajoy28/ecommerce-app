@@ -29,6 +29,7 @@ const MainContent = styled.main`
 `;
 
 function App() {
+  // Sidebar is toggled via button on all devices
   const [showFilters, setShowFilters] = useState(true);
   const { token } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();

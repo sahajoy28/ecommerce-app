@@ -18,13 +18,14 @@ const DashboardContainer = styled.div`
 
 const MainContainer = styled.div<{ sidebarOpen: boolean }>`
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: ${props => props.sidebarOpen ? '280px 1fr' : '1fr'};
   gap: 0;
   flex: 1;
   width: 100%;
   max-width: 1920px;
   margin: 0 auto;
   position: relative;
+  transition: grid-template-columns ${transitions.base};
 
   ${media.tablet} {
     grid-template-columns: 1fr;
@@ -37,27 +38,31 @@ const MainContainer = styled.div<{ sidebarOpen: boolean }>`
 `;
 
 const Overlay = styled.div<{ isOpen: boolean }>`
-  display: none;
+  display: ${props => props.isOpen ? 'block' : 'none'};
+  position: fixed;
+  top: 72px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 98;
+  animation: fadeIn ${transitions.base};
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
 
   ${media.tablet} {
     display: ${props => props.isOpen ? 'block' : 'none'};
-    position: fixed;
-    top: 72px;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 98;
-    animation: fadeIn ${transitions.base};
+  }
 
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-      }
-      to {
-        opacity: 1;
-      }
-    }
+  ${media.mobile} {
+    display: ${props => props.isOpen ? 'block' : 'none'};
   }
 `;
 
@@ -67,8 +72,11 @@ const SidebarWrapper = styled.div<{ isOpen: boolean }>`
   overflow-y: auto;
   height: auto;
   padding: ${spacing[4]};
+  display: ${props => props.isOpen ? 'block' : 'none'};
+  transition: all ${transitions.base};
 
   ${media.tablet} {
+    display: ${props => props.isOpen ? 'block' : 'none'};
     position: fixed;
     left: 0;
     top: 72px;
@@ -94,8 +102,29 @@ const SidebarWrapper = styled.div<{ isOpen: boolean }>`
   }
 
   ${media.mobile} {
+    display: ${props => props.isOpen ? 'block' : 'none'};
+    position: fixed;
+    left: 0;
+    top: 72px;
+    bottom: 0;
     width: 80vw;
     max-width: 280px;
+    border-right: 1px solid ${colors.neutral[200]};
+    padding: ${spacing[4]};
+    z-index: 100;
+    transform: translateX(${props => props.isOpen ? '0' : '-100%'});
+    transition: transform ${transitions.base};
+    background: ${colors.neutral[0]};
+    overflow-y: auto;
+
+    > div {
+      border-radius: 0;
+      border: none;
+      box-shadow: none;
+      position: static;
+      top: auto;
+      background: ${colors.neutral[0]};
+    }
   }
 `;
 
