@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import styled from "styled-components";
 import { Badge, Button } from "@fluentui/react-components";
 import { ShoppingBag24Filled, Home24Filled, Person24Filled } from "@fluentui/react-icons";
@@ -7,12 +7,14 @@ import { useAppSelector } from "../app/hooks";
 import { useStrings } from "../utils/strings";
 import { colors, spacing, typography, shadows, borderRadius, transitions, media } from "../styles/designTokens";
 import { SearchBar } from "./SearchBar";
+import { UserMenu, GuestMenu } from "./UserMenu";
+import { SettingsModal } from "./SettingsModal";
 
 export const FilterContext = React.createContext<{toggleFilters: () => void} | null>(null);
 export const useFilterToggle = () => useContext(FilterContext);
 
 const Wrapper = styled.header`
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--color-neutral-0, #ffffff);
   backdrop-filter: blur(12px);
   padding: ${spacing[3]} ${spacing[6]};
   display: flex;
@@ -22,9 +24,11 @@ const Wrapper = styled.header`
   position: sticky;
   top: 0;
   z-index: 1000;
-  border-bottom: 1px solid ${colors.neutral[200]};
+  border-bottom: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
   box-shadow: ${shadows.sm};
   flex-wrap: nowrap;
+  color: var(--color-text-primary, ${colors.neutral[900]});
+  transition: all 0.3s ease;
 
   ${media.tablet} {
     padding: ${spacing[2]} ${spacing[4]};
@@ -275,64 +279,64 @@ export const Header = () => {
   );
   const wishlistItems = useAppSelector(state => state.wishlist.items);
   const filterToggle = useFilterToggle();
+  const [showSettings, setShowSettings] = useState(false);
 
   const isHome = location.pathname === "/";
 
   return (
-    <Wrapper>
-      <LeftSection>
-        <FilterToggleButton 
-          onClick={() => filterToggle?.toggleFilters()}
-          title="Toggle filters"
-        >
-          ☰
-        </FilterToggleButton>
-        <Logo to="/">
-          🛍 Store
-        </Logo>
-      </LeftSection>
+    <>
+      <Wrapper>
+        <LeftSection>
+          <FilterToggleButton 
+            onClick={() => filterToggle?.toggleFilters()}
+            title="Toggle filters"
+          >
+            ☰
+          </FilterToggleButton>
+          <Logo to="/">
+            🛍 Store
+          </Logo>
+        </LeftSection>
 
-      <CenterSection>
-        <SearchBar />
-      </CenterSection>
+        <CenterSection>
+          <SearchBar />
+        </CenterSection>
 
-      <RightSection>
-        <NavSection>
-          <Link to="/wishlist" style={{ textDecoration: "none" }}>
-            <IconBadgeWrapper>
-              <IconButton title="Wishlist">
-                ❤️
-              </IconButton>
-              {wishlistItems.length > 0 && <BadgeCount>{wishlistItems.length}</BadgeCount>}
-            </IconBadgeWrapper>
-          </Link>
-          
-          <Link to="/cart" style={{ textDecoration: "none" }}>
-            <IconBadgeWrapper>
-              <IconButton title="Cart">
-                <ShoppingBag24Filled />
-              </IconButton>
-              {cartCount > 0 && <BadgeCount>{cartCount}</BadgeCount>}
-            </IconBadgeWrapper>
-          </Link>
-
-          <Divider />
-
-          {authUser ? (
-            <Link to="/account" style={{ textDecoration: "none" }}>
-              <IconButton title="Account">
-                <Person24Filled />
-              </IconButton>
+        <RightSection>
+          <NavSection>
+            <Link to="/wishlist" style={{ textDecoration: "none" }}>
+              <IconBadgeWrapper>
+                <IconButton title="Wishlist">
+                  ❤️
+                </IconButton>
+                {wishlistItems.length > 0 && <BadgeCount>{wishlistItems.length}</BadgeCount>}
+              </IconBadgeWrapper>
             </Link>
-          ) : (
-            <Link to="/login" style={{ textDecoration: "none" }}>
-              <AuthButton appearance="primary">
-                Login
-              </AuthButton>
+            
+            <Link to="/cart" style={{ textDecoration: "none" }}>
+              <IconBadgeWrapper>
+                <IconButton title="Cart">
+                  <ShoppingBag24Filled />
+                </IconButton>
+                {cartCount > 0 && <BadgeCount>{cartCount}</BadgeCount>}
+              </IconBadgeWrapper>
             </Link>
-          )}
-        </NavSection>
-      </RightSection>
-    </Wrapper>
+
+            <Divider />
+
+            {authUser ? (
+              <UserMenu 
+                userName={authUser.name || authUser.email?.split('@')[0]}
+                onSettingsClick={() => setShowSettings(true)}
+              />
+            ) : (
+              <GuestMenu onSettingsClick={() => setShowSettings(true)} />
+            )}
+          </NavSection>
+        </RightSection>
+      </Wrapper>
+      
+      <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
+    </>
   );
 };

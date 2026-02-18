@@ -225,4 +225,36 @@ router.delete('/wishlist/:wishlistItemId', async (req, res) => {
   }
 });
 
+// ==================== PREFERENCES ====================
+
+// Get user preferences
+router.get('/preferences', async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    const preferences = user.preferences || { theme: 'light', accentColor: 'blue' };
+    res.json({ success: true, theme: preferences.theme, accentColor: preferences.accentColor });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Save user preferences
+router.post('/preferences', async (req, res) => {
+  try {
+    const { theme, accentColor } = req.body;
+
+    if (!['light', 'dark'].includes(theme) || !['blue', 'orange', 'purple', 'green', 'red'].includes(accentColor)) {
+      return res.status(400).json({ success: false, message: 'Invalid preferences' });
+    }
+
+    const user = await User.findById(req.userId);
+    user.preferences = { theme, accentColor };
+    await user.save();
+
+    res.json({ success: true, message: 'Preferences saved', preferences: user.preferences });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 export default router;

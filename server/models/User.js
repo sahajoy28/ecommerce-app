@@ -79,6 +79,18 @@ const userSchema = new mongoose.Schema(
     addresses: [addressSchema],
     cart: [cartItemSchema],
     wishlist: [wishlistItemSchema],
+    preferences: {
+      theme: {
+        type: String,
+        enum: ['light', 'dark'],
+        default: 'light'
+      },
+      accentColor: {
+        type: String,
+        enum: ['blue', 'orange', 'purple', 'green', 'red'],
+        default: 'blue'
+      }
+    },
     createdAt: {
       type: Date,
       default: Date.now

@@ -34,11 +34,12 @@ export const GlobalStyle = createGlobalStyle`
     font-family: ${typography.fontFamily.base};
     font-size: ${typography.fontSize.base};
     line-height: ${typography.lineHeight.normal};
-    color: ${colors.neutral[900]};
-    background-color: ${colors.neutral[50]};
+    color: var(--color-text-primary, ${colors.neutral[900]});
+    background-color: var(--color-bg-primary, ${colors.neutral[50]});
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     -webkit-text-size-adjust: 100%;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   /* ========================================================================
@@ -49,7 +50,7 @@ export const GlobalStyle = createGlobalStyle`
     font-weight: ${typography.fontWeight.bold};
     line-height: ${typography.lineHeight.tight};
     margin: 0;
-    color: ${colors.neutral[900]};
+    color: var(--color-text-primary, ${colors.neutral[900]});
   }
 
   h1 {
@@ -94,16 +95,16 @@ export const GlobalStyle = createGlobalStyle`
      ======================================================================== */
 
   a {
-    color: ${colors.primary.main};
+    color: var(--color-primary, ${colors.primary.main});
     text-decoration: none;
     transition: color 250ms cubic-bezier(0.4, 0, 0.2, 1);
 
     &:hover {
-      color: ${colors.primary.dark};
+      color: var(--color-primary-dark, ${colors.primary.dark});
     }
 
     &:focus-visible {
-      outline: 2px solid ${colors.primary.main};
+      outline: 2px solid var(--color-primary, ${colors.primary.main});
       outline-offset: 2px;
       border-radius: ${borderRadius.base};
     }
@@ -138,25 +139,26 @@ export const GlobalStyle = createGlobalStyle`
   input, textarea, select {
     font-family: ${typography.fontFamily.base};
     font-size: inherit;
-    border: 1px solid ${colors.neutral[300]};
+    border: 1px solid var(--color-neutral-300, ${colors.neutral[300]});
     border-radius: ${borderRadius.md};
     padding: ${spacing[3]} ${spacing[4]};
-    background: ${colors.neutral[0]};
-    color: ${colors.neutral[900]};
+    background: var(--color-neutral-0, ${colors.neutral[0]});
+    color: var(--color-text-primary, ${colors.neutral[900]});
     transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
 
     &::placeholder {
-      color: ${colors.neutral[400]};
+      color: var(--color-text-secondary, ${colors.neutral[400]});
     }
 
     &:hover:not(:disabled) {
-      border-color: ${colors.neutral[400]};
+      border-color: var(--color-neutral-200, ${colors.neutral[400]});
     }
 
     &:focus {
       outline: none;
-      border-color: ${colors.primary.main};
-      box-shadow: 0 0 0 3px ${colors.primary.lighter};
+      border-color: var(--color-primary, ${colors.primary.main});
+      box-shadow: 0 0 0 3px var(--color-primary-lighter, ${colors.primary.lighter});
+    }
     }
 
     &:disabled {
@@ -260,6 +262,34 @@ export const GlobalStyle = createGlobalStyle`
 
   .content-wrapper {
     flex: 1;
+  }
+
+  /* ========================================================================
+     SCROLLBAR STYLES - Hide scrollbars while keeping scroll functionality
+     ======================================================================== */
+
+  /* Chrome, Safari and Opera */
+  ::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: transparent;
+  }
+
+  /* Firefox */
+  * {
+    scrollbar-width: none;
+  }
+
+  /* Internet Explorer and Edge */
+  * {
+    -ms-overflow-style: none;
   }
 
   /* ========================================================================

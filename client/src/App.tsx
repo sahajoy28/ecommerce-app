@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Header, FilterContext } from "./components/Header";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { ThemeProviderWrapper } from "./components/ThemeWrapper";
 import { Dashboard } from "./pages/Dashboard";
 import { ProductDetails } from "./pages/ProductDetails";
 import { CartPage } from "./pages/CartPage";
@@ -8,6 +9,7 @@ import { AuthPage } from "./pages/AuthPage";
 import { AccountPage } from "./pages/AccountPage";
 import { OrderPage } from "./pages/OrderPage";
 import { WishlistPage } from "./pages/WishlistPage";
+import { SettingsPage } from "./pages/SettingsPage";
 import { AddressForm } from "./components/AddressForm";
 import styled from "styled-components";
 import { useState, useEffect } from "react";
@@ -16,6 +18,7 @@ import { authApi } from "./services/apiClient";
 import { getUser } from "./features/auth/authSlice";
 import { loadCartAPI } from "./features/cart/cartSlice";
 import { loadWishlistAPI } from "./features/wishlist/wishlistSlice";
+import { ThemeProvider } from "./app/themeContext";
 
 const AppWrapper = styled.div`
   display: flex;
@@ -30,7 +33,7 @@ const MainContent = styled.main`
 
 function App() {
   // Sidebar is toggled via button on all devices
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
   const { token } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
 
@@ -51,27 +54,32 @@ function App() {
   };
 
   return (
-    <ErrorBoundary>
-      <BrowserRouter>
-        <AppWrapper>
-          <FilterContext.Provider value={{ toggleFilters }}>
-            <Header />
-            <MainContent>
-              <Routes>
-                <Route path="/" element={<ErrorBoundary><Dashboard showFilters={showFilters} setShowFilters={setShowFilters} /></ErrorBoundary>} />
-                <Route path="/product/:id" element={<ErrorBoundary><ProductDetails /></ErrorBoundary>} />
-                <Route path="/cart" element={<ErrorBoundary><CartPage /></ErrorBoundary>} />
-                <Route path="/wishlist" element={<ErrorBoundary><WishlistPage /></ErrorBoundary>} />
-                <Route path="/login" element={<ErrorBoundary><AuthPage /></ErrorBoundary>} />
-                <Route path="/account" element={<ErrorBoundary><AccountPage /></ErrorBoundary>} />
-                <Route path="/order" element={<ErrorBoundary><OrderPage /></ErrorBoundary>} />
-                <Route path="/checkout" element={<ErrorBoundary><AddressForm /></ErrorBoundary>} />
-              </Routes>
-            </MainContent>
-          </FilterContext.Provider>
-        </AppWrapper>
-      </BrowserRouter>
-    </ErrorBoundary>
+    <ThemeProvider>
+      <ThemeProviderWrapper>
+        <ErrorBoundary>
+          <BrowserRouter>
+            <AppWrapper>
+              <FilterContext.Provider value={{ toggleFilters }}>
+                <Header />
+                <MainContent>
+                  <Routes>
+                    <Route path="/" element={<ErrorBoundary><Dashboard showFilters={showFilters} setShowFilters={setShowFilters} /></ErrorBoundary>} />
+                    <Route path="/product/:id" element={<ErrorBoundary><ProductDetails /></ErrorBoundary>} />
+                    <Route path="/cart" element={<ErrorBoundary><CartPage /></ErrorBoundary>} />
+                    <Route path="/wishlist" element={<ErrorBoundary><WishlistPage /></ErrorBoundary>} />
+                    <Route path="/login" element={<ErrorBoundary><AuthPage /></ErrorBoundary>} />
+                    <Route path="/account" element={<ErrorBoundary><AccountPage /></ErrorBoundary>} />
+                    <Route path="/order" element={<ErrorBoundary><OrderPage /></ErrorBoundary>} />
+                    <Route path="/settings" element={<ErrorBoundary><SettingsPage /></ErrorBoundary>} />
+                    <Route path="/checkout" element={<ErrorBoundary><AddressForm /></ErrorBoundary>} />
+                  </Routes>
+                </MainContent>
+              </FilterContext.Provider>
+            </AppWrapper>
+          </BrowserRouter>
+        </ErrorBoundary>
+      </ThemeProviderWrapper>
+    </ThemeProvider>
   );
 }
 

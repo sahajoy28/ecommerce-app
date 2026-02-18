@@ -9,11 +9,12 @@ import { useEffect } from "react";
 import { colors, spacing, typography, shadows, borderRadius, transitions, media } from "../styles/designTokens";
 
 const DashboardContainer = styled.div`
-  background: ${colors.neutral[50]};
+  background: var(--color-bg-primary, ${colors.neutral[50]});
   min-height: 100vh;
   padding: 0;
   display: flex;
   flex-direction: column;
+  transition: background-color 0.3s ease;
 `;
 
 const MainContainer = styled.div<{ sidebarOpen: boolean }>`
@@ -67,13 +68,14 @@ const Overlay = styled.div<{ isOpen: boolean }>`
 `;
 
 const SidebarWrapper = styled.div<{ isOpen: boolean }>`
-  background: ${colors.neutral[0]};
-  border-right: 1px solid ${colors.neutral[200]};
+  background: var(--color-neutral-0, ${colors.neutral[0]});
+  border-right: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
   overflow-y: auto;
   height: auto;
   padding: ${spacing[4]};
   display: ${props => props.isOpen ? 'block' : 'none'};
   transition: all ${transitions.base};
+  color: var(--color-text-primary, ${colors.neutral[900]});
 
   ${media.tablet} {
     display: ${props => props.isOpen ? 'block' : 'none'};
@@ -107,10 +109,10 @@ const SidebarWrapper = styled.div<{ isOpen: boolean }>`
     left: 0;
     top: 72px;
     bottom: 0;
-    width: 80vw;
-    max-width: 280px;
+    width: 100%;
+    max-width: 100%;
     border-right: 1px solid ${colors.neutral[200]};
-    padding: ${spacing[4]};
+    padding: ${spacing[3]};
     z-index: 100;
     transform: translateX(${props => props.isOpen ? '0' : '-100%'});
     transition: transform ${transitions.base};
