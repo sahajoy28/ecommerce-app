@@ -34,9 +34,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (user) {
       userPreferencesAPI
         .getPreferences()
-        .then((prefs) => {
+        .then((prefs: { theme?: ThemeMode; accentColor?: AccentColor }) => {
           if (prefs?.theme) setModeState(prefs.theme);
-          if (prefs && prefs.accentColor) setAccentColorState(prefs.accentColor);
+          if (prefs?.accentColor) setAccentColorState(prefs.accentColor);
         })
         .catch((err) => {
           console.error('Failed to load user preferences:', err);
