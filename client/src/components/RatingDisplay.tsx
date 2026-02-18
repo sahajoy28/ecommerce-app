@@ -24,25 +24,26 @@ const RatingText = styled.span`
 `;
 
 interface RatingDisplayProps {
-  rating: number;
+  rating?: number;
   count?: number;
   size?: string;
   showText?: boolean;
 }
 
-export const RatingDisplay = ({ rating, count, size = "16px", showText = true }: RatingDisplayProps) => {
+export const RatingDisplay = ({ rating = 0, count, size = "16px", showText = true }: RatingDisplayProps) => {
   const stars = Array.from({ length: 5 }, (_, i) => i + 1);
+  const safeRating = rating || 0;
 
   return (
     <StarContainer>
       {stars.map(star => (
-        <Star key={star} filled={star <= Math.round(rating)} $size={size}>
+        <Star key={star} filled={star <= Math.round(safeRating)} $size={size}>
           ★
         </Star>
       ))}
       {showText && (
         <RatingText>
-          {rating.toFixed(1)} {count && `(${count})`}
+          {safeRating.toFixed(1)} {count && `(${count})`}
         </RatingText>
       )}
     </StarContainer>

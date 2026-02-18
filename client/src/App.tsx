@@ -11,8 +11,11 @@ import { WishlistPage } from "./pages/WishlistPage";
 import { AddressForm } from "./components/AddressForm";
 import styled from "styled-components";
 import { useState, useEffect } from "react";
-import { useAppSelector } from "./app/hooks";
+import { useAppSelector, useAppDispatch } from "./app/hooks";
 import { authApi } from "./services/apiClient";
+import { getUser } from "./features/auth/authSlice";
+import { loadCartAPI } from "./features/cart/cartSlice";
+import { loadWishlistAPI } from "./features/wishlist/wishlistSlice";
 
 const AppWrapper = styled.div`
   display: flex;
@@ -28,14 +31,19 @@ const MainContent = styled.main`
 function App() {
   const [showFilters, setShowFilters] = useState(true);
   const { token } = useAppSelector((state) => state.auth);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     if (token) {
       authApi.setAuthToken(token);
+      dispatch(getUser());
+      // Load user's cart and wishlist
+      dispatch(loadCartAPI() as any).catch(() => {});
+      dispatch(loadWishlistAPI() as any).catch(() => {});
     } else {
       authApi.clearAuthToken();
     }
-  }, [token]);
+  }, [token, dispatch]);
 
   const toggleFilters = () => {
     setShowFilters(!showFilters);

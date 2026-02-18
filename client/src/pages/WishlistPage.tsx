@@ -1,8 +1,12 @@
 import styled from "styled-components";
 import { useAppSelector, useAppDispatch } from "../app/hooks";
-import { ProductCard } from "../components/ProductCard";
-import { selectWishlist } from "../features/wishlist/wishlistSlice";
+import { selectWishlist, removeFromWishlistAPI } from "../features/wishlist/wishlistSlice";
+import { addToCartLocal, loadCartAPI, addToCartAPI } from "../features/cart/cartSlice";
+import { userAPI } from "../services/userAPI";
+import { Button } from "@fluentui/react-components";
+import { ShoppingBag24Filled, Delete24Filled, Heart24Filled } from "@fluentui/react-icons";
 import { colors, spacing, typography, shadows, borderRadius, transitions, media } from "../styles/designTokens";
+import { Link } from "react-router-dom";
 
 const WishlistContainer = styled.div`
   background: ${colors.neutral[50]};
@@ -127,9 +131,9 @@ const EmptyState = styled.div`
 `;
 
 const ProductGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: ${spacing[4]};
+  display: flex;
+  flex-direction: column;
+  gap: ${spacing[3]};
   animation: fadeIn 0.4s ease-in-out;
 
   @keyframes fadeIn {
@@ -144,7 +148,115 @@ const ProductGrid = styled.div`
   }
 
   ${media.mobile} {
-    gap: ${spacing[3]};
+    gap: ${spacing[2]};
+  }
+`;
+
+const WishlistItem = styled.div`
+  display: flex;
+  gap: ${spacing[3]};
+  align-items: center;
+  padding: ${spacing[2]} ${spacing[3]};
+  background: ${colors.neutral[0]};
+  border: 1px solid ${colors.neutral[200]};
+  border-radius: ${borderRadius.md};
+  transition: all ${transitions.base};
+  box-shadow: ${shadows.sm};
+
+  &:hover {
+    box-shadow: ${shadows.md};
+    border-color: ${colors.primary.light};
+  }
+
+  ${media.mobile} {
+    flex-direction: column;
+    gap: ${spacing[2]};
+    align-items: flex-start;
+  }
+`;
+
+const ProductImage = styled.img`
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: ${borderRadius.sm};
+  background: ${colors.neutral[100]};
+  flex-shrink: 0;
+
+  ${media.mobile} {
+    width: 70px;
+    height: 70px;
+  }
+`;
+
+const ProductDetails = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: ${spacing[1]};
+  min-width: 0;
+`;
+
+const ProductName = styled(Link)`
+  font-size: ${typography.fontSize.base};
+  font-weight: ${typography.fontWeight.semibold};
+  color: ${colors.neutral[900]};
+  text-decoration: none;
+  transition: color ${transitions.fast};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  &:hover {
+    color: ${colors.primary.main};
+  }
+`;
+
+const ProductPrice = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${spacing[2]};
+`;
+
+const ProductCategory = styled.span`
+  font-size: ${typography.fontSize.xs};
+  color: ${colors.neutral[500]};
+  text-transform: capitalize;
+`;
+
+const Price = styled.span`
+  font-size: ${typography.fontSize.base};
+  font-weight: ${typography.fontWeight.bold};
+  color: ${colors.primary.main};
+`;
+
+const SavedBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: ${spacing[1]};
+  font-size: ${typography.fontSize.sm};
+  color: #10b981;
+  font-weight: ${typography.fontWeight.semibold};
+`;
+
+const Actions = styled.div`
+  display: flex;
+  gap: ${spacing[1]};
+  flex-shrink: 0;
+
+  button {
+    padding: ${spacing[1]} ${spacing[2]};
+    font-size: ${typography.fontSize.sm};
+  }
+
+  ${media.mobile} {
+    width: 100%;
+    align-self: flex-end;
+
+    button {
+      flex: 1;
+      min-height: 32px;
+    }
   }
 `;
 
@@ -174,6 +286,45 @@ const ResultsInfo = styled.div`
 
 export const WishlistPage = () => {
   const wishlistItems = useAppSelector(selectWishlist);
+  const dispatch = useAppDispatch();
+
+  const handleAddToCart = async (product: any) => {
+    try {
+      // Transform wishlist product to match cart format
+      const cartProduct = {
+        id: product.productId || product.id,
+        title: product.productName || product.title,
+        price: product.price,
+        image: product.image,
+        category: product.category || "General"
+      };
+      
+      // Add to cart using the API directly
+      await userAPI.addToCart({
+        productId: cartProduct.id,
+        productName: cartProduct.title,
+        price: cartProduct.price,
+        quantity: 1,
+        image: cartProduct.image
+      });
+      
+      // Reload cart from backend to sync Redux state
+      await dispatch(loadCartAPI() as any);
+      
+      // Remove from wishlist after adding to cart
+      await dispatch(removeFromWishlistAPI(String(product.productId || product.id)) as any);
+    } catch (error) {
+      console.error("Failed to add to cart", error);
+    }
+  };
+
+  const handleRemoveFromWishlist = async (itemId: string) => {
+    try {
+      await dispatch(removeFromWishlistAPI(itemId) as any);
+    } catch (error) {
+      console.error("Failed to remove from wishlist", error);
+    }
+  };
 
   return (
     <WishlistContainer>
@@ -199,7 +350,34 @@ export const WishlistPage = () => {
             </ResultsInfo>
             <ProductGrid>
               {wishlistItems.map(product => (
-                <ProductCard key={product.id} product={product} />
+                <WishlistItem key={product.id}>
+                  <ProductImage src={product.image} alt={product.title} />
+                  <ProductDetails>
+                    <ProductName to={`/product/${product.id}`}>
+                      {product.title}
+                    </ProductName>
+                    <ProductCategory>{product.category}</ProductCategory>
+                    <ProductPrice>
+                      <Price>${product.price.toFixed(2)}</Price>
+                    </ProductPrice>
+                  </ProductDetails>
+                  <Actions>
+                    <Button
+                      appearance="primary"
+                      size="small"
+                      onClick={() => handleAddToCart(product)}
+                    >
+                      Add to Cart
+                    </Button>
+                    <Button
+                      appearance="subtle"
+                      size="small"
+                      icon={<Delete24Filled />}
+                      onClick={() => handleRemoveFromWishlist(String(product.id))}
+                      title="Remove from wishlist"
+                    />
+                  </Actions>
+                </WishlistItem>
               ))}
             </ProductGrid>
           </>

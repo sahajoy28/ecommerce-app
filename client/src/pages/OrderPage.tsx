@@ -4,7 +4,7 @@ import { Button, Text, Label, RadioGroup, Radio } from "@fluentui/react-componen
 import { useNavigate, Link } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { addOrder } from "../features/auth/authSlice";
-import { removeFromCart } from "../features/cart/cartSlice";
+import { clearCart } from "../features/cart/cartSlice";
 import { ArrowLeft24Filled } from "@fluentui/react-icons";
 
 const Container = styled.div`
@@ -272,9 +272,7 @@ export const OrderPage = () => {
       dispatch(addOrder(newOrder));
 
       // Clear cart
-      cartItems.forEach(item => {
-        dispatch(removeFromCart(item.id));
-      });
+      dispatch(clearCart());
 
       setIsProcessing(false);
       navigate("/account");

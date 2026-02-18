@@ -4,6 +4,8 @@ import { Button, Input, Label, Text } from "@fluentui/react-components";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { signup, login } from "../features/auth/authSlice";
+import { loadCartAPI } from "../features/cart/cartSlice";
+import { loadWishlistAPI } from "../features/wishlist/wishlistSlice";
 
 const Container = styled.div`
   display: flex;
@@ -141,6 +143,12 @@ export const AuthPage = () => {
         password: loginForm.password 
       })).unwrap();
       
+      // Load cart and wishlist from MongoDB
+      await Promise.all([
+        dispatch(loadCartAPI() as any).unwrap().catch(() => {}),
+        dispatch(loadWishlistAPI() as any).unwrap().catch(() => {})
+      ]);
+      
       setSuccess("Login successful!");
       setTimeout(() => navigate("/account"), 1500);
     } catch (err: any) {
@@ -175,6 +183,12 @@ export const AuthPage = () => {
         email: signupForm.email,
         password: signupForm.password
       })).unwrap();
+
+      // Load cart and wishlist from MongoDB (should be empty on new signup)
+      await Promise.all([
+        dispatch(loadCartAPI() as any).unwrap().catch(() => {}),
+        dispatch(loadWishlistAPI() as any).unwrap().catch(() => {})
+      ]);
 
       setSuccess("Account created successfully!");
       setTimeout(() => navigate("/account"), 1500);

@@ -48,7 +48,9 @@ router.post('/signup', async (req, res, next) => {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        cart: user.cart,
+        wishlist: user.wishlist
       }
     });
   } catch (error) {
@@ -114,7 +116,9 @@ router.post('/login', async (req, res, next) => {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        cart: user.cart,
+        wishlist: user.wishlist
       }
     });
   } catch (error) {
@@ -145,7 +149,9 @@ router.get('/me', verify, async (req, res, next) => {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        cart: user.cart,
+        wishlist: user.wishlist
       }
     });
   } catch (error) {
@@ -167,6 +173,36 @@ router.post('/logout', (req, res) => {
     success: true,
     message: 'Logged out successfully'
   });
+});
+
+/**
+ * PUT /api/auth/cart
+ * Sync user cart
+ */
+router.put('/cart', verify, async (req, res, next) => {
+  try {
+    const user = await User.findById(req.userId);
+    user.cart = req.body.cart;
+    await user.save();
+    res.json({ success: true, cart: user.cart });
+  } catch (error) {
+    next({ status: 500, message: 'Failed to sync cart' });
+  }
+});
+
+/**
+ * PUT /api/auth/wishlist
+ * Sync user wishlist
+ */
+router.put('/wishlist', verify, async (req, res, next) => {
+  try {
+    const user = await User.findById(req.userId);
+    user.wishlist = req.body.wishlist;
+    await user.save();
+    res.json({ success: true, wishlist: user.wishlist });
+  } catch (error) {
+    next({ status: 500, message: 'Failed to sync wishlist' });
+  }
 });
 
 export default router;

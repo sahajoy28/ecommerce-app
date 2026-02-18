@@ -1,7 +1,7 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "../app/hooks";
 import { Button, Text, Badge } from "@fluentui/react-components";
-import { addToCart } from "../features/cart/cartSlice";
+import { addToCartLocal, addToCartAPI } from "../features/cart/cartSlice";
 import { Toast } from "../components/Toast";
 import { ProductCard } from "../components/ProductCard";
 import { RatingDisplay } from "../components/RatingDisplay";
@@ -255,12 +255,17 @@ export const ProductDetails = () => {
     );
   }
 
-  const handleAddToCart = () => {
-    dispatch(addToCart(product));
-    const currentItem = cartItems.find(item => item.id === product.id);
-    const quantity = currentItem ? currentItem.quantity + 1 : 1;
+  const handleAddToCart = async () => {
+    // Optimistic update
+    dispatch(addToCartLocal(product));
     
-    setToastMessage(`✓ Added to cart! Cart: ${quantity} items`);
+    // Save to MongoDB
+    try {
+      await dispatch(addToCartAPI(product) as any).unwrap();
+      setToastMessage(`✓ Added to cart!`);
+    } catch (error) {
+      setToastMessage("Failed to add to cart");
+    }
     setShowToast(true);
   };
 

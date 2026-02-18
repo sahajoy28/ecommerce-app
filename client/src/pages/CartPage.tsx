@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button, Text } from "@fluentui/react-components";
 import { Delete24Filled } from "@fluentui/react-icons";
 import { useAppSelector, useAppDispatch } from "../app/hooks";
-import { removeFromCart } from "../features/cart/cartSlice";
+import { removeFromCartLocal } from "../features/cart/cartSlice";
 import { colors, spacing, typography, shadows, borderRadius, transitions, media } from "../styles/designTokens";
 
 const CartContainer = styled.div`
@@ -241,15 +241,15 @@ const SummaryTitle = styled.h2`
   color: ${colors.neutral[900]};
 `;
 
-const SummaryItem = styled.div<{ highlighted?: boolean }>`
+const SummaryItem = styled.div<{ $highlighted?: boolean }>`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: ${spacing[4]} 0;
-  border-bottom: ${props => props.highlighted ? `2px solid ${colors.primary.light}` : `1px solid ${colors.neutral[200]}`};
-  font-size: ${props => props.highlighted ? typography.fontSize.lg : typography.fontSize.base};
-  font-weight: ${props => props.highlighted ? typography.fontWeight.bold : typography.fontWeight.medium};
-  color: ${props => props.highlighted ? colors.primary.main : colors.neutral[900]};
+  padding: ${spacing[3]} 0;
+  border-bottom: ${props => props.$highlighted ? `2px solid ${colors.primary.light}` : `1px solid ${colors.neutral[200]}`};
+  font-size: ${props => props.$highlighted ? typography.fontSize.lg : typography.fontSize.base};
+  font-weight: ${props => props.$highlighted ? typography.fontWeight.bold : typography.fontWeight.medium};
+  color: ${props => props.$highlighted ? colors.primary.main : colors.neutral[900]};
 
   &:last-child {
     border-bottom: none;
@@ -354,7 +354,7 @@ export const CartPage = () => {
               <RemoveButton
                 appearance="subtle"
                 icon={<Delete24Filled />}
-                onClick={() => dispatch(removeFromCart(item.id))}
+                onClick={() => dispatch(removeFromCartLocal(item.id))}
                 title="Remove from cart"
               />
             </CartItem>
@@ -375,7 +375,7 @@ export const CartPage = () => {
             <span>Tax (10%)</span>
             <span>${tax.toFixed(2)}</span>
           </SummaryItem>
-          <SummaryItem highlighted>
+          <SummaryItem $highlighted>
             <span>Total</span>
             <span>${total.toFixed(2)}</span>
           </SummaryItem>

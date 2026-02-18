@@ -3,8 +3,8 @@ import { Card, Button } from "@fluentui/react-components";
 import styled from "styled-components";
 import { Product } from "../types/product";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
-import { addToCart } from "../features/cart/cartSlice";
-import { addToWishlist, removeFromWishlist, selectWishlist } from "../features/wishlist/wishlistSlice";
+import { addToCartLocal, addToCartAPI } from "../features/cart/cartSlice";
+import { addToWishlistLocal, removeFromWishlistLocal, addToWishlistAPI, selectWishlist } from "../features/wishlist/wishlistSlice";
 import { Toast } from "./Toast";
 import { RatingDisplay } from "./RatingDisplay";
 import { useState } from "react";
@@ -202,26 +202,37 @@ export const ProductCard = ({ product }: { product: Product }) => {
     navigate(`/product/${product.id}`);
   };
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    dispatch(addToCart(product));
+    // Optimistic update
+    dispatch(addToCartLocal(product));
     
-    const currentItem = cartItems.find(item => item.id === product.id);
-    const quantity = currentItem ? currentItem.quantity + 1 : 1;
-    
-    setToastMessage("Added to cart");
+    // Save to MongoDB
+    try {
+      await dispatch(addToCartAPI(product) as any).unwrap();
+      setToastMessage("Added to cart");
+    } catch (error) {
+      setToastMessage("Failed to add to cart");
+    }
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  const handleWishlistToggle = (e: React.MouseEvent) => {
+  const handleWishlistToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isInWishlist) {
-      dispatch(removeFromWishlist(product.id));
-      setToastMessage("Removed from wishlist");
-    } else {
-      dispatch(addToWishlist(product));
-      setToastMessage("Added to wishlist");
+    try {
+      if (isInWishlist) {
+        dispatch(removeFromWishlistLocal(product.id));
+        setToastMessage("Removed from wishlist");
+      } else {
+        // Optimistic update
+        dispatch(addToWishlistLocal(product));
+        // Save to MongoDB
+        await dispatch(addToWishlistAPI(product) as any).unwrap();
+        setToastMessage("Added to wishlist");
+      }
+    } catch (error) {
+      setToastMessage("Failed to update wishlist");
     }
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
