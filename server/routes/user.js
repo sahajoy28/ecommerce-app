@@ -257,4 +257,137 @@ router.post('/preferences', async (req, res) => {
   }
 });
 
+// ==================== PROFILE MANAGEMENT ====================
+
+// Get user profile
+router.get('/profile', async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    res.json({
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone || '',
+        gender: user.gender || '',
+        createdAt: user.createdAt
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Update user profile (name, email, phone, gender)
+router.put('/profile', async (req, res) => {
+  try {
+    const { name, email, phone, gender } = req.body;
+    const user = await User.findById(req.userId);
+
+    // Validation
+    if (name && name.trim().length === 0) {
+      return res.status(400).json({ success: false, message: 'Name cannot be empty' });
+    }
+
+    if (name && name.length > 50) {
+      return res.status(400).json({ success: false, message: 'Name cannot exceed 50 characters' });
+    }
+
+    // Email validation and uniqueness
+    if (email) {
+      const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ success: false, message: 'Invalid email format' });
+      }
+
+      // Check if email is already used by another user
+      const existingUser = await User.findOne({ email: email.toLowerCase(), _id: { $ne: req.userId } });
+      if (existingUser) {
+        return res.status(409).json({ success: false, message: 'Email already in use' });
+      }
+    }
+
+    // Phone validation (optional, basic format)
+    if (phone) {
+      const phoneRegex = /^[\d\s\-\+\(\)]+$/;
+      if (!phoneRegex.test(phone)) {
+        return res.status(400).json({ success: false, message: 'Invalid phone number format' });
+      }
+    }
+
+    // Gender validation
+    if (gender && !['male', 'female', 'other', ''].includes(gender)) {
+      return res.status(400).json({ success: false, message: 'Invalid gender value' });
+    }
+
+    // Update fields
+    if (name) user.name = name.trim();
+    if (email) user.email = email.toLowerCase();
+    if (phone !== undefined) user.phone = phone || '';
+    if (gender !== undefined) user.gender = gender || '';
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Profile updated successfully',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone || '',
+        gender: user.gender || ''
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Update password
+router.post('/change-password', async (req, res) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+
+    // Validation
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({ success: false, message: 'All fields are required' });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ success: false, message: 'New passwords do not match' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+    }
+
+    if (currentPassword === newPassword) {
+      return res.status(400).json({ success: false, message: 'New password must be different from current password' });
+    }
+
+    // Get user with password
+    const user = await User.findById(req.userId).select('+password');
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Verify current password
+    const isPasswordValid = await user.comparePassword(currentPassword);
+    if (!isPasswordValid) {
+      return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+    }
+
+    // Update password (will be hashed by schema pre-save hook)
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ success: true, message: 'Password changed successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 export default router;

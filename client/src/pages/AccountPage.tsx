@@ -85,6 +85,84 @@ const UserInfoCard = styled.div`
   border-radius: ${borderRadius.md};
   margin-bottom: ${spacing[4]};
   box-shadow: ${shadows.sm};
+  max-width: 70%;
+
+  ${media.tablet} {
+    max-width: 100%;
+  }
+
+  ${media.mobile} {
+    max-width: 100%;
+  }
+`;
+
+const FormCard = styled.div`
+  background: var(--color-neutral-0, ${colors.neutral[0]});
+  border: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
+  padding: ${spacing[6]};
+  border-radius: ${borderRadius.md};
+  margin-bottom: ${spacing[6]};
+  box-shadow: ${shadows.sm};
+  max-width: 70%;
+
+  ${media.tablet} {
+    max-width: 100%;
+  }
+
+  ${media.mobile} {
+    max-width: 100%;
+    padding: ${spacing[4]};
+  }
+`;
+
+const FormTitle = styled.h3`
+  margin: 0 0 ${spacing[4]} 0;
+  font-size: ${typography.fontSize.lg};
+  font-weight: ${typography.fontWeight.semibold};
+  color: var(--color-text-primary, ${colors.neutral[900]});
+`;
+
+const FormGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${spacing[2]};
+  margin-bottom: ${spacing[4]};
+
+  label {
+    font-weight: ${typography.fontWeight.semibold};
+    color: var(--color-text-secondary, ${colors.neutral[600]});
+    font-size: ${typography.fontSize.sm};
+  }
+
+  input,
+  select {
+    padding: ${spacing[2]} ${spacing[3]};
+    border: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
+    border-radius: ${borderRadius.md};
+    font-size: ${typography.fontSize.base};
+    transition: border-color ${transitions.fast};
+
+    &:focus {
+      outline: none;
+      border-color: var(--color-primary, ${colors.primary.main});
+      box-shadow: 0 0 0 3px rgba(79, 112, 245, 0.1);
+    }
+  }
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: ${spacing[3]};
+  margin-top: ${spacing[5]};
+  flex-wrap: wrap;
+
+  ${media.mobile} {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+    }
+  }
 `;
 
 const InfoRow = styled.div`
@@ -329,6 +407,25 @@ export const AccountPage = () => {
   const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [addresses, setAddresses] = useState<any[]>([]);
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error">("success");
+
+  const [editProfile, setEditProfile] = useState({
+    name: user?.name || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+    gender: user?.gender || ""
+  });
+
+  const [changePassword, setChangePassword] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
+
   const [newAddress, setNewAddress] = useState({
     name: "",
     email: "",
@@ -392,6 +489,80 @@ export const AccountPage = () => {
     }
   };
 
+  const handleUpdateProfile = async () => {
+    if (!editProfile.name.trim()) {
+      setMessage("Name cannot be empty");
+      setMessageType("error");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await userAPI.updateProfile(editProfile);
+      if (response.success) {
+        setMessage("Profile updated successfully");
+        setMessageType("success");
+        setEditProfileOpen(false);
+        // Update Redux state with new user data
+        dispatch({ 
+          type: "auth/loginSuccess", 
+          payload: response.user 
+        });
+        setTimeout(() => setMessage(""), 3000);
+      }
+    } catch (error: any) {
+      setMessage(error.response?.data?.message || "Failed to update profile");
+      setMessageType("error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!changePassword.currentPassword || !changePassword.newPassword || !changePassword.confirmPassword) {
+      setMessage("All fields are required");
+      setMessageType("error");
+      return;
+    }
+
+    if (changePassword.newPassword !== changePassword.confirmPassword) {
+      setMessage("New passwords do not match");
+      setMessageType("error");
+      return;
+    }
+
+    if (changePassword.newPassword.length < 6) {
+      setMessage("Password must be at least 6 characters");
+      setMessageType("error");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await userAPI.changePassword({
+        currentPassword: changePassword.currentPassword,
+        newPassword: changePassword.newPassword,
+        confirmPassword: changePassword.confirmPassword
+      });
+      if (response.success) {
+        setMessage("Password changed successfully");
+        setMessageType("success");
+        setChangePasswordOpen(false);
+        setChangePassword({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: ""
+        });
+        setTimeout(() => setMessage(""), 3000);
+      }
+    } catch (error: any) {
+      setMessage(error.response?.data?.message || "Failed to change password");
+      setMessageType("error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleRemoveAddress = async (id: string) => {
     if (confirm("Are you sure you want to delete this address?")) {
       try {
@@ -441,11 +612,167 @@ export const AccountPage = () => {
             <InfoValue>{user.email}</InfoValue>
           </InfoRow>
           <InfoRow>
+            <InfoLabel>Phone:</InfoLabel>
+            <InfoValue>{user.phone || "Not set"}</InfoValue>
+          </InfoRow>
+          <InfoRow>
+            <InfoLabel>Gender:</InfoLabel>
+            <InfoValue>{user.gender ? user.gender.charAt(0).toUpperCase() + user.gender.slice(1) : "Not set"}</InfoValue>
+          </InfoRow>
+          <InfoRow>
             <InfoLabel>User ID:</InfoLabel>
             <InfoValue>{user.id}</InfoValue>
           </InfoRow>
         </UserInfoCard>
+        <div style={{ display: "flex", gap: spacing[3], flexWrap: "wrap" }}>
+          <Button appearance="primary" onClick={() => setEditProfileOpen(true)}>
+            Edit Profile
+          </Button>
+          <Button appearance="secondary" onClick={() => setChangePasswordOpen(true)}>
+            Change Password
+          </Button>
+        </div>
       </TabSection>
+
+      {/* Edit Profile Form */}
+      {editProfileOpen && (
+        <TabSection>
+          <FormCard>
+            <FormTitle>Edit Profile Information</FormTitle>
+            {message && (
+              <div style={{
+                padding: `${spacing[3]}`,
+                marginBottom: `${spacing[4]}`,
+                borderRadius: borderRadius.md,
+                backgroundColor: messageType === "error" ? "#fee" : "#efe",
+                color: messageType === "error" ? "#c33" : "#3c3",
+                fontSize: typography.fontSize.sm
+              }}>
+                {message}
+              </div>
+            )}
+            <FormGroup>
+              <label>Name</label>
+              <input
+                type="text"
+                value={editProfile.name}
+                onChange={(e) => setEditProfile({ ...editProfile, name: e.target.value })}
+                placeholder="Your name"
+              />
+            </FormGroup>
+            <FormGroup>
+              <label>Email</label>
+              <input
+                type="email"
+                value={editProfile.email}
+                onChange={(e) => setEditProfile({ ...editProfile, email: e.target.value })}
+                placeholder="Your email"
+              />
+            </FormGroup>
+            <FormGroup>
+              <label>Phone</label>
+              <input
+                type="tel"
+                value={editProfile.phone}
+                onChange={(e) => setEditProfile({ ...editProfile, phone: e.target.value })}
+                placeholder="Your phone number"
+              />
+            </FormGroup>
+            <FormGroup>
+              <label>Gender</label>
+              <select
+                value={editProfile.gender}
+                onChange={(e) => setEditProfile({ ...editProfile, gender: e.target.value })}
+              >
+                <option value="">Not specified</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </FormGroup>
+            <ButtonGroup>
+              <Button 
+                appearance="primary" 
+                onClick={handleUpdateProfile}
+                disabled={loading}
+              >
+                {loading ? "Saving..." : "Save Changes"}
+              </Button>
+              <Button 
+                appearance="secondary" 
+                onClick={() => setEditProfileOpen(false)}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+            </ButtonGroup>
+          </FormCard>
+        </TabSection>
+      )}
+
+      {/* Change Password Form */}
+      {changePasswordOpen && (
+        <TabSection>
+          <FormCard>
+            <FormTitle>Change Password</FormTitle>
+            {message && (
+              <div style={{
+                padding: `${spacing[3]}`,
+                marginBottom: `${spacing[4]}`,
+                borderRadius: borderRadius.md,
+                backgroundColor: messageType === "error" ? "#fee" : "#efe",
+                color: messageType === "error" ? "#c33" : "#3c3",
+                fontSize: typography.fontSize.sm
+              }}>
+                {message}
+              </div>
+            )}
+            <FormGroup>
+              <label>Current Password</label>
+              <input
+                type="password"
+                value={changePassword.currentPassword}
+                onChange={(e) => setChangePassword({ ...changePassword, currentPassword: e.target.value })}
+                placeholder="Enter your current password"
+              />
+            </FormGroup>
+            <FormGroup>
+              <label>New Password</label>
+              <input
+                type="password"
+                value={changePassword.newPassword}
+                onChange={(e) => setChangePassword({ ...changePassword, newPassword: e.target.value })}
+                placeholder="Enter your new password"
+              />
+            </FormGroup>
+            <FormGroup>
+              <label>Confirm New Password</label>
+              <input
+                type="password"
+                value={changePassword.confirmPassword}
+                onChange={(e) => setChangePassword({ ...changePassword, confirmPassword: e.target.value })}
+                placeholder="Confirm your new password"
+              />
+            </FormGroup>
+            <ButtonGroup>
+              <Button 
+                appearance="primary" 
+                onClick={handleChangePassword}
+                disabled={loading}
+              >
+                {loading ? "Updating..." : "Change Password"}
+              </Button>
+              <Button 
+                appearance="secondary" 
+                onClick={() => setChangePasswordOpen(false)}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+            </ButtonGroup>
+          </FormCard>
+        </TabSection>
+      )}
 
       {/* Addresses Section */}
       <TabSection>

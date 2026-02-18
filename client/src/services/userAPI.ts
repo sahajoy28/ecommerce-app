@@ -33,5 +33,14 @@ export const userAPI = {
   },
   removeFromWishlist: async (id: string) => {
     return await authApi.delete<{ success: boolean; wishlist: any[] }>(`/user/wishlist/${id}`);
+  },
+  getProfile: async () => {
+    return await authApi.get<{ success: boolean; user: any }>("/user/profile");
+  },
+  updateProfile: async (data: any) => {
+    return await authApi.put<{ success: boolean; message: string; user: any }>("/user/profile", data);
+  },
+  changePassword: async (data: any) => {
+    return await authApi.post<{ success: boolean; message: string }>("/user/change-password", data);
   }
 };
