@@ -6,92 +6,135 @@ import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { signup, login } from "../features/auth/authSlice";
 import { loadCartAPI } from "../features/cart/cartSlice";
 import { loadWishlistAPI } from "../features/wishlist/wishlistSlice";
+import { colors, spacing, typography, shadows, borderRadius, transitions, media } from "../styles/designTokens";
 
 const Container = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #8BC6EC 0%, #9599E2 100%);
-  padding: 20px;
+  background: ${colors.gradients.primary};
+  padding: ${spacing[4]};
+
+  ${media.mobile} {
+    padding: ${spacing[3]};
+  }
 `;
 
 const FormWrapper = styled.div`
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  background: ${colors.neutral[0]};
+  border-radius: ${borderRadius.lg};
+  box-shadow: ${shadows.lg};
   width: 100%;
   max-width: 420px;
-  padding: 48px;
+  padding: ${spacing[12]};
+
+  ${media.tablet} {
+    max-width: 100%;
+    padding: ${spacing[8]};
+  }
+
+  ${media.mobile} {
+    padding: ${spacing[6]};
+  }
 `;
 
 const TabContainer = styled.div`
   display: flex;
-  gap: 12px;
-  margin-bottom: 32px;
-  border-bottom: 2px solid #e0e0e0;
+  gap: ${spacing[3]};
+  margin-bottom: ${spacing[8]};
+  border-bottom: 2px solid ${colors.neutral[200]};
 `;
 
 const Tab = styled.button<{ isActive: boolean }>`
-  padding: 12px 24px;
+  padding: ${spacing[3]} ${spacing[6]};
   border: none;
   background: none;
   cursor: pointer;
-  font-size: 16px;
-  font-weight: ${props => props.isActive ? "600" : "500"};
-  color: ${props => props.isActive ? "#667eea" : "#999"};
-  border-bottom: ${props => props.isActive ? "3px solid #667eea" : "none"};
+  font-size: ${typography.fontSize.lg};
+  font-weight: ${props => props.isActive ? typography.fontWeight.semibold : typography.fontWeight.medium};
+  color: ${props => props.isActive ? colors.primary.main : colors.neutral[500]};
+  border-bottom: ${props => props.isActive ? `3px solid ${colors.primary.main}` : "none"};
   margin-bottom: -2px;
+  transition: all ${transitions.fast};
+  min-height: 44px;
 
   &:hover {
-    color: #667eea;
+    color: ${colors.primary.main};
+  }
+
+  ${media.mobile} {
+    padding: ${spacing[2]} ${spacing[4]};
+    font-size: ${typography.fontSize.md};
   }
 `;
 
 const FormTitle = styled.h2`
-  margin: 0 0 24px 0;
-  font-size: 24px;
-  font-weight: 700;
-  color: #333;
+  margin: 0 0 ${spacing[6]} 0;
+  font-size: ${typography.fontSize["2xl"]};
+  font-weight: ${typography.fontWeight.extrabold};
+  color: ${colors.neutral[900]};
+
+  ${media.mobile} {
+    font-size: ${typography.fontSize.xl};
+  }
 `;
 
 const FormGroup = styled.div`
-  margin-bottom: 20px;
+  margin-bottom: ${spacing[5]};
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: ${spacing[2]};
+
+  ${media.mobile} {
+    margin-bottom: ${spacing[4]};
+  }
 `;
 
 const StyledInput = styled(Input)`
   width: 100%;
+  min-height: 44px;
 `;
 
 const ButtonGroup = styled.div`
   display: flex;
-  gap: 12px;
-  margin-top: 32px;
+  gap: ${spacing[3]};
+  margin-top: ${spacing[8]};
+
+  ${media.mobile} {
+    flex-direction: column;
+    gap: ${spacing[2]};
+    margin-top: ${spacing[6]};
+  }
 `;
 
 const SubmitButton = styled(Button)`
   flex: 1;
+  min-height: 44px;
+  font-size: ${typography.fontSize.lg};
+  font-weight: ${typography.fontWeight.semibold};
 `;
 
 const ErrorMessage = styled.div`
-  padding: 12px;
-  background: #fee2e2;
-  color: #dc2626;
-  border-radius: 6px;
-  margin-bottom: 16px;
-  font-size: 14px;
+  padding: ${spacing[3]};
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: ${colors.error};
+  border-radius: ${borderRadius.md};
+  margin-bottom: ${spacing[4]};
+  font-size: ${typography.fontSize.sm};
+  border-left: 4px solid ${colors.error};
+  font-weight: ${typography.fontWeight.medium};
 `;
 
 const SuccessMessage = styled.div`
-  padding: 12px;
-  background: #dcfce7;
-  color: #16a34a;
-  border-radius: 6px;
-  margin-bottom: 16px;
-  font-size: 14px;
+  padding: ${spacing[3]};
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: ${colors.success};
+  border-radius: ${borderRadius.md};
+  margin-bottom: ${spacing[4]};
+  font-size: ${typography.fontSize.sm};
+  border-left: 4px solid ${colors.success};
+  font-weight: ${typography.fontWeight.medium};
 `;
 
 type TabType = "login" | "signup";

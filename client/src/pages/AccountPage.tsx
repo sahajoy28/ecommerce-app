@@ -6,146 +6,211 @@ import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { logout } from "../features/auth/authSlice";
 import { Delete24Filled, CheckmarkCircle24Filled, Heart24Filled, Heart24Regular } from "@fluentui/react-icons";
 import { userAPI } from "../services/userAPI";
+import { colors, spacing, typography, shadows, borderRadius, transitions, media } from "../styles/designTokens";
 
 const Container = styled.div`
   max-width: 1000px;
   margin: 0 auto;
-  padding: 32px;
+  padding: ${spacing[8]};
+  width: 100%;
+
+  ${media.tablet} {
+    padding: ${spacing[6]};
+  }
+
+  ${media.mobile} {
+    padding: ${spacing[4]};
+  }
 `;
 
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 32px;
-  padding-bottom: 24px;
-  border-bottom: 2px solid #e0e0e0;
+  margin-bottom: ${spacing[8]};
+  padding-bottom: ${spacing[6]};
+  border-bottom: 2px solid ${colors.neutral[200]};
+  flex-wrap: wrap;
+  gap: ${spacing[4]};
+
+  ${media.mobile} {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: ${spacing[6]};
+  }
 `;
 
 const Title = styled.h1`
   margin: 0;
-  font-size: 28px;
-  font-weight: 700;
-  color: #333;
+  font-size: ${typography.fontSize["3xl"]};
+  font-weight: ${typography.fontWeight.extrabold};
+  color: ${colors.neutral[900]};
+
+  ${media.mobile} {
+    font-size: ${typography.fontSize["2xl"]};
+  }
 `;
 
-const LogoutButton = styled(Button)``;
+const LogoutButton = styled(Button)`
+  min-height: 44px;
+  min-width: 120px;
+`;
 
 const TabSection = styled.div`
-  margin-bottom: 40px;
+  margin-bottom: ${spacing[8]};
+
+  ${media.mobile} {
+    margin-bottom: ${spacing[6]};
+  }
 `;
 
 const SectionTitle = styled.h2`
-  margin: 0 0 20px 0;
-  font-size: 20px;
-  font-weight: 600;
-  color: #333;
-  border-bottom: 2px solid #667eea;
-  padding-bottom: 12px;
+  margin: 0 0 ${spacing[5]} 0;
+  font-size: ${typography.fontSize["2xl"]};
+  font-weight: ${typography.fontWeight.semibold};
+  color: ${colors.neutral[900]};
+  border-bottom: 2px solid ${colors.primary.main};
+  padding-bottom: ${spacing[3]};
   display: inline-block;
+
+  ${media.mobile} {
+    font-size: ${typography.fontSize.xl};
+  }
 `;
 
 const UserInfoCard = styled.div`
-  background: white;
-  border: 1px solid #f5f5f5;
-  padding: 16px;
-  border-radius: 6px;
-  margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  background: ${colors.neutral[0]};
+  border: 1px solid ${colors.neutral[200]};
+  padding: ${spacing[4]};
+  border-radius: ${borderRadius.md};
+  margin-bottom: ${spacing[4]};
+  box-shadow: ${shadows.sm};
 `;
 
 const InfoRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid #f5f5f5;
+  padding: ${spacing[2]} 0;
+  border-bottom: 1px solid ${colors.neutral[200]};
 
   &:last-child {
     border-bottom: none;
   }
+
+  ${media.mobile} {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: ${spacing[1]};
+  }
 `;
 
 const InfoLabel = styled.span`
-  font-weight: 600;
-  color: #666;
+  font-weight: ${typography.fontWeight.semibold};
+  color: ${colors.neutral[600]};
   min-width: 120px;
 `;
 
 const InfoValue = styled.span`
-  color: #333;
+  color: ${colors.neutral[900]};
 `;
 
 const AddressGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: ${spacing[4]};
+  margin-bottom: ${spacing[5]};
+
+  ${media.mobile} {
+    grid-template-columns: 1fr;
+    gap: ${spacing[3]};
+  }
 `;
 
 const AddressCard = styled.div<{ isDefault: boolean }>`
-  border: 1px solid ${props => props.isDefault ? "#667eea" : "#f5f5f5"};
-  box-shadow: ${props => props.isDefault ? "0 4px 12px rgba(102, 126, 234, 0.1)" : "0 2px 8px rgba(0,0,0,0.02)"};
-  border-radius: 6px;
-  padding: 12px;
-  background: ${props => props.isDefault ? "#f8faff" : "white"};
+  border: 1px solid ${props => props.isDefault ? colors.primary.main : colors.neutral[200]};
+  box-shadow: ${props => props.isDefault ? shadows.md : shadows.sm};
+  border-radius: ${borderRadius.md};
+  padding: ${spacing[3]};
+  background: ${props => props.isDefault ? `linear-gradient(135deg, ${colors.primary.lighter} 0%, ${colors.neutral[50]} 100%)` : colors.neutral[0]};
   position: relative;
 `;
 
 const DefaultBadge = styled.div`
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: ${spacing[2]};
+  right: ${spacing[2]};
   display: flex;
   align-items: center;
-  gap: 4px;
-  background: #667eea;
+  gap: ${spacing[1]};
+  background: ${colors.primary.main};
   color: white;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
+  padding: ${spacing[1]} ${spacing[3]};
+  border-radius: ${borderRadius.full};
+  font-size: ${typography.fontSize.xs};
+  font-weight: ${typography.fontWeight.semibold};
 `;
 
 const AddressInfo = styled.div`
-  margin-bottom: 12px;
+  margin-bottom: ${spacing[3]};
+  padding-right: ${spacing[8]};
 `;
 
 const AddressName = styled.div`
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 4px;
+  font-weight: ${typography.fontWeight.semibold};
+  color: ${colors.neutral[900]};
+  margin-bottom: ${spacing[2]};
 `;
 
 const AddressDetail = styled.div`
-  font-size: 13px;
-  color: #666;
-  line-height: 1.4;
+  font-size: ${typography.fontSize.sm};
+  color: ${colors.neutral[600]};
+  line-height: ${typography.lineHeight.normal};
 `;
 
 const AddressActions = styled.div`
   display: flex;
-  gap: 8px;
-  margin-top: 12px;
+  gap: ${spacing[2]};
+  margin-top: ${spacing[3]};
+  flex-wrap: wrap;
+
+  ${media.mobile} {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+      min-height: 44px;
+    }
+  }
 `;
 
-const ActionButton = styled(Button)``;
+const ActionButton = styled(Button)`
+  min-height: 44px;
+`;
 
 const OrdersGrid = styled.div`
   display: grid;
-  gap: 16px;
+  gap: ${spacing[4]};
+
+  ${media.mobile} {
+    gap: ${spacing[3]};
+  }
 `;
 
 const OrderCard = styled.div`
-  border: 1px solid #f5f5f5;
-  border-radius: 6px;
-  padding: 12px;
-  background: white;
-  transition: box-shadow 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  border: 1px solid ${colors.neutral[200]};
+  border-radius: ${borderRadius.md};
+  padding: ${spacing[4]};
+  background: ${colors.neutral[0]};
+  transition: box-shadow ${transitions.fast};
+  box-shadow: ${shadows.sm};
 
   &:hover {
-    box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+    box-shadow: ${shadows.md};
+  }
+
+  ${media.mobile} {
+    padding: ${spacing[3]};
   }
 `;
 

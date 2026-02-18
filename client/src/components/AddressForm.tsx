@@ -2,53 +2,90 @@ import { useState } from "react";
 import { Input, Button, Label, Text } from "@fluentui/react-components";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { colors, spacing, typography, shadows, borderRadius, transitions, media } from "../styles/designTokens";
 
 const FormContainer = styled.div`
   max-width: 600px;
-  margin: 40px auto;
-  padding: 32px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  margin: ${spacing[8]} auto;
+  padding: ${spacing[8]};
+  background: ${colors.neutral[0]};
+  border-radius: ${borderRadius.lg};
+  box-shadow: ${shadows.md};
+  width: 100%;
+
+  ${media.tablet} {
+    margin: ${spacing[4]} auto;
+    padding: ${spacing[6]};
+  }
+
+  ${media.mobile} {
+    margin: ${spacing[4]};
+    padding: ${spacing[6]};
+  }
 `;
 
 const PageTitle = styled.h1`
-  margin: 0 0 24px 0;
-  font-size: 24px;
-  font-weight: 700;
-  color: #333;
+  margin: 0 0 ${spacing[6]} 0;
+  font-size: ${typography.fontSize["2xl"]};
+  font-weight: ${typography.fontWeight.extrabold};
+  color: ${colors.neutral[900]};
+
+  ${media.mobile} {
+    font-size: ${typography.fontSize.xl};
+  }
 `;
 
 const FormGroup = styled.div`
-  margin-bottom: 20px;
+  margin-bottom: ${spacing[5]};
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: ${spacing[2]};
+
+  input {
+    min-height: 44px;
+  }
+
+  ${media.mobile} {
+    margin-bottom: ${spacing[4]};
+  }
 `;
 
 const FormRow = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: ${spacing[4]};
 
-  @media (max-width: 600px) {
+  ${media.mobile} {
     grid-template-columns: 1fr;
   }
 `;
 
 const ButtonGroup = styled.div`
   display: flex;
-  gap: 12px;
-  margin-top: 32px;
+  gap: ${spacing[3]};
+  margin-top: ${spacing[8]};
   justify-content: flex-end;
+
+  ${media.mobile} {
+    flex-direction: column-reverse;
+    gap: ${spacing[2]};
+
+    button {
+      width: 100%;
+      min-height: 44px;
+    }
+  }
 `;
 
 const SuccessMessage = styled.div`
-  padding: 12px 16px;
-  background: #e7f3e8;
-  color: #107c10;
-  border-radius: 4px;
-  margin-bottom: 16px;
+  padding: ${spacing[3]} ${spacing[4]};
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: ${colors.success};
+  border-radius: ${borderRadius.md};
+  margin-bottom: ${spacing[4]};
+  border-left: 4px solid ${colors.success};
+  font-weight: ${typography.fontWeight.medium};
+  font-size: ${typography.fontSize.sm};
 `;
 
 export const AddressForm = () => {
