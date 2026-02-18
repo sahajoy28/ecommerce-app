@@ -14,6 +14,7 @@ const PORT = process.env.PORT || 5000;
 // Connect to MongoDB
 const connectDB = async () => {
   try {
+    if (mongoose.connection.readyState >= 1) return;
     await mongoose.connect(process.env.MONGO_URI);
     console.log('🔗 Connected to MongoDB');
   } catch (error) {
@@ -26,7 +27,7 @@ connectDB();
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'],
+  origin: process.env.CLIENT_URL ? [process.env.CLIENT_URL, 'http://localhost:5173', 'http://localhost:3000'] : ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'],
   credentials: true
 }));
 app.use(express.json());
@@ -55,6 +56,10 @@ app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 E-commerce API running on http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`🚀 E-commerce API running on http://localhost:${PORT}`);
+  });
+}
+
+export default app;

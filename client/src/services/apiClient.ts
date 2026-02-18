@@ -151,7 +151,9 @@ class ApiClient {
 
 // Create API client instances for different services
 // Pointing to the local Node.js backend
-export const productsApi = new ApiClient("http://localhost:5000/api");
-export const authApi = new ApiClient("http://localhost:5000/api");
+const BASE_URL = import.meta.env.MODE === 'production' ? '/api' : 'http://localhost:5000/api';
+
+export const productsApi = new ApiClient(BASE_URL);
+export const authApi = new ApiClient(BASE_URL);
 
 export default ApiClient;
