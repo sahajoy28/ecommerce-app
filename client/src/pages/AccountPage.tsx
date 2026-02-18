@@ -383,22 +383,8 @@ const EmptyState = styled.div`
   color: #666;
 `;
 
-const FormGroup = styled.div`
-  margin-bottom: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`;
-
 const StyledInput = styled(Input)`
   width: 100%;
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  margin-top: 16px;
 `;
 
 export const AccountPage = () => {
