@@ -165,7 +165,7 @@ export const InquiryForm = ({ productId, productName }: InquiryFormProps) => {
         productName
       });
 
-      if (response.success) {
+      if ((response as any).success) {
         setSubmitted(true);
         setFormData({ name: '', email: '', phone: '', quantity: '', quantityUnit: 'units', message: '' });
         setTimeout(() => setSubmitted(false), 5000);

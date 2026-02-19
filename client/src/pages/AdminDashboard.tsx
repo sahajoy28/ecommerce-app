@@ -4,6 +4,7 @@ import { Button } from '@fluentui/react-components';
 import { colors, spacing, typography } from '../styles/designTokens';
 import { ProductForm } from '../components/ProductForm';
 import { ProductManagement } from '../components/ProductManagement';
+import { BannerManagement } from '../components/BannerManagement';
 import { AdminUsers } from '../components/AdminUsers';
 import { userAPI } from '../services/userAPI';
 
@@ -124,8 +125,9 @@ interface AdminDashboardProps {
 
 export const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [bannerRefreshTrigger, setBannerRefreshTrigger] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'products' | 'users'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'banners' | 'users'>('products');
 
   const handleProductSubmit = async (data: any) => {
     setIsLoading(true);
@@ -153,6 +155,12 @@ export const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
           📦 Products
         </TabButton>
         <TabButton
+          $active={activeTab === 'banners'}
+          onClick={() => setActiveTab('banners')}
+        >
+          🎨 Banners
+        </TabButton>
+        <TabButton
           $active={activeTab === 'users'}
           onClick={() => setActiveTab('users')}
         >
@@ -178,6 +186,13 @@ export const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
             </RightSection>
           </Content>
         </>
+      )}
+
+      {activeTab === 'banners' && (
+        <Card style={{ maxWidth: '100%' }}>
+          <SectionTitle>🎨 Manage Banners</SectionTitle>
+          <BannerManagement refreshTrigger={bannerRefreshTrigger} />
+        </Card>
       )}
 
       {activeTab === 'users' && (

@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { useEffect } from "react";
 import { fetchProducts } from "../features/products/productsSlice";
 import { ProductCard } from "../components/ProductCard";
+import { BannerDisplay } from "../components/BannerDisplay";
 import { colors, spacing, typography, media } from "../styles/designTokens";
 
 const Container = styled.div`
@@ -310,6 +311,11 @@ export const HomePage = () => {
 
   return (
     <Container>
+      {/* Dynamic Banners from Admin Panel */}
+      <Section>
+        <BannerDisplay type="hero" limit={5} autoRotate={true} rotationInterval={5000} />
+      </Section>
+
       {/* Hero Banner */}
       <HeroBanner>
         <HeroContent>

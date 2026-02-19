@@ -6,6 +6,7 @@ import productRoutes from './routes/products.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/user.js';
 import inquiryRoutes from './routes/inquiries.js';
+import bannerRoutes from './routes/banners.js';
 
 dotenv.config();
 
@@ -58,6 +59,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/inquiries', inquiryRoutes);
+app.use('/api/banners', bannerRoutes);
 
 // Health Check
 app.get('/', (req, res) => {

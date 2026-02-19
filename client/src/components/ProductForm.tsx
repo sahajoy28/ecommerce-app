@@ -126,6 +126,22 @@ const ImageUrlInput = styled.input`
   }
 `;
 
+const ImageHint = styled.div`
+  padding: ${spacing[3]};
+  background: #f0f9ff;
+  border-left: 4px solid #0284c7;
+  border-radius: 4px;
+  font-size: ${typography.fontSize.sm};
+  color: #0c4a6e;
+  margin-bottom: ${spacing[3]};
+  line-height: 1.5;
+`;
+
+const HintTitle = styled.strong`
+  display: block;
+  margin-bottom: ${spacing[1]};
+`;
+
 const SubmitButton = styled(Button)`
   align-self: flex-end;
   min-width: 120px;
@@ -399,6 +415,13 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
 
       <FormGroup>
         <Label>📸 Product Images (Google Drive links) *</Label>
+        <ImageHint>
+          <HintTitle>💡 How to get a Google Drive image link:</HintTitle>
+          1. Upload image to Google Drive<br/>
+          2. Right-click → Share → Change to "Anyone with the link"<br/>
+          3. Copy the link (e.g. drive.google.com/file/d/FILE_ID/view?usp=sharing)<br/>
+          4. Paste below - we'll convert it automatically ✨
+        </ImageHint>
         <ImageSection>
           {!showImageInput ? (
             <Button
