@@ -1,175 +1,205 @@
 import styled from "styled-components";
-import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@fluentui/react-components";
-import { colors, spacing, typography, shadows, borderRadius, transitions, media } from "../styles/designTokens";
+import { useNavigate } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { useEffect } from "react";
+import { fetchProducts } from "../features/products/productsSlice";
+import { ProductCard } from "../components/ProductCard";
+import { colors, spacing, typography, media } from "../styles/designTokens";
 
-const HomeContainer = styled.div`
-  background: var(--color-bg-primary, ${colors.neutral[50]});
-  min-height: 100vh;
-  padding: 0;
+const Container = styled.div`
+  width: 100%;
+  background: white;
 `;
 
-// Hero Banner
-const HeroBanner = styled.div`
-  background: linear-gradient(135deg, ${colors.gradients.primary} 0%, ${colors.primary.dark} 100%);
-  padding: ${spacing[16]} ${spacing[8]};
+const HeroBanner = styled.section`
+  width: 100%;
+  min-height: 500px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  color: var(--color-neutral-0, ${colors.neutral[0]});
+  color: white;
   position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 400px;
-    height: 400px;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-    border-radius: 50%;
-    transform: translate(100px, -100px);
-  }
+  padding: ${spacing[8]};
 
   ${media.tablet} {
-    padding: ${spacing[12]} ${spacing[6]};
+    min-height: 350px;
   }
 
   ${media.mobile} {
-    padding: ${spacing[8]} ${spacing[4]};
+    min-height: 250px;
+    padding: ${spacing[4]};
   }
+`;
+
+const HeroContent = styled.div`
+  max-width: 800px;
 `;
 
 const HeroTitle = styled.h1`
-  margin: 0 0 ${spacing[4]} 0;
-  font-size: ${typography.fontSize["5xl"]};
-  font-weight: ${typography.fontWeight.extrabold};
-  position: relative;
-  z-index: 1;
-  letter-spacing: -0.02em;
+  font-size: 3.5rem;
+  font-weight: bold;
+  margin-bottom: ${spacing[4]};
 
   ${media.tablet} {
-    font-size: ${typography.fontSize["4xl"]};
+    font-size: 2.5rem;
   }
 
   ${media.mobile} {
-    font-size: ${typography.fontSize["3xl"]};
+    font-size: 1.75rem;
   }
 `;
 
 const HeroSubtitle = styled.p`
-  margin: 0 0 ${spacing[8]} 0;
-  font-size: ${typography.fontSize.lg};
-  position: relative;
-  z-index: 1;
+  font-size: 1.25rem;
+  margin-bottom: ${spacing[6]};
   opacity: 0.95;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
 
   ${media.mobile} {
-    font-size: ${typography.fontSize.base};
+    font-size: 1rem;
   }
 `;
 
-const HeroButton = styled(Button)`
-  position: relative;
-  z-index: 1;
-  padding: ${spacing[3]} ${spacing[8]} !important;
-  font-size: ${typography.fontSize.base} !important;
-  font-weight: ${typography.fontWeight.bold} !important;
-  background: var(--color-neutral-0, ${colors.neutral[0]}) !important;
-  color: var(--color-primary, ${colors.primary.main}) !important;
-  transition: all ${transitions.fast} !important;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: ${shadows.xl} !important;
-  }
+const CTAButtons = styled.div`
+  display: flex;
+  gap: ${spacing[4]};
+  justify-content: center;
+  flex-wrap: wrap;
 `;
 
-// Categories Section
-const CategoriesSection = styled.div`
+const Section = styled.section`
+  padding: ${spacing[12]} ${spacing[6]};
   max-width: 1400px;
   margin: 0 auto;
-  padding: ${spacing[12]} ${spacing[8]};
 
   ${media.tablet} {
-    padding: ${spacing[8]} ${spacing[6]};
+    padding: ${spacing[8]} ${spacing[4]};
   }
 
   ${media.mobile} {
-    padding: ${spacing[6]} ${spacing[4]};
+    padding: ${spacing[6]} ${spacing[3]};
   }
 `;
 
 const SectionTitle = styled.h2`
-  margin: 0 0 ${spacing[8]} 0;
-  font-size: ${typography.fontSize["4xl"]};
-  font-weight: ${typography.fontWeight.extrabold};
-  color: var(--color-text-primary, ${colors.neutral[900]});
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: ${spacing[8]};
   text-align: center;
-  position: relative;
-
-  &::after {
-    content: '';
-    display: block;
-    width: 80px;
-    height: 4px;
-    background: ${colors.gradients.primary};
-    margin: ${spacing[4]} auto 0;
-    border-radius: ${borderRadius.full};
-  }
+  color: ${colors.neutral[900]};
 
   ${media.mobile} {
-    font-size: ${typography.fontSize["3xl"]};
+    font-size: 1.75rem;
+    margin-bottom: ${spacing[6]};
   }
 `;
 
 const CategoriesGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: ${spacing[6]};
 
   ${media.tablet} {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: ${spacing[4]};
   }
 
   ${media.mobile} {
-    grid-template-columns: 1fr;
-    gap: ${spacing[4]};
+    grid-template-columns: repeat(2, 1fr);
+    gap: ${spacing[3]};
   }
 `;
 
-const CategoryCard = styled(Link)`
-  position: relative;
-  height: 300px;
-  border-radius: ${borderRadius.lg};
+const CategoryCard = styled.div`
+  background: white;
+  border-radius: 8px;
   overflow: hidden;
-  box-shadow: ${shadows.md};
-  transition: all ${transitions.fast};
-  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   cursor: pointer;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-start;
-  background: linear-gradient(135deg, ${colors.neutral[100]} 0%, ${colors.neutral[200]} 100%);
+  transition: all 0.3s ease;
 
   &:hover {
     transform: translateY(-8px);
-    box-shadow: ${shadows.xl};
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  }
+`;
 
-    img {
-      transform: scale(1.1);
-    }
+const CategoryImage = styled.div`
+  width: 100%;
+  height: 150px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+`;
 
-    .overlay {
-      background: rgba(0, 0, 0, 0.4);
-    }
+const CategoryInfo = styled.div`
+  padding: ${spacing[4]};
+  text-align: center;
+`;
 
-    .content {
-      transform: translateY(0);
-    }
+const CategoryName = styled.h3`
+  font-size: ${typography.fontSize.base};
+  font-weight: 600;
+  margin: 0;
+  color: ${colors.neutral[900]};
+`;
+
+const ProductsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: ${spacing[6]};
+
+  ${media.tablet} {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: ${spacing[4]};
+  }
+
+  ${media.mobile} {
+    grid-template-columns: repeat(2, 1fr));
+    gap: ${spacing[3]};
+  }
+`;
+
+const TestimonialsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: ${spacing[6]};
+`;
+
+const TestimonialCard = styled.div`
+  background: white;
+  padding: ${spacing[6]};
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid #667eea;
+`;
+
+const TestimonialText = styled.p`
+  font-size: ${typography.fontSize.base};
+  color: ${colors.neutral[600]};
+  margin-bottom: ${spacing[4]};
+  font-style: italic;
+`;
+
+const TestimonialAuthor = styled.p`
+  font-weight: 600;
+  color: ${colors.neutral[900]};
+  margin: 0;
+`;
+
+const MapContainer = styled.div`
+  width: 100%;
+  height: 400px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  ${media.tablet} {
+    height: 300px;
   }
 
   ${media.mobile} {
@@ -177,203 +207,236 @@ const CategoryCard = styled(Link)`
   }
 `;
 
-const CategoryImage = styled.img`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform ${transitions.base};
-`;
-
-const CategoryOverlay = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
-  transition: background ${transitions.fast};
+const WhatsAppButton = styled.a`
+  position: fixed;
+  bottom: ${spacing[6]};
+  right: ${spacing[6]};
+  width: 60px;
+  height: 60px;
+  background: #25d366;
+  border-radius: 50%;
   display: flex;
-  align-items: flex-end;
-  justify-content: flex-start;
-  padding: ${spacing[6]};
-  z-index: 2;
-`;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 32px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  z-index: 100;
+  text-decoration: none;
 
-const CategoryContent = styled.div`
-  color: var(--color-neutral-0, ${colors.neutral[0]});
-  transform: translateY(20px);
-  transition: transform ${transitions.fast};
-  z-index: 3;
-`;
-
-const CategoryName = styled.h3`
-  margin: 0 0 ${spacing[2]} 0;
-  font-size: ${typography.fontSize["2xl"]};
-  font-weight: ${typography.fontWeight.bold};
-  letter-spacing: -0.01em;
+  &:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  }
 
   ${media.mobile} {
-    font-size: ${typography.fontSize.lg};
+    bottom: ${spacing[4]};
+    right: ${spacing[4]};
   }
 `;
 
-const CategoryDescription = styled.p`
-  margin: 0;
-  font-size: ${typography.fontSize.sm};
-  opacity: 0.9;
-
-  ${media.mobile} {
-    font-size: ${typography.fontSize.xs};
-  }
-`;
-
-// Featured Section
-const FeaturedSection = styled.div`
-  background: linear-gradient(135deg, ${colors.gradients.cool} 0%, rgba(79, 112, 245, 0.1) 100%);
-  padding: ${spacing[12]} ${spacing[8]};
+const StatsContainer = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: ${spacing[6]};
   text-align: center;
-  margin: ${spacing[12]} 0;
-
-  ${media.tablet} {
-    padding: ${spacing[8]} ${spacing[6]};
-  }
-
-  ${media.mobile} {
-    padding: ${spacing[6]} ${spacing[4]};
-  }
 `;
 
-const FeaturedTitle = styled.h2`
-  margin: 0 0 ${spacing[6]} 0;
-  font-size: ${typography.fontSize["3xl"]};
-  font-weight: ${typography.fontWeight.bold};
-  color: var(--color-text-primary, ${colors.neutral[900]});
-
-  ${media.mobile} {
-    font-size: ${typography.fontSize["2xl"]};
-  }
+const StatCard = styled.div`
+  padding: ${spacing[6]};
 `;
 
-const FeaturedDescription = styled.p`
-  margin: 0 0 ${spacing[6]} 0;
-  font-size: ${typography.fontSize.lg};
-  color: var(--color-text-secondary, ${colors.neutral[600]});
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
+const StatNumber = styled.div`
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #667eea;
+  margin-bottom: ${spacing[2]};
 `;
 
-const FeaturedButton = styled(Button)`
-  padding: ${spacing[3]} ${spacing[8]} !important;
-  font-size: ${typography.fontSize.base} !important;
-  font-weight: ${typography.fontWeight.bold} !important;
-  border-radius: ${borderRadius.md} !important;
+const StatLabel = styled.div`
+  font-size: ${typography.fontSize.base};
+  color: ${colors.neutral[600]};
+`;
+
+const ProductListContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-top: ${spacing[8]};
 `;
 
 const CATEGORIES = [
+  { id: 'floor-tiles', name: 'Floor Tiles', icon: '🏠' },
+  { id: 'wall-tiles', name: 'Wall Tiles', icon: '🧱' },
+  { id: 'marble', name: 'Marble', icon: '💎' },
+  { id: 'granite', name: 'Granite', icon: '🪨' },
+  { id: 'bathroom', name: 'Bathroom Fittings', icon: '🚿' },
+  { id: 'outdoor', name: 'Outdoor Tiles', icon: '🌳' },
+];
+
+const TESTIMONIALS = [
   {
-    id: "electronics",
-    name: "Electronics",
-    description: "Latest gadgets & devices",
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop",
-    slug: "electronics"
+    id: 1,
+    text: "Excellent quality tiles and outstanding customer service. We've been sourcing from them for over 5 years.",
+    author: "Rajesh Kumar - Contractor",
   },
   {
-    id: "clothing",
-    name: "Clothing",
-    description: "Fashion & apparel",
-    image: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=500&h=500&fit=crop",
-    slug: "mens-shirts"
+    id: 2,
+    text: "The variety of designs and competitive pricing is unmatched. Highly recommended for bulk orders.",
+    author: "Priya Sharma - Interior Designer",
   },
   {
-    id: "furniture",
-    name: "Furniture",
-    description: "Home & office furniture",
-    image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=500&h=500&fit=crop",
-    slug: "furniture"
+    id: 3,
+    text: "Professional team, reliable delivery, and premium products. They've become our trusted supplier.",
+    author: "Amit Patel - Project Manager",
   },
-  {
-    id: "beauty",
-    name: "Beauty & Skincare",
-    description: "Personal care products",
-    image: "https://images.unsplash.com/photo-1596462502278-af242a95b3b7?w=500&h=500&fit=crop",
-    slug: "beauty"
-  },
-  {
-    id: "sports",
-    name: "Sports & Outdoors",
-    description: "Active lifestyle gear",
-    image: "https://images.unsplash.com/photo-1517836357463-d25ddfcbf042?w=500&h=500&fit=crop",
-    slug: "sports-accessories"
-  },
-  {
-    id: "books",
-    name: "Books & Media",
-    description: "Knowledge & entertainment",
-    image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=500&h=500&fit=crop",
-    slug: "books"
-  }
 ];
 
 export const HomePage = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { items, loading } = useAppSelector(state => state.products);
+  const featuredProducts = items.slice(0, 6);
 
-  const handleCategoryClick = (slug: string) => {
-    navigate(`/catalog?category=${slug}`);
+  useEffect(() => {
+    if (items.length === 0) {
+      dispatch(fetchProducts() as any);
+    }
+  }, []);
+
+  const handleCategoryClick = (categoryId: string) => {
+    navigate(`/catalog?category=${categoryId}`);
   };
 
   return (
-    <HomeContainer>
+    <Container>
       {/* Hero Banner */}
       <HeroBanner>
-        <HeroTitle>Welcome to Your Shop</HeroTitle>
-        <HeroSubtitle>
-          Discover an amazing collection of products across multiple categories. 
-          Shop the latest trends and find exactly what you're looking for.
-        </HeroSubtitle>
-        <HeroButton appearance="primary" onClick={() => navigate("/catalog")}>
-          Start Shopping
-        </HeroButton>
+        <HeroContent>
+          <HeroTitle>Premium Building Materials & Tiles Showroom</HeroTitle>
+          <HeroSubtitle>
+            Explore our extensive collection of high-quality tiles, marble, granite, and bathroom fittings
+          </HeroSubtitle>
+          <CTAButtons>
+            <Button
+              appearance="primary"
+              onClick={() => navigate('/catalog')}
+            >
+              Explore Products
+            </Button>
+            <Button
+              appearance="outline"
+              onClick={() => navigate('/contact')}
+            >
+              Contact Us
+            </Button>
+          </CTAButtons>
+        </HeroContent>
       </HeroBanner>
 
-      {/* Categories Section */}
-      <CategoriesSection>
-        <SectionTitle>Shop by Category</SectionTitle>
+      {/* Featured Categories */}
+      <Section>
+        <SectionTitle>Our Categories</SectionTitle>
         <CategoriesGrid>
           {CATEGORIES.map(category => (
-            <CategoryCard
-              key={category.id}
-              onClick={() => handleCategoryClick(category.slug)}
-              to={`/catalog?category=${category.slug}`}
-            >
-              <CategoryImage src={category.image} alt={category.name} />
-              <CategoryOverlay className="overlay">
-                <CategoryContent className="content">
-                  <CategoryName>{category.name}</CategoryName>
-                  <CategoryDescription>{category.description}</CategoryDescription>
-                </CategoryContent>
-              </CategoryOverlay>
+            <CategoryCard key={category.id} onClick={() => handleCategoryClick(category.id)}>
+              <CategoryImage>{category.icon}</CategoryImage>
+              <CategoryInfo>
+                <CategoryName>{category.name}</CategoryName>
+              </CategoryInfo>
             </CategoryCard>
           ))}
         </CategoriesGrid>
-      </CategoriesSection>
+      </Section>
 
-      {/* Featured Section */}
-      <FeaturedSection>
-        <FeaturedTitle>Explore All Products</FeaturedTitle>
-        <FeaturedDescription>
-          Can't find what you're looking for? Browse our complete catalog of products from all categories.
-        </FeaturedDescription>
-        <FeaturedButton 
-          appearance="primary" 
-          onClick={() => navigate("/catalog")}
-        >
-          View All Products
-        </FeaturedButton>
-      </FeaturedSection>
-    </HomeContainer>
+      {/* Featured Products */}
+      <Section style={{ backgroundColor: '#f9f9f9' }}>
+        <SectionTitle>Featured Products</SectionTitle>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '40px' }}>Loading products...</div>
+        ) : featuredProducts.length > 0 ? (
+          <>
+            <ProductsGrid>
+              {featuredProducts.map(product => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </ProductsGrid>
+            <ProductListContainer>
+              <Button
+                appearance="primary"
+                onClick={() => navigate('/catalog')}
+              >
+                View All Products
+              </Button>
+            </ProductListContainer>
+          </>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+            No products available yet
+          </div>
+        )}
+      </Section>
+
+      {/* Statistics */}
+      <Section>
+        <StatsContainer>
+          <StatCard>
+            <StatNumber>500+</StatNumber>
+            <StatLabel>Premium Products</StatLabel>
+          </StatCard>
+          <StatCard>
+            <StatNumber>15+</StatNumber>
+            <StatLabel>Years Experience</StatLabel>
+          </StatCard>
+          <StatCard>
+            <StatNumber>5000+</StatNumber>
+            <StatLabel>Happy Customers</StatLabel>
+          </StatCard>
+          <StatCard>
+            <StatNumber>50+</StatNumber>
+            <StatLabel>Brands Available</StatLabel>
+          </StatCard>
+        </StatsContainer>
+      </Section>
+
+      {/* Testimonials */}
+      <Section style={{ backgroundColor: '#f9f9f9' }}>
+        <SectionTitle>What Our Customers Say</SectionTitle>
+        <TestimonialsGrid>
+          {TESTIMONIALS.map(testimonial => (
+            <TestimonialCard key={testimonial.id}>
+              <TestimonialText>"{testimonial.text}"</TestimonialText>
+              <TestimonialAuthor>{testimonial.author}</TestimonialAuthor>
+            </TestimonialCard>
+          ))}
+        </TestimonialsGrid>
+      </Section>
+
+      {/* Location Map */}
+      <Section>
+        <SectionTitle>Visit Our Showroom</SectionTitle>
+        <MapContainer>
+          <iframe
+            width="100%"
+            height="100%"
+            style={{ border: 0 }}
+            loading="lazy"
+            allowFullScreen
+            referrerPolicy="no-referrer-when-downgrade"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3671.4244489996937!2d72.58316!3d23.025122!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x395e84a7f000001%3A0x1a3a3a3a3a3a3a3a!2sAhmedabad%2C%20Gujarat!5e0!3m2!1sen!2sin!4v1234567890"
+          />
+        </MapContainer>
+      </Section>
+
+      {/* WhatsApp Button */}
+      <WhatsAppButton
+        href="https://wa.me/919876543210?text=Hello%2C%20I%20would%20like%20to%20know%20more%20about%20your%20products"
+        target="_blank"
+        rel="noopener noreferrer"
+        title="Chat on WhatsApp"
+      >
+        💬
+      </WhatsAppButton>
+    </Container>
   );
 };

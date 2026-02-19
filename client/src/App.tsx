@@ -14,6 +14,8 @@ import { AccountPage } from "./pages/AccountPage";
 import { OrderPage } from "./pages/OrderPage";
 import { WishlistPage } from "./pages/WishlistPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { AboutPage } from "./pages/AboutPage";
+import { ContactPage } from "./pages/ContactPage";
 import { AddressForm } from "./components/AddressForm";
 import styled from "styled-components";
 import { useState, useEffect } from "react";
@@ -70,6 +72,8 @@ function App() {
                     <Route path="/" element={<ErrorBoundary><HomePage /></ErrorBoundary>} />
                     <Route path="/catalog" element={<ErrorBoundary><CatalogPage /></ErrorBoundary>} />
                     <Route path="/product/:id" element={<ErrorBoundary><ProductDetails /></ErrorBoundary>} />
+                    <Route path="/about" element={<ErrorBoundary><AboutPage /></ErrorBoundary>} />
+                    <Route path="/contact" element={<ErrorBoundary><ContactPage /></ErrorBoundary>} />
                     <Route path="/cart" element={<ErrorBoundary><CartPage /></ErrorBoundary>} />
                     <Route path="/wishlist" element={<ErrorBoundary><WishlistPage /></ErrorBoundary>} />
                     <Route path="/login" element={<ErrorBoundary><AuthPage /></ErrorBoundary>} />

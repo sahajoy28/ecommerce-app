@@ -1,12 +1,12 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "../app/hooks";
 import { Button, Text, Badge } from "@fluentui/react-components";
-import { addToCartLocal, addToCartAPI } from "../features/cart/cartSlice";
 import { Toast } from "../components/Toast";
 import { ProductCard } from "../components/ProductCard";
 import { RatingDisplay } from "../components/RatingDisplay";
 import { AddReviewForm } from "../components/AddReviewForm";
 import { ReviewsList } from "../components/ReviewsList";
+import { InquiryForm } from "../components/InquiryForm";
 import styled from "styled-components";
 import { ArrowLeft24Filled } from "@fluentui/react-icons";
 import { useState, useEffect, useRef } from "react";
@@ -356,22 +356,6 @@ export const ProductDetails = () => {
     );
   }
 
-  const cartItems = useAppSelector(state => state.cart.items);
-
-  const handleAddToCart = async () => {
-    // Optimistic update
-    dispatch(addToCartLocal(product));
-    
-    // Save to MongoDB
-    try {
-      await dispatch(addToCartAPI(product) as any).unwrap();
-      setToastMessage(`✓ Added to cart!`);
-    } catch (error) {
-      setToastMessage("Failed to add to cart");
-    }
-    setShowToast(true);
-  };
-
   return (
     <Container>
       <BackButton to="/">
@@ -418,24 +402,10 @@ export const ProductDetails = () => {
             </AvailabilityStatus>
           </AvailabilityBox>
 
-          <ButtonGroup>
-            <Button 
-              appearance="primary" 
-              size="large" 
-              onClick={handleAddToCart}
-              style={{ flex: 1 }}
-            >
-              Add to Cart
-            </Button>
-            <Button 
-              appearance="secondary" 
-              size="large" 
-              onClick={() => navigate("/")}
-              style={{ flex: 1 }}
-            >
-              Continue Shopping
-            </Button>
-          </ButtonGroup>
+          <InquiryForm 
+            productId={String(product._id || product.id)}
+            productName={product.title}
+          />
         </DetailsContainer>
       </ProductWrapper>
 

@@ -58,9 +58,10 @@ const LeftSection = styled.div`
 
 const CenterSection = styled.div`
   flex: 1;
-  max-width: 500px;
+  max-width: 600px;
   display: flex;
   align-items: center;
+  gap: ${spacing[3]};
   min-width: 0;
 
   ${media.tablet} {
@@ -68,6 +69,7 @@ const CenterSection = styled.div`
     flex-basis: 100%;
     margin-top: ${spacing[2]};
     order: 3;
+    gap: ${spacing[2]};
   }
 
   ${media.mobile} {
@@ -76,6 +78,48 @@ const CenterSection = styled.div`
     flex-basis: 100%;
     margin-top: ${spacing[2]};
     order: 3;
+    gap: ${spacing[1]};
+  }
+`;
+
+const NavMenu = styled.nav`
+  display: flex;
+  gap: ${spacing[3]};
+  align-items: center;
+
+  ${media.tablet} {
+    gap: ${spacing[2]};
+  }
+
+  ${media.mobile} {
+    gap: ${spacing[1]};
+  }
+`;
+
+const NavMenuItem = styled(Link)<{ isActive?: boolean }>`
+  text-decoration: none;
+  color: ${props => props.isActive ? colors.primary.main : colors.neutral[700]};
+  font-weight: ${props => props.isActive ? '600' : '500'};
+  font-size: ${typography.fontSize.sm};
+  padding: ${spacing[2]} ${spacing[3]};
+  border-radius: ${borderRadius.md};
+  transition: all ${transitions.fast};
+  white-space: nowrap;
+  display: inline-block;
+
+  &:hover {
+    background: var(--color-neutral-100, ${colors.neutral[100]});
+    color: var(--color-primary, ${colors.primary.main});
+  }
+
+  ${media.tablet} {
+    padding: ${spacing[1]} ${spacing[2]};
+    font-size: ${typography.fontSize.xs};
+  }
+
+  ${media.mobile} {
+    padding: ${spacing[1]};
+    font-size: 0.75rem;
   }
 `;
 
@@ -300,6 +344,14 @@ export const Header = () => {
 
         <CenterSection>
           <SearchBar />
+          <NavMenu>
+            <NavMenuItem to="/about" isActive={location.pathname === "/about"}>
+              About
+            </NavMenuItem>
+            <NavMenuItem to="/contact" isActive={location.pathname === "/contact"}>
+              Contact
+            </NavMenuItem>
+          </NavMenu>
         </CenterSection>
 
         <RightSection>
