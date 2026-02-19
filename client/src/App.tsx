@@ -79,7 +79,7 @@ function App() {
                     <Route path="/checkout" element={<ErrorBoundary><AddressForm /></ErrorBoundary>} />
                     <Route path="/admin" element={<ErrorBoundary><AdminPage /></ErrorBoundary>} />
                     <Route
-                      path="/admin-dashboard"
+                      path="/admin/dashboard"
                       element={
                         <ErrorBoundary>
                           <ProtectedRoute requiredRole="admin">

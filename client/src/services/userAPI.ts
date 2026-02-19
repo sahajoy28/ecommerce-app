@@ -56,5 +56,13 @@ export const userAPI = {
   },
   deleteAdminProduct: async (id: string) => {
     return await authApi.delete<{ success: boolean; message: string }>(`/products/admin/${id}`);
+  },
+  // User management endpoints (admin only)
+  getAllUsers: async () => {
+    const response = await authApi.get<{ success: boolean; users: any[] }>("/auth/users");
+    return response.users || [];
+  },
+  promotUserToAdmin: async (email: string) => {
+    return await authApi.post<{ success: boolean; message: string; user: any }>("/auth/promote-to-admin", { email });
   }
 };

@@ -29,26 +29,21 @@ router.post('/signup', async (req, res, next) => {
       });
     }
 
-    // Check if this is the first user - if so, make them admin
-    const userCount = await User.countDocuments();
-    const isFirstUser = userCount === 0;
-
-    // Create user
+    // Create user (regular user by default)
     const user = await User.create({
       name,
       email,
-      password,
-      role: isFirstUser ? 'admin' : 'user'
+      password
     });
 
     // Generate token
     const token = generateToken(user._id);
 
-    console.log(`✅ User registered: ${email} (Role: ${user.role})`);
+    console.log(`✅ User registered: ${email}`);
 
     res.status(201).json({
       success: true,
-      message: isFirstUser ? '🎉 Admin account created! Welcome to your store.' : 'Account created successfully',
+      message: 'Account created successfully',
       token,
       user: {
         id: user._id,
@@ -213,27 +208,63 @@ router.put('/wishlist', verify, async (req, res, next) => {
 });
 
 /**
+ * GET /api/auth/users
+ * Get all users (Admin only - for user management)
+ */
+router.get('/users', verify, async (req, res, next) => {
+  try {
+    const { user: currentUser } = req;
+
+    // Check if current user is admin
+    if (currentUser.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only admins can view user list'
+      });
+    }
+
+    const users = await User.find({})
+      .select('_id name email role createdAt')
+      .lean()
+      .exec();
+
+    res.json({
+      success: true,
+      count: users.length,
+      users
+    });
+  } catch (error) {
+    console.error('❌ Error fetching users:', error.message);
+    next({
+      status: 500,
+      message: 'Failed to fetch users',
+      details: error.message
+    });
+  }
+});
+
+/**
  * POST /api/auth/promote-to-admin
- * Promote a user to admin (for troubleshooting - only works if no admins exist)
+ * Promote a user to admin (Admin only)
  * Body: { email: string }
  */
-router.post('/promote-to-admin', async (req, res, next) => {
+router.post('/promote-to-admin', verify, async (req, res, next) => {
   try {
+    const { user: currentUser } = req;
     const { email } = req.body;
+
+    // Check if current user is admin
+    if (currentUser.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only admins can promote users to admin'
+      });
+    }
 
     if (!email) {
       return res.status(400).json({
         success: false,
         message: 'Email is required'
-      });
-    }
-
-    // Check if any admin already exists
-    const adminExists = await User.findOne({ role: 'admin' });
-    if (adminExists) {
-      return res.status(403).json({
-        success: false,
-        message: 'An admin account already exists. This endpoint can only be used for initial setup.'
       });
     }
 
@@ -246,11 +277,19 @@ router.post('/promote-to-admin', async (req, res, next) => {
       });
     }
 
+    // Check if already admin
+    if (user.role === 'admin') {
+      return res.status(400).json({
+        success: false,
+        message: 'User is already an admin'
+      });
+    }
+
     // Promote to admin
     user.role = 'admin';
     await user.save();
 
-    console.log(`✅ User promoted to admin: ${email}`);
+    console.log(`✅ User promoted to admin: ${email} (by ${currentUser.email})`);
 
     res.json({
       success: true,

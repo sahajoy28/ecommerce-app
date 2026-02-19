@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { Button, Input as FluentInput } from "@fluentui/react-components";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "../app/hooks";
-import { signup, login } from "../features/auth/authSlice";
+import { login } from "../features/auth/authSlice";
 import { colors, spacing, typography, shadows, borderRadius, transitions, media } from "../styles/designTokens";
 
 const Container = styled.div`
@@ -53,27 +53,7 @@ const Subtitle = styled.p`
   color: ${colors.neutral[600]};
 `;
 
-const TabContainer = styled.div`
-  display: flex;
-  gap: ${spacing[4]};
-  margin-bottom: ${spacing[8]};
-  border-bottom: 2px solid ${colors.neutral[200]};
-`;
 
-const Tab = styled.button<{ isActive: boolean }>`
-  padding: ${spacing[4]} ${spacing[8]};
-  background: none;
-  border: none;
-  color: ${p => p.isActive ? colors.primary.main : colors.neutral[600]};
-  font-weight: ${p => p.isActive ? typography.fontWeight.semibold : typography.fontWeight.normal};
-  cursor: pointer;
-  border-bottom: 3px solid ${p => p.isActive ? colors.primary.main : "transparent"};
-  transition: ${transitions.base};
-
-  &:hover {
-    color: ${colors.primary.main};
-  }
-`;
 
 const FormGroup = styled.div`
   display: flex;
@@ -141,11 +121,8 @@ const BackButton = styled(Button)`
 `;
 
 export const AdminPage = () => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -174,52 +151,20 @@ export const AdminPage = () => {
       return;
     }
 
-    if (!isLogin && password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
-    if (!isLogin && !name.trim()) {
-      setError("Name is required");
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      if (isLogin) {
-        // Login
-        const result = await dispatch(login({ email, password }) as any);
-        if (result.payload && result.payload.user?.role === "admin") {
-          setSuccess("Login successful! Redirecting to admin dashboard...");
-          setTimeout(() => {
-            navigate("/admin-dashboard");
-          }, 1000);
-        } else {
-          setError("This account is not an admin account.\n\n💡 TIP: If this is your first time, use Sign Up instead. The first registered account automatically becomes an admin.");
-        }
+      const result = await dispatch(login({ email, password }) as any);
+      if (result.payload && result.payload.user?.role === "admin") {
+        setSuccess("Login successful! Redirecting to admin dashboard...");
+        setTimeout(() => {
+          navigate("/admin/dashboard");
+        }, 1000);
       } else {
-        // Signup - First user becomes admin automatically
-        const result = await dispatch(
-          signup({ name, email, password }) as any
-        );
-        if (result.payload) {
-          if (result.payload.user?.role === "admin") {
-            setSuccess("🎉 Admin account created! You can now login to access the dashboard.");
-            setTimeout(() => {
-              setIsLogin(true);
-              setName("");
-              setPassword("");
-              setConfirmPassword("");
-              setEmail("");
-            }, 2000);
-          } else {
-            setError("Your account was created as a regular user. Only the first registered account becomes admin.");
-          }
-        }
+        setError("❌ This account doesn't have admin access. Contact the root administrator to grant you admin privileges.");
       }
     } catch (err: any) {
-      setError(err.message || (isLogin ? "Login failed" : "Registration failed"));
+      setError(err.message || "Login failed");
     } finally {
       setIsLoading(false);
     }
@@ -229,41 +174,20 @@ export const AdminPage = () => {
     <Container>
       <FormWrapper>
         <Header>
-          <Title>🔐 Admin Portal</Title>
-          <Subtitle>Manage your store</Subtitle>
+          <Title>🔐 Admin</Title>
+          <Subtitle>Store Management Portal</Subtitle>
         </Header>
 
         <InfoBox>
-          <strong>ℹ️  Admin Access Required</strong>
-          <p>👉 <strong>First Time?</strong> Use "Sign Up" - the first registered account automatically becomes an admin!</p>
-          <p>👉 <strong>Returning?</strong> Use "Login" with your admin credentials.</p>
+          <strong>ℹ️  Admin Login</strong>
+          <p>👉 Only administrators can access this portal.</p>
+          <p>👉 <strong>Not an admin yet?</strong> Regular users should signup from the main store page.</p>
         </InfoBox>
 
         {error && <ErrorMessage>{error}</ErrorMessage>}
         {success && <SuccessMessage>{success}</SuccessMessage>}
 
-        <TabContainer>
-          <Tab isActive={isLogin} onClick={() => setIsLogin(true)}>
-            Login
-          </Tab>
-          <Tab isActive={!isLogin} onClick={() => setIsLogin(false)}>
-            Sign Up
-          </Tab>
-        </TabContainer>
-
         <form onSubmit={handleSubmit}>
-          {!isLogin && (
-            <FormGroup>
-              <Label>Full Name</Label>
-              <Input
-                value={name}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) => setName(event.target.value)}
-                placeholder="Enter your full name"
-                disabled={isLoading}
-              />
-            </FormGroup>
-          )}
-
           <FormGroup>
             <Label>Email Address</Label>
             <Input
@@ -286,25 +210,12 @@ export const AdminPage = () => {
             />
           </FormGroup>
 
-          {!isLogin && (
-            <FormGroup>
-              <Label>Confirm Password</Label>
-              <Input
-                type="password"
-                value={confirmPassword}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(event.target.value)}
-                placeholder="Confirm password"
-                disabled={isLoading}
-              />
-            </FormGroup>
-          )}
-
           <SubmitButton
             appearance="primary"
             type="submit"
             disabled={isLoading}
           >
-            {isLoading ? "Processing..." : isLogin ? "Login to Admin" : "Create Admin Account"}
+            {isLoading ? "Logging in..." : "Login to Admin"}
           </SubmitButton>
         </form>
 

@@ -199,7 +199,7 @@ export const UserMenu = ({ userName, onSettingsClick }: UserMenuProps) => {
         </DropdownItem>
         
         {user?.role === 'admin' && (
-          <DropdownItem as={Link} to="/admin-dashboard">
+          <DropdownItem as={Link} to="/admin/dashboard">
             🔧 Admin Dashboard
           </DropdownItem>
         )}

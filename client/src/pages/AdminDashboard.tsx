@@ -1,8 +1,10 @@
 import styled from 'styled-components';
 import { useState } from 'react';
+import { Button } from '@fluentui/react-components';
 import { colors, spacing, typography } from '../styles/designTokens';
 import { ProductForm } from '../components/ProductForm';
 import { ProductManagement } from '../components/ProductManagement';
+import { AdminUsers } from '../components/AdminUsers';
 import { userAPI } from '../services/userAPI';
 
 const DashboardContainer = styled.div`
@@ -78,6 +80,28 @@ const StatLabel = styled.div`
   letter-spacing: 0.5px;
 `;
 
+const TabContainer = styled.div`
+  display: flex;
+  gap: ${spacing[2]};
+  margin-bottom: ${spacing[8]};
+  border-bottom: 2px solid ${colors.neutral[200]};
+`;
+
+const TabButton = styled(Button)<{ active: boolean }>`
+  padding: ${spacing[4]} ${spacing[6]};
+  background: ${p => p.active ? colors.primary.main : 'transparent'};
+  color: ${p => p.active ? 'white' : colors.neutral[600]};
+  border: none;
+  border-bottom: ${p => p.active ? `3px solid ${colors.primary.main}` : 'none'};
+  cursor: pointer;
+  font-weight: ${p => p.active ? typography.fontWeight.semibold : 'normal'};
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: ${p => p.active ? colors.primary.main : colors.neutral[100]};
+  }
+`;
+
 interface AdminDashboardProps {
   onLogout?: () => void;
 }
@@ -85,6 +109,7 @@ interface AdminDashboardProps {
 export const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'products' | 'users'>('products');
 
   const handleProductSubmit = async (data: any) => {
     setIsLoading(true);
@@ -104,30 +129,55 @@ export const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
         <Subtitle>Manage your products and store</Subtitle>
       </Header>
 
-      <StatsContainer>
-        <StatCard>
-          <StatValue>+</StatValue>
-          <StatLabel>Add Products</StatLabel>
-        </StatCard>
-        <StatCard>
-          <StatValue>🗂️</StatValue>
-          <StatLabel>Organize by Category</StatLabel>
-        </StatCard>
-        <StatCard>
-          <StatValue>🖼️</StatValue>
-          <StatLabel>Upload Images</StatLabel>
-        </StatCard>
-      </StatsContainer>
+      <TabContainer>
+        <TabButton
+          active={activeTab === 'products'}
+          onClick={() => setActiveTab('products')}
+        >
+          📦 Products
+        </TabButton>
+        <TabButton
+          active={activeTab === 'users'}
+          onClick={() => setActiveTab('users')}
+        >
+          👥 Users
+        </TabButton>
+      </TabContainer>
 
-      <Content>
-        <LeftSection>
-          <ProductForm onSubmit={handleProductSubmit} isLoading={isLoading} />
-        </LeftSection>
-        
-        <RightSection>
-          <ProductManagement refreshTrigger={refreshTrigger} />
-        </RightSection>
-      </Content>
+      {activeTab === 'products' && (
+        <>
+          <StatsContainer>
+            <StatCard>
+              <StatValue>+</StatValue>
+              <StatLabel>Add Products</StatLabel>
+            </StatCard>
+            <StatCard>
+              <StatValue>🗂️</StatValue>
+              <StatLabel>Organize by Category</StatLabel>
+            </StatCard>
+            <StatCard>
+              <StatValue>🖼️</StatValue>
+              <StatLabel>Upload Images</StatLabel>
+            </StatCard>
+          </StatsContainer>
+
+          <Content>
+            <LeftSection>
+              <ProductForm onSubmit={handleProductSubmit} isLoading={isLoading} />
+            </LeftSection>
+            
+            <RightSection>
+              <ProductManagement refreshTrigger={refreshTrigger} />
+            </RightSection>
+          </Content>
+        </>
+      )}
+
+      {activeTab === 'users' && (
+        <div style={{ maxWidth: '100%' }}>
+          <AdminUsers />
+        </div>
+      )}
     </DashboardContainer>
   );
 };
