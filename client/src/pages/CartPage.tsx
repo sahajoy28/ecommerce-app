@@ -357,7 +357,7 @@ export const CartPage = () => {
                 onClick={() => {
                   if (authUser) {
                     // Use MongoDB item ID for logged-in users
-                    dispatch(removeFromCartAPI(item._id || item.id));
+                    dispatch(removeFromCartAPI(String(item._id || item.id)));
                   } else {
                     // Use product ID for local cart
                     dispatch(removeFromCartLocal(item.id));
