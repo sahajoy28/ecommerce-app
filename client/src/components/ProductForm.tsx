@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Button, Input as FluentInput, Checkbox } from '@fluentui/react-components';
 import { colors, spacing, typography } from '../styles/designTokens';
 import { convertGoogleDriveUrl } from '../utils/googleDriveUrl';
+import { productsApi } from '../services/apiClient';
 
 const FormContainer = styled.form`
   display: flex;
@@ -362,7 +363,25 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
   const [waterAbsorption, setWaterAbsorption] = useState(initialData?.specifications?.waterAbsorption || '');
   const [mohs, setMohs] = useState(initialData?.specifications?.mohs || '');
 
+  // Category list from API
+  const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
+  const [customCategory, setCustomCategory] = useState('');
+  const [showCustomCategory, setShowCustomCategory] = useState(false);
+
   const isEditing = !!initialData;
+
+  // Fetch categories from API
+  useEffect(() => {
+    productsApi.get<any>('/categories').then((res: any) => {
+      const names = (res.categories || []).map((c: any) => c.name).filter(Boolean);
+      setCategoryOptions(names);
+      // If editing a product with a category not in the list, show custom input
+      if (initialData?.category && !names.includes(initialData.category)) {
+        setShowCustomCategory(true);
+        setCustomCategory(initialData.category);
+      }
+    }).catch(() => {});
+  }, []);
 
   // Reset form when initialData changes (e.g. switching between edit targets)
   useEffect(() => {
@@ -510,12 +529,38 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
 
       <FormGroup>
         <Label>Category *</Label>
-        <Input
-          value={category}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) => setCategory(event.target.value)}
-          placeholder="e.g., Electronics, Clothing, Furniture"
+        <SelectField
+          value={showCustomCategory ? '__custom__' : category}
+          onChange={(e) => {
+            if (e.target.value === '__custom__') {
+              setShowCustomCategory(true);
+              setCategory('');
+            } else {
+              setShowCustomCategory(false);
+              setCategory(e.target.value);
+              setCustomCategory('');
+            }
+          }}
           disabled={isLoading}
-        />
+        >
+          <option value="">Select a category</option>
+          {categoryOptions.map(cat => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+          <option value="__custom__">+ Custom category...</option>
+        </SelectField>
+        {showCustomCategory && (
+          <Input
+            value={customCategory}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+              setCustomCategory(event.target.value);
+              setCategory(event.target.value);
+            }}
+            placeholder="Enter custom category name"
+            disabled={isLoading}
+            style={{ marginTop: '8px' }}
+          />
+        )}
       </FormGroup>
 
       <FormGroup>

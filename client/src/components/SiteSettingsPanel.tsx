@@ -1,8 +1,9 @@
 import styled from 'styled-components';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Button, Spinner, Input } from '@fluentui/react-components';
 import { colors, spacing, typography, borderRadius, shadows } from '../styles/designTokens';
 import { userAPI } from '../services/userAPI';
+import { authApi, productsApi } from '../services/apiClient';
 
 // ===================== STYLED COMPONENTS =====================
 
@@ -192,7 +193,142 @@ const RemoveButton = styled.button`
   &:hover { background: rgba(239, 68, 68, 0.1); }
 `;
 
+// ---- Category Manager Styled Components ----
+
+const CatGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: ${spacing[4]};
+`;
+
+const CatCard = styled.div<{ $inactive?: boolean }>`
+  border: 1px solid ${colors.neutral[200]};
+  border-radius: ${borderRadius.md};
+  padding: ${spacing[4]};
+  background: ${(props: any) => props.$inactive ? colors.neutral[100] : 'white'};
+  opacity: ${(props: any) => props.$inactive ? 0.65 : 1};
+  display: flex;
+  flex-direction: column;
+  gap: ${spacing[3]};
+  position: relative;
+  transition: box-shadow 0.2s;
+  &:hover { box-shadow: ${shadows.md}; }
+`;
+
+const CatPreview = styled.div<{ $bg?: string }>`
+  width: 100%;
+  height: 100px;
+  border-radius: ${borderRadius.sm};
+  background: ${(props: any) => props.$bg || `linear-gradient(135deg, ${colors.primary.main}, ${colors.primary.dark})`};
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  overflow: hidden;
+`;
+
+const CatBadge = styled.span<{ $type: 'predefined' | 'custom' | 'hidden' }>`
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+  ${(props: any) => {
+    switch (props.$type) {
+      case 'predefined': return `background: ${colors.primary.lighter}; color: ${colors.primary.main};`;
+      case 'hidden': return `background: ${colors.neutral[200]}; color: ${colors.neutral[600]};`;
+      default: return `background: #e8f5e9; color: #388e3c;`;
+    }
+  }}
+`;
+
+const CatActions = styled.div`
+  display: flex;
+  gap: ${spacing[2]};
+  flex-wrap: wrap;
+`;
+
+const SmallBtn = styled.button<{ $variant?: 'danger' | 'toggle' }>`
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid ${colors.neutral[300]};
+  background: white;
+  transition: all 0.15s;
+  ${(props: any) => props.$variant === 'danger' && `
+    color: ${colors.error};
+    border-color: ${colors.error};
+    &:hover { background: rgba(239,68,68,0.1); }
+  `}
+  ${(props: any) => props.$variant === 'toggle' && `
+    color: ${colors.primary.main};
+    border-color: ${colors.primary.main};
+    &:hover { background: ${colors.primary.lighter}; }
+  `}
+  &:hover { opacity: 0.85; }
+`;
+
+const AddCatForm = styled.div`
+  border: 2px dashed ${colors.neutral[300]};
+  border-radius: ${borderRadius.md};
+  padding: ${spacing[4]};
+  display: flex;
+  flex-direction: column;
+  gap: ${spacing[3]};
+  background: ${colors.neutral[50]};
+`;
+
+const CatInlineRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: ${spacing[3]};
+  @media (max-width: 400px) { grid-template-columns: 1fr; }
+`;
+
+const GRADIENT_PRESETS = [
+  { label: 'Purple Blue', value: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+  { label: 'Ocean', value: 'linear-gradient(135deg, #2196f3 0%, #00bcd4 100%)' },
+  { label: 'Sunset', value: 'linear-gradient(135deg, #ff6b35 0%, #f7c948 100%)' },
+  { label: 'Forest', value: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)' },
+  { label: 'Rose', value: 'linear-gradient(135deg, #ee9ca7 0%, #ffdde1 100%)' },
+  { label: 'Slate', value: 'linear-gradient(135deg, #636e72 0%, #b2bec3 100%)' },
+  { label: 'Gold', value: 'linear-gradient(135deg, #f7971e 0%, #ffd200 100%)' },
+  { label: 'Night', value: 'linear-gradient(135deg, #232526 0%, #414345 100%)' },
+];
+
+const GradientPicker = styled.div`
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+`;
+
+const GradientSwatch = styled.button<{ $bg: string; $active: boolean }>`
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: ${(props: any) => props.$bg};
+  border: 2px solid ${(props: any) => props.$active ? colors.neutral[900] : 'transparent'};
+  cursor: pointer;
+  transition: all 0.15s;
+  &:hover { transform: scale(1.15); }
+`;
+
 // ===================== TYPES =====================
+
+interface CategoryData {
+  _id: string;
+  name: string;
+  slug: string;
+  icon: string;
+  image: string;
+  gradient: string;
+  displayOrder: number;
+  isActive: boolean;
+  showOnHome: boolean;
+  isPredefined: boolean;
+}
 
 export type SettingsTabKey = 'general' | 'appearance' | 'hero' | 'categories' | 'stats' | 'testimonials' | 'about' | 'contact';
 
@@ -322,7 +458,28 @@ export const SiteSettingsPanel = ({ activeTab = 'general' }: SiteSettingsPanelPr
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  useEffect(() => { loadSettings(); }, []);
+  // Category manager state
+  const [catList, setCatList] = useState<CategoryData[]>([]);
+  const [catLoading, setCatLoading] = useState(false);
+  const [catMsg, setCatMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [editingCat, setEditingCat] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<Partial<CategoryData>>({});
+  const [newCat, setNewCat] = useState({ name: '', icon: '📦', image: '', gradient: '', showOnHome: true });
+  const [showAddForm, setShowAddForm] = useState(false);
+
+  const loadCategories = useCallback(async () => {
+    try {
+      setCatLoading(true);
+      const res = await productsApi.get<any>('/categories?all=true');
+      setCatList(res.categories || []);
+    } catch (err) {
+      console.error('Failed to load categories:', err);
+    } finally {
+      setCatLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadSettings(); loadCategories(); }, []);
 
   const loadSettings = async () => {
     try {
@@ -385,9 +542,6 @@ export const SiteSettingsPanel = ({ activeTab = 'general' }: SiteSettingsPanelPr
         accentColor: settings.accentColor,
         heroTitle: settings.heroTitle,
         heroSubtitle: settings.heroSubtitle,
-        heroCategories: settings.heroCategories.split(',').map(s => s.trim()).filter(Boolean),
-        heroCategoryIcons: settings.heroCategoryIcons.split(',').map(s => s.trim()).filter(Boolean),
-        heroCategoryImages: settings.heroCategoryImages.split(',').map(s => s.trim()).filter(Boolean),
         statsProducts: settings.statsProducts,
         statsYears: settings.statsYears,
         statsClients: settings.statsClients,
@@ -534,26 +688,185 @@ export const SiteSettingsPanel = ({ activeTab = 'general' }: SiteSettingsPanelPr
     </TabContent>
   );
 
-  const renderCategoriesTab = () => (
-    <TabContent>
-      <SectionHeader>📂 Categories</SectionHeader>
-      <FieldGroup>
-        <Label>Category Names</Label>
-        <HelpText>Comma-separated, e.g. Floor Tiles, Wall Tiles, Marble, Granite</HelpText>
-        <TextArea placeholder="Floor Tiles, Wall Tiles, Marble, Granite, Bathroom Fittings, Outdoor Tiles" value={settings.heroCategories} onChange={handleChange('heroCategories')} />
-      </FieldGroup>
-      <FieldGroup>
-        <Label>Category Icons</Label>
-        <HelpText>Comma-separated emojis matching each category above, e.g. 🏠, 🧱, 💎, 🪨</HelpText>
-        <StyledInput placeholder="🏠, 🧱, 💎, 🪨, 🚿, 🌳" value={settings.heroCategoryIcons} onChange={inputChange('heroCategoryIcons')} />
-      </FieldGroup>
-      <FieldGroup>
-        <Label>Category Background Images</Label>
-        <HelpText>Comma-separated image URLs (Google Drive or direct). One per category. If provided, image replaces the gradient background.</HelpText>
-        <TextArea placeholder="https://drive.google.com/..., https://drive.google.com/..." value={settings.heroCategoryImages} onChange={handleChange('heroCategoryImages')} />
-      </FieldGroup>
-    </TabContent>
-  );
+  const renderCategoriesTab = () => {
+    const handleAddCategory = async () => {
+      if (!newCat.name.trim()) return;
+      try {
+        setCatMsg(null);
+        await authApi.post('/categories', newCat);
+        setCatMsg({ type: 'success', text: `Category "${newCat.name}" added!` });
+        setNewCat({ name: '', icon: '📦', image: '', gradient: '', showOnHome: true });
+        setShowAddForm(false);
+        await loadCategories();
+        setTimeout(() => setCatMsg(null), 3000);
+      } catch (err: any) {
+        setCatMsg({ type: 'error', text: err?.details?.message || err?.message || 'Failed to add category' });
+      }
+    };
+
+    const handleUpdateCategory = async (id: string) => {
+      try {
+        setCatMsg(null);
+        await authApi.put(`/categories/${id}`, editForm);
+        setCatMsg({ type: 'success', text: 'Category updated!' });
+        setEditingCat(null);
+        setEditForm({});
+        await loadCategories();
+        setTimeout(() => setCatMsg(null), 3000);
+      } catch (err: any) {
+        setCatMsg({ type: 'error', text: err?.details?.message || err?.message || 'Failed to update' });
+      }
+    };
+
+    const handleDeleteCategory = async (cat: CategoryData) => {
+      if (!window.confirm(`Delete category "${cat.name}"? Products with this category won't be affected.`)) return;
+      try {
+        setCatMsg(null);
+        await authApi.delete(`/categories/${cat._id}`);
+        setCatMsg({ type: 'success', text: `Category "${cat.name}" deleted.` });
+        await loadCategories();
+        setTimeout(() => setCatMsg(null), 3000);
+      } catch (err: any) {
+        setCatMsg({ type: 'error', text: err?.details?.message || err?.message || 'Failed to delete' });
+      }
+    };
+
+    const handleToggle = async (cat: CategoryData, field: 'isActive' | 'showOnHome') => {
+      try {
+        await authApi.put(`/categories/${cat._id}`, { [field]: !cat[field] });
+        await loadCategories();
+      } catch (err) {
+        console.error('Toggle failed:', err);
+      }
+    };
+
+    const startEdit = (cat: CategoryData) => {
+      setEditingCat(cat._id);
+      setEditForm({ name: cat.name, icon: cat.icon, image: cat.image, gradient: cat.gradient });
+    };
+
+    const getPreviewBg = (cat: { image?: string; gradient?: string }) => {
+      if (cat.image) return `url('${cat.image}')`;
+      if (cat.gradient) return cat.gradient;
+      return `linear-gradient(135deg, ${colors.primary.main}, ${colors.primary.dark})`;
+    };
+
+    return (
+      <TabContent>
+        <SectionHeader>📂 Category Management</SectionHeader>
+        <HelpText>Manage categories that appear on the home page and in product filters. Each category can have a background image, icon, or gradient.</HelpText>
+
+        {catMsg && (
+          catMsg.type === 'success'
+            ? <SuccessMessage>{catMsg.text}</SuccessMessage>
+            : <ErrorMessage>{catMsg.text}</ErrorMessage>
+        )}
+
+        {catLoading ? <Spinner label="Loading categories..." /> : (
+          <CatGrid>
+            {catList.map(cat => (
+              <CatCard key={cat._id} $inactive={!cat.isActive}>
+                <CatPreview $bg={getPreviewBg(cat)} style={cat.image ? { backgroundImage: `url('${cat.image}')` } : cat.gradient ? { background: cat.gradient } : undefined}>
+                  {!cat.image && <span>{cat.icon}</span>}
+                </CatPreview>
+
+                {editingCat === cat._id ? (
+                  <>
+                    <FieldGroup>
+                      <Label>Name</Label>
+                      <StyledInput value={editForm.name || ''} onChange={(e: any) => setEditForm(f => ({ ...f, name: e.target.value }))} />
+                    </FieldGroup>
+                    <CatInlineRow>
+                      <FieldGroup>
+                        <Label>Icon (emoji)</Label>
+                        <StyledInput value={editForm.icon || ''} onChange={(e: any) => setEditForm(f => ({ ...f, icon: e.target.value }))} />
+                      </FieldGroup>
+                      <FieldGroup>
+                        <Label>Image URL</Label>
+                        <StyledInput value={editForm.image || ''} onChange={(e: any) => setEditForm(f => ({ ...f, image: e.target.value }))} placeholder="https://..." />
+                      </FieldGroup>
+                    </CatInlineRow>
+                    <FieldGroup>
+                      <Label>Gradient (or leave empty for default)</Label>
+                      <GradientPicker>
+                        <GradientSwatch $bg="transparent" $active={!editForm.gradient} onClick={() => setEditForm(f => ({ ...f, gradient: '' }))} style={{ border: '2px dashed #ccc', fontSize: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</GradientSwatch>
+                        {GRADIENT_PRESETS.map(g => (
+                          <GradientSwatch key={g.label} $bg={g.value} $active={editForm.gradient === g.value} onClick={() => setEditForm(f => ({ ...f, gradient: g.value }))} title={g.label} />
+                        ))}
+                      </GradientPicker>
+                    </FieldGroup>
+                    <CatActions>
+                      <SmallBtn $variant="toggle" onClick={() => handleUpdateCategory(cat._id)}>Save</SmallBtn>
+                      <SmallBtn onClick={() => { setEditingCat(null); setEditForm({}); }}>Cancel</SmallBtn>
+                    </CatActions>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2], flexWrap: 'wrap' }}>
+                      <strong style={{ fontSize: typography.fontSize.base }}>{cat.name}</strong>
+                      {cat.isPredefined && <CatBadge $type="predefined">Predefined</CatBadge>}
+                      {!cat.isPredefined && <CatBadge $type="custom">Custom</CatBadge>}
+                      {!cat.isActive && <CatBadge $type="hidden">Inactive</CatBadge>}
+                      {!cat.showOnHome && cat.isActive && <CatBadge $type="hidden">Hidden from Home</CatBadge>}
+                    </div>
+                    <CatActions>
+                      <SmallBtn onClick={() => startEdit(cat)}>✏️ Edit</SmallBtn>
+                      <SmallBtn $variant="toggle" onClick={() => handleToggle(cat, 'isActive')}>
+                        {cat.isActive ? '👁 Active' : '👁‍🗨 Inactive'}
+                      </SmallBtn>
+                      <SmallBtn $variant="toggle" onClick={() => handleToggle(cat, 'showOnHome')}>
+                        {cat.showOnHome ? '🏠 On Home' : '🏠 Off Home'}
+                      </SmallBtn>
+                      <SmallBtn $variant="danger" onClick={() => handleDeleteCategory(cat)}>🗑</SmallBtn>
+                    </CatActions>
+                  </>
+                )}
+              </CatCard>
+            ))}
+
+            {/* Add new category card */}
+            {showAddForm ? (
+              <AddCatForm>
+                <SectionHeader style={{ fontSize: typography.fontSize.base, margin: 0, border: 'none', paddingBottom: 0 }}>➕ New Category</SectionHeader>
+                <FieldGroup>
+                  <Label>Name *</Label>
+                  <StyledInput value={newCat.name} onChange={(e: any) => setNewCat(n => ({ ...n, name: e.target.value }))} placeholder="e.g., Porcelain Tiles" />
+                </FieldGroup>
+                <CatInlineRow>
+                  <FieldGroup>
+                    <Label>Icon (emoji)</Label>
+                    <StyledInput value={newCat.icon} onChange={(e: any) => setNewCat(n => ({ ...n, icon: e.target.value }))} />
+                  </FieldGroup>
+                  <FieldGroup>
+                    <Label>Image URL</Label>
+                    <StyledInput value={newCat.image} onChange={(e: any) => setNewCat(n => ({ ...n, image: e.target.value }))} placeholder="https://..." />
+                  </FieldGroup>
+                </CatInlineRow>
+                <FieldGroup>
+                  <Label>Gradient</Label>
+                  <GradientPicker>
+                    <GradientSwatch $bg="transparent" $active={!newCat.gradient} onClick={() => setNewCat(n => ({ ...n, gradient: '' }))} style={{ border: '2px dashed #ccc', fontSize: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</GradientSwatch>
+                    {GRADIENT_PRESETS.map(g => (
+                      <GradientSwatch key={g.label} $bg={g.value} $active={newCat.gradient === g.value} onClick={() => setNewCat(n => ({ ...n, gradient: g.value }))} title={g.label} />
+                    ))}
+                  </GradientPicker>
+                </FieldGroup>
+                <CatActions>
+                  <SmallBtn $variant="toggle" onClick={handleAddCategory}>Add Category</SmallBtn>
+                  <SmallBtn onClick={() => setShowAddForm(false)}>Cancel</SmallBtn>
+                </CatActions>
+              </AddCatForm>
+            ) : (
+              <AddCatForm style={{ alignItems: 'center', justifyContent: 'center', minHeight: 150, cursor: 'pointer' }} onClick={() => setShowAddForm(true)}>
+                <span style={{ fontSize: '2rem' }}>➕</span>
+                <span style={{ color: colors.neutral[500], fontWeight: 600 }}>Add Category</span>
+              </AddCatForm>
+            )}
+          </CatGrid>
+        )}
+      </TabContent>
+    );
+  };
 
   const renderStatsTab = () => (
     <TabContent>

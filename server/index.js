@@ -8,6 +8,8 @@ import userRoutes from './routes/user.js';
 import inquiryRoutes from './routes/inquiries.js';
 import bannerRoutes from './routes/banners.js';
 import settingsRoutes from './routes/settings.js';
+import categoryRoutes from './routes/categories.js';
+import Category from './models/Category.js';
 
 dotenv.config();
 
@@ -28,6 +30,8 @@ const connectDB = async () => {
     await mongoose.connect(process.env.MONGO_URI);
     dbConnected = true;
     console.log('🔗 Connected to MongoDB');
+    // Seed default categories on first connect
+    await Category.seedDefaults();
   } catch (error) {
     console.error('❌ MongoDB connection failed:', error.message);
     if (process.env.NODE_ENV !== 'production') {
@@ -62,6 +66,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/inquiries', inquiryRoutes);
 app.use('/api/banners', bannerRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/categories', categoryRoutes);
 
 // Health Check
 app.get('/', (req, res) => {

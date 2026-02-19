@@ -7,6 +7,7 @@ import { fetchProducts } from "../features/products/productsSlice";
 import { ProductCard } from "../components/ProductCard";
 import { BannerDisplay } from "../components/BannerDisplay";
 import { userAPI } from "../services/userAPI";
+import { productsApi } from "../services/apiClient";
 import { convertGoogleDriveUrl } from '../utils/googleDriveUrl';
 import { colors, spacing, typography, media } from "../styles/designTokens";
 
@@ -129,10 +130,10 @@ const CategoryCard = styled.div`
   }
 `;
 
-const CategoryImage = styled.div<{ $hasImage?: boolean }>`
+const CategoryImage = styled.div<{ $hasImage?: boolean; $gradient?: string }>`
   width: 100%;
   height: 150px;
-  background: ${p => p.$hasImage ? colors.neutral[200] : `linear-gradient(135deg, var(--color-primary, #667eea) 0%, var(--color-primary-dark, #764ba2) 100%)`};
+  background: ${p => p.$gradient || `linear-gradient(135deg, var(--color-primary, #667eea) 0%, var(--color-primary-dark, #764ba2) 100%)`};
   background-size: cover;
   background-position: center;
   display: flex;
@@ -272,14 +273,7 @@ const ProductListContainer = styled.div`
   margin-top: ${spacing[8]};
 `;
 
-const DEFAULT_CATEGORIES = [
-  { id: 'floor-tiles', name: 'Floor Tiles', icon: '🏠', image: '' },
-  { id: 'wall-tiles', name: 'Wall Tiles', icon: '🧱', image: '' },
-  { id: 'marble', name: 'Marble', icon: '💎', image: '' },
-  { id: 'granite', name: 'Granite', icon: '🪨', image: '' },
-  { id: 'bathroom', name: 'Bathroom Fittings', icon: '🚿', image: '' },
-  { id: 'outdoor', name: 'Outdoor Tiles', icon: '🌳', image: '' },
-];
+const DEFAULT_CATEGORIES: { id: string; name: string; icon: string; image: string; gradient: string }[] = [];
 
 const DEFAULT_TESTIMONIALS = [
   { text: "Excellent quality tiles and outstanding customer service. We've been sourcing from them for over 5 years.", author: "Rajesh Kumar - Contractor" },
@@ -304,7 +298,21 @@ export const HomePage = () => {
     if (items.length === 0) {
       dispatch(fetchProducts() as any);
     }
-    // Load all homepage settings
+
+    // Load categories from Category API
+    productsApi.get<any>('/categories/home').then((res: any) => {
+      if (res.categories && res.categories.length > 0) {
+        setCategories(res.categories.map((cat: any) => ({
+          id: cat.slug || cat.name.toLowerCase().replace(/\s+/g, '-'),
+          name: cat.name,
+          icon: cat.icon || '📦',
+          image: cat.image || '',
+          gradient: cat.gradient || '',
+        })));
+      }
+    }).catch(() => {});
+
+    // Load other homepage settings
     userAPI.getSiteSettings().then((data: any) => {
       // Map
       if (data.mapEmbedUrl) {
@@ -318,17 +326,6 @@ export const HomePage = () => {
       // Hero
       if (data.heroTitle) setHeroTitle(data.heroTitle);
       if (data.heroSubtitle) setHeroSubtitle(data.heroSubtitle);
-      // Categories
-      if (Array.isArray(data.heroCategories) && data.heroCategories.length > 0) {
-        const icons = Array.isArray(data.heroCategoryIcons) ? data.heroCategoryIcons : [];
-        const images = Array.isArray(data.heroCategoryImages) ? data.heroCategoryImages : [];
-        setCategories(data.heroCategories.map((name: string, i: number) => ({
-          id: name.toLowerCase().replace(/\s+/g, '-'),
-          name,
-          icon: icons[i] || '📦',
-          image: images[i] || '',
-        })));
-      }
       // Stats
       setStats({
         products: data.statsProducts || '500+',
@@ -379,13 +376,15 @@ export const HomePage = () => {
       </HeroBanner>
 
       {/* Featured Categories */}
+      {categories.length > 0 && (
       <Section>
         <SectionTitle>Our Categories</SectionTitle>
         <CategoriesGrid>
           {categories.map(category => (
-            <CategoryCard key={category.id} onClick={() => handleCategoryClick(category.id)}>
+            <CategoryCard key={category.id} onClick={() => handleCategoryClick(category.name)}>
               <CategoryImage
                 $hasImage={!!category.image}
+                $gradient={category.gradient || undefined}
                 style={category.image ? { backgroundImage: `url('${convertGoogleDriveUrl(category.image)}')` } : undefined}
               >
                 {!category.image && category.icon}
@@ -397,6 +396,7 @@ export const HomePage = () => {
           ))}
         </CategoriesGrid>
       </Section>
+      )}
 
       {/* Featured Products */}
       <Section style={{ backgroundColor: 'var(--color-bg-secondary, #f9f9f9)' }}>
