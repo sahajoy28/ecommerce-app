@@ -311,8 +311,8 @@ export const WishlistPage = () => {
       // Reload cart from backend to sync Redux state
       await dispatch(loadCartAPI() as any);
       
-      // Remove from wishlist after adding to cart
-      await dispatch(removeFromWishlistAPI(String(product.productId || product.id)) as any);
+      // Remove from wishlist after adding to cart (use MongoDB ID)
+      await dispatch(removeFromWishlistAPI(String(product._id || product.productId || product.id)) as any);
     } catch (error) {
       console.error("Failed to add to cart", error);
     }
