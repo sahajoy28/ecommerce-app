@@ -2,7 +2,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Header, FilterContext } from "./components/Header";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ThemeProviderWrapper } from "./components/ThemeWrapper";
-import { Dashboard } from "./pages/Dashboard";
+import { HomePage } from "./pages/HomePage";
+import { CatalogPage } from "./pages/CatalogPage";
 import { ProductDetails } from "./pages/ProductDetails";
 import { CartPage } from "./pages/CartPage";
 import { AuthPage } from "./pages/AuthPage";
@@ -63,7 +64,8 @@ function App() {
                 <Header />
                 <MainContent>
                   <Routes>
-                    <Route path="/" element={<ErrorBoundary><Dashboard showFilters={showFilters} setShowFilters={setShowFilters} /></ErrorBoundary>} />
+                    <Route path="/" element={<ErrorBoundary><HomePage /></ErrorBoundary>} />
+                    <Route path="/catalog" element={<ErrorBoundary><CatalogPage /></ErrorBoundary>} />
                     <Route path="/product/:id" element={<ErrorBoundary><ProductDetails /></ErrorBoundary>} />
                     <Route path="/cart" element={<ErrorBoundary><CartPage /></ErrorBoundary>} />
                     <Route path="/wishlist" element={<ErrorBoundary><WishlistPage /></ErrorBoundary>} />
