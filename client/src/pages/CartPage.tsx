@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button, Text } from "@fluentui/react-components";
 import { Delete24Filled } from "@fluentui/react-icons";
 import { useAppSelector, useAppDispatch } from "../app/hooks";
-import { removeFromCartLocal } from "../features/cart/cartSlice";
+import { removeFromCartLocal, removeFromCartAPI } from "../features/cart/cartSlice";
 import { colors, spacing, typography, shadows, borderRadius, transitions, media } from "../styles/designTokens";
 
 const CartContainer = styled.div`
@@ -339,7 +339,7 @@ export const CartPage = () => {
             <div></div>
           </CartHeader>
           {items.map((item) => (
-            <CartItem key={item.id}>
+            <CartItem key={item.id || item._id}>
               <ProductImage src={item.image} alt={item.title} />
               <ProductInfo>
                 <ProductName>{item.title}</ProductName>
@@ -354,7 +354,15 @@ export const CartPage = () => {
               <RemoveButton
                 appearance="subtle"
                 icon={<Delete24Filled />}
-                onClick={() => dispatch(removeFromCartLocal(item.id))}
+                onClick={() => {
+                  if (authUser) {
+                    // Use MongoDB item ID for logged-in users
+                    dispatch(removeFromCartAPI(item._id || item.id));
+                  } else {
+                    // Use product ID for local cart
+                    dispatch(removeFromCartLocal(item.id));
+                  }
+                }}
                 title="Remove from cart"
               />
             </CartItem>

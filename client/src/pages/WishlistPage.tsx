@@ -373,7 +373,7 @@ export const WishlistPage = () => {
                       appearance="subtle"
                       size="small"
                       icon={<Delete24Filled />}
-                      onClick={() => handleRemoveFromWishlist(String(product.id))}
+                      onClick={() => handleRemoveFromWishlist(String(product._id || product.id))}
                       title="Remove from wishlist"
                     />
                   </Actions>
