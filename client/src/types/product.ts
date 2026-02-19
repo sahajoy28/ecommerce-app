@@ -11,6 +11,7 @@ export interface Review {
 
 export interface Product {
   id: number;
+  _id?: string; // MongoDB ID for logged-in users
   title: string;
   price: number;
   description: string;
