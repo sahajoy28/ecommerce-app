@@ -268,6 +268,68 @@ const DiscountPreview = styled.div`
   margin-top: ${spacing[1]};
 `;
 
+const SpecSection = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: ${spacing[4]};
+  padding: ${spacing[6]};
+  background: ${colors.neutral[50]};
+  border-radius: 8px;
+  border: 1px solid ${colors.neutral[200]};
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+    padding: ${spacing[3]};
+  }
+`;
+
+const SizesGrid = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${spacing[2]};
+  margin-top: ${spacing[2]};
+`;
+
+const SizeChip = styled.button<{ $active: boolean }>`
+  padding: ${spacing[1]} ${spacing[3]};
+  border-radius: 20px;
+  border: 1.5px solid ${(p: any) => p.$active ? colors.primary.main : colors.neutral[300]};
+  background: ${(p: any) => p.$active ? colors.primary.main : 'white'};
+  color: ${(p: any) => p.$active ? 'white' : colors.neutral[700]};
+  font-size: ${typography.fontSize.sm};
+  font-weight: ${typography.fontWeight.medium};
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: ${colors.primary.main};
+  }
+`;
+
+const SelectField = styled.select`
+  width: 100%;
+  max-width: 100%;
+  padding: ${spacing[2]};
+  border: 1px solid ${colors.neutral[300]};
+  border-radius: 4px;
+  font-size: ${typography.fontSize.sm};
+  box-sizing: border-box;
+  background: white;
+
+  &:focus {
+    outline: none;
+    border-color: ${colors.primary.main};
+  }
+`;
+
+const MATERIAL_OPTIONS = ['Tiles', 'Marble', 'Granite', 'Ceramic', 'Porcelain', 'Natural Stone', 'Bathroom Fittings', 'Other'];
+const FINISH_OPTIONS = ['Glossy', 'Matte', 'Polish', 'Textured', 'Honed'];
+const SIZE_OPTIONS = ['1x1', '2x1', '2x2', '2x4', '3x2', '4x2', '4x4', '6x4', '8x4', '12x6', '12x24', '24x24', '24x48', '32x32', '60x60', '60x120', '80x80', '80x120', '100x100', '120x120', '120x180'];
+
 interface ProductFormProps {
   onSubmit: (data: any) => Promise<void>;
   initialData?: any;
@@ -290,6 +352,15 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
   const [showImageInput, setShowImageInput] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  // Tile / showroom fields
+  const [material, setMaterial] = useState(initialData?.material || 'Tiles');
+  const [finish, setFinish] = useState(initialData?.finish || 'Glossy');
+  const [sizes, setSizes] = useState<string[]>(initialData?.sizes || []);
+  const [color, setColor] = useState(initialData?.color || '');
+  const [thickness, setThickness] = useState(initialData?.specifications?.thickness || '');
+  const [weight, setWeight] = useState(initialData?.specifications?.weight || '');
+  const [waterAbsorption, setWaterAbsorption] = useState(initialData?.specifications?.waterAbsorption || '');
+  const [mohs, setMohs] = useState(initialData?.specifications?.mohs || '');
 
   const isEditing = !!initialData;
 
@@ -309,6 +380,14 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
     setImageUrl('');
     setError('');
     setSuccess('');
+    setMaterial(initialData?.material || 'Tiles');
+    setFinish(initialData?.finish || 'Glossy');
+    setSizes(initialData?.sizes || []);
+    setColor(initialData?.color || '');
+    setThickness(initialData?.specifications?.thickness || '');
+    setWeight(initialData?.specifications?.weight || '');
+    setWaterAbsorption(initialData?.specifications?.waterAbsorption || '');
+    setMohs(initialData?.specifications?.mohs || '');
   }, [initialData]);
 
   const calculateFinalPrice = () => {
@@ -364,7 +443,17 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
         showPriceInListing,
         category,
         quantity: parseInt(quantity),
-        images
+        images,
+        material,
+        finish,
+        sizes,
+        color,
+        specifications: {
+          ...(thickness && { thickness }),
+          ...(weight && { weight }),
+          ...(waterAbsorption && { waterAbsorption }),
+          ...(mohs && { mohs }),
+        }
       });
       setSuccess(isEditing ? 'Product updated successfully!' : 'Product added successfully!');
       if (!isEditing) {
@@ -379,6 +468,14 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
         setCategory('');
         setQuantity('');
         setImages([]);
+        setMaterial('Tiles');
+        setFinish('Glossy');
+        setSizes([]);
+        setColor('');
+        setThickness('');
+        setWeight('');
+        setWaterAbsorption('');
+        setMohs('');
       }
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {
@@ -430,6 +527,102 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
           placeholder="Enter quantity"
           disabled={isLoading}
           inputMode="numeric"
+        />
+      </FormGroup>
+
+      <FormGroup>
+        <Label>🧱 Tile / Material Specifications</Label>
+        <SpecSection>
+          <FormGroup>
+            <Label>Material Type</Label>
+            <SelectField value={material} onChange={(e) => setMaterial(e.target.value)} disabled={isLoading}>
+              {MATERIAL_OPTIONS.map(m => <option key={m} value={m}>{m}</option>)}
+            </SelectField>
+          </FormGroup>
+
+          <FormGroup>
+            <Label>Finish</Label>
+            <SelectField value={finish} onChange={(e) => setFinish(e.target.value)} disabled={isLoading}>
+              {FINISH_OPTIONS.map(f => <option key={f} value={f}>{f}</option>)}
+            </SelectField>
+          </FormGroup>
+
+          <FormGroup>
+            <Label>Color</Label>
+            <Input
+              value={color}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setColor(event.target.value)}
+              placeholder="e.g., White, Beige, Grey"
+              disabled={isLoading}
+            />
+          </FormGroup>
+
+          <FormGroup>
+            <Label>Thickness</Label>
+            <Input
+              value={thickness}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setThickness(event.target.value)}
+              placeholder="e.g., 8mm, 10mm"
+              disabled={isLoading}
+            />
+          </FormGroup>
+
+          <FormGroup>
+            <Label>Weight (per box/sqft)</Label>
+            <Input
+              value={weight}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setWeight(event.target.value)}
+              placeholder="e.g., 18 kg/box"
+              disabled={isLoading}
+            />
+          </FormGroup>
+
+          <FormGroup>
+            <Label>Water Absorption</Label>
+            <Input
+              value={waterAbsorption}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setWaterAbsorption(event.target.value)}
+              placeholder="e.g., &lt;0.5%"
+              disabled={isLoading}
+            />
+          </FormGroup>
+
+          <FormGroup>
+            <Label>Mohs Hardness</Label>
+            <Input
+              value={mohs}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setMohs(event.target.value)}
+              placeholder="e.g., 5-6"
+              disabled={isLoading}
+            />
+          </FormGroup>
+        </SpecSection>
+      </FormGroup>
+
+      <FormGroup>
+        <Label>📐 Available Sizes</Label>
+        <SizesGrid>
+          {SIZE_OPTIONS.map(s => (
+            <SizeChip
+              key={s}
+              type="button"
+              $active={sizes.includes(s)}
+              onClick={() => setSizes(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])}
+              disabled={isLoading}
+            >
+              {s}
+            </SizeChip>
+          ))}
+        </SizesGrid>
+        <Input
+          value={sizes.filter(s => !SIZE_OPTIONS.includes(s)).join(', ')}
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+            const custom = event.target.value.split(',').map(s => s.trim()).filter(Boolean);
+            setSizes([...sizes.filter(s => SIZE_OPTIONS.includes(s)), ...custom]);
+          }}
+          placeholder="Add custom sizes (comma separated)"
+          disabled={isLoading}
+          style={{ marginTop: spacing[2] }}
         />
       </FormGroup>
 

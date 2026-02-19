@@ -119,6 +119,29 @@ const Description = styled.p`
   overflow: hidden;
 `;
 
+const SpecTags = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: ${spacing[1]};
+`;
+
+const SpecTag = styled.span`
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: ${colors.neutral[100]};
+  color: ${colors.neutral[600]};
+  font-weight: ${typography.fontWeight.medium};
+  white-space: nowrap;
+`;
+
+const ContactForPrice = styled.div`
+  font-weight: ${typography.fontWeight.semibold};
+  font-size: ${typography.fontSize.sm};
+  color: ${colors.primary.main};
+`;
+
 const PriceAndRating = styled.div`
   display: flex;
   align-items: center;
@@ -240,11 +263,28 @@ export const ProductCard = ({ product }: { product: Product }) => {
             {product.title}
           </Title>
 
+          {(product.material || product.finish || (product.sizes && product.sizes.length > 0)) && (
+            <SpecTags>
+              {product.material && <SpecTag>{product.material}</SpecTag>}
+              {product.finish && <SpecTag>{product.finish}</SpecTag>}
+              {product.sizes && product.sizes.length > 0 && (
+                <SpecTag>{product.sizes.slice(0, 2).join(', ')}{product.sizes.length > 2 ? ` +${product.sizes.length - 2}` : ''}</SpecTag>
+              )}
+              {product.color && <SpecTag>{product.color}</SpecTag>}
+            </SpecTags>
+          )}
+
           <PriceAndRating>
             <PriceSection>
-              <Price>₹{product.price.toFixed(0)}</Price>
-              {originalPrice > product.price && (
-                <OriginalPrice>₹{originalPrice.toFixed(0)}</OriginalPrice>
+              {product.showPriceInListing === false ? (
+                <ContactForPrice>Contact for Price</ContactForPrice>
+              ) : (
+                <>
+                  <Price>₹{product.price.toFixed(0)}</Price>
+                  {originalPrice > product.price && (
+                    <OriginalPrice>₹{originalPrice.toFixed(0)}</OriginalPrice>
+                  )}
+                </>
               )}
             </PriceSection>
             <RatingDisplay rating={product.rating} count={product.reviewCount} size="12px" />

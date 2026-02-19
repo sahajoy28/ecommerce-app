@@ -1,10 +1,11 @@
 import styled from "styled-components";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
-import { deleteReview, updateHelpful } from "../features/reviews/reviewsSlice";
+import { updateProductReviews } from "../features/products/productsSlice";
 import { Review } from "../types/product";
 import { RatingDisplay } from "./RatingDisplay";
 import { useStrings } from "../utils/strings";
 import React from "react";
+import { authApi, productsApi } from "../services/apiClient";
 
 const Container = styled.div`
   margin: 20px 0;
@@ -180,16 +181,40 @@ const SortButton = styled.button<{ active?: boolean }>`
 `;
 
 interface ReviewsListProps {
-  productId: number;
+  productId: number | string;
 }
 
 export const ReviewsList = ({ productId }: ReviewsListProps) => {
   const dispatch = useAppDispatch();
   const { t } = useStrings();
   const user = useAppSelector((state: any) => state.auth.user);
-  const reviews = useAppSelector((state: any) => state.reviews.reviews[productId] || []);
+  const [reviews, setReviews] = React.useState<Review[]>([]);
   const [sortBy, setSortBy] = React.useState<"recent" | "helpful" | "rating">("recent");
   const [userHelpfulVotes, setUserHelpfulVotes] = React.useState<Set<string>>(new Set());
+
+  // Fetch reviews from the product API
+  const fetchReviews = React.useCallback(async () => {
+    try {
+      const productData = await productsApi.get<any>(`/products/${productId}`);
+      if (productData) {
+        const p = productData.product || productData;
+        setReviews(p.reviews || []);
+        // Also update redux store
+        dispatch(updateProductReviews({
+          productId,
+          reviews: p.reviews || [],
+          rating: p.rating || 0,
+          reviewCount: p.reviewCount || 0,
+        }));
+      }
+    } catch (err) {
+      console.error('Failed to fetch reviews:', err);
+    }
+  }, [productId, dispatch]);
+
+  React.useEffect(() => {
+    fetchReviews();
+  }, [fetchReviews]);
 
   const sortedReviews = [...reviews].sort((a, b) => {
     if (sortBy === "recent") {
@@ -202,16 +227,30 @@ export const ReviewsList = ({ productId }: ReviewsListProps) => {
     return 0;
   });
 
-  const handleHelpful = (reviewId: string) => {
+  const refreshProductReviews = async () => {
+    await fetchReviews();
+  };
+
+  const handleHelpful = async (reviewId: string) => {
     if (!userHelpfulVotes.has(reviewId)) {
-      dispatch(updateHelpful({ productId, reviewId }));
-      setUserHelpfulVotes(prev => new Set([...prev, reviewId]));
+      try {
+        await productsApi.patch<any>(`/products/${productId}/reviews/${reviewId}/helpful`);
+        setUserHelpfulVotes(prev => new Set([...prev, reviewId]));
+        await refreshProductReviews();
+      } catch (err) {
+        console.error('Failed to update helpful:', err);
+      }
     }
   };
 
-  const handleDelete = (reviewId: string) => {
+  const handleDelete = async (reviewId: string) => {
     if (window.confirm(t("reviews.deleteConfirm"))) {
-      dispatch(deleteReview({ productId, reviewId }));
+      try {
+        await authApi.delete<any>(`/products/${productId}/reviews/${reviewId}`);
+        await refreshProductReviews();
+      } catch (err) {
+        console.error('Failed to delete review:', err);
+      }
     }
   };
 

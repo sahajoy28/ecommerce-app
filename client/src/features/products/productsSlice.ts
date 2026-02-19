@@ -8,6 +8,16 @@ interface ProductsState {
   loading: boolean;
   error: string | null;
   retrying: boolean;
+  filters: {
+    category: string | null;
+    maxPrice: number | null;
+    minRating: number;
+    search: string;
+    material: string | null;
+    finish: string | null;
+    size: string | null;
+    color: string | null;
+  };
 }
 
 const initialState: ProductsState = {
@@ -15,37 +25,17 @@ const initialState: ProductsState = {
   filtered: [],
   loading: false,
   error: null,
-  retrying: false
-};
-
-const generateSampleReviews = (productId: number) => {
-  const reviewTexts = [
-    { title: "Great product!", comment: "Really happy with this purchase. Excellent quality and arrived on time." },
-    { title: "Good value for money", comment: "The price is reasonable and the product works as expected." },
-    { title: "Highly recommend", comment: "Very satisfied with my purchase. Would buy again!" },
-    { title: "Average quality", comment: "It's okay, does what it's supposed to do but nothing special." },
-    { title: "Excellent!", comment: "Exceeded my expectations. Great durability and performance." },
-  ];
-
-  const reviewCount = Math.floor(Math.random() * 4) + 2; // 2-5 reviews
-  const reviews = [];
-
-  for (let i = 0; i < reviewCount; i++) {
-    const reviewText = reviewTexts[Math.floor(Math.random() * reviewTexts.length)];
-    const rating = Math.floor(Math.random() * 2) + 4; // 4-5 stars mostly, with some 3-4
-    reviews.push({
-      id: `review_${productId}_${i}_${Date.now()}`,
-      userId: `user_${i}`,
-      userName: `User ${i + 1}`,
-      rating,
-      title: reviewText.title,
-      comment: reviewText.comment,
-      date: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-      helpful: Math.floor(Math.random() * 10),
-    });
+  retrying: false,
+  filters: {
+    category: null,
+    maxPrice: null,
+    minRating: 0,
+    search: '',
+    material: null,
+    finish: null,
+    size: null,
+    color: null,
   }
-
-  return reviews;
 };
 
 export const fetchProducts = createAsyncThunk(
@@ -56,17 +46,10 @@ export const fetchProducts = createAsyncThunk(
       const res = await productsApi.get<any>("/products?limit=100");
       const products = res.products || res;
 
-      // Transform products - handle both string IDs (MongoDB) and numeric IDs (legacy)
+      // Transform products - use real reviews from database
       return Array.isArray(products)
-        ? products.map((product: any) => {
-            const reviews = generateSampleReviews(product.id || product._id);
-            const averageRating =
-              reviews.length > 0
-                ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-                : product.rating || 4;
-
-            return {
-              id: String(product.id || product._id),  // Ensure ID is a string
+        ? products.map((product: any) => ({
+              id: String(product.id || product._id),
               _id: String(product._id || product.id),
               title: product.title,
               price: product.price,
@@ -78,11 +61,17 @@ export const fetchProducts = createAsyncThunk(
               retailPrice: product.retailPrice,
               discount: product.discount,
               showPriceInListing: product.showPriceInListing,
-              rating: Number(averageRating.toFixed(1)),
-              reviewCount: reviews.length,
-              reviews: reviews,
-            };
-          })
+              rating: product.rating || 0,
+              reviewCount: product.reviewCount || 0,
+              reviews: product.reviews || [],
+              material: product.material || '',
+              finish: product.finish || '',
+              sizes: product.sizes || [],
+              color: product.color || '',
+              specifications: product.specifications || {},
+              stock: product.stock,
+              quantity: product.quantity,
+            }))
         : [];
     } catch (error) {
       const apiError = error as ApiError;
@@ -91,25 +80,65 @@ export const fetchProducts = createAsyncThunk(
   }
 );
 
+const applyFilters = (state: ProductsState) => {
+  let result = [...state.items];
+  const f = state.filters;
+  if (f.category) result = result.filter(p => p.category === f.category);
+  if (f.maxPrice !== null) result = result.filter(p => p.price <= f.maxPrice!);
+  if (f.minRating > 0) result = result.filter(p => p.rating >= f.minRating);
+  if (f.search) {
+    const q = f.search.toLowerCase();
+    result = result.filter(p =>
+      p.title.toLowerCase().includes(q) ||
+      p.description.toLowerCase().includes(q) ||
+      p.category.toLowerCase().includes(q)
+    );
+  }
+  if (f.material) result = result.filter(p => p.material === f.material);
+  if (f.finish) result = result.filter(p => p.finish === f.finish);
+  if (f.size) result = result.filter(p => p.sizes?.includes(f.size!));
+  if (f.color) result = result.filter(p => p.color?.toLowerCase() === f.color!.toLowerCase());
+  state.filtered = result;
+};
+
 const slice = createSlice({
   name: "products",
   initialState,
   reducers: {
     filterByCategory: (state, action) => {
-      state.filtered = state.items.filter(p => p.category === action.payload);
+      state.filters.category = action.payload || null;
+      applyFilters(state);
     },
     filterByPrice: (state, action) => {
-      state.filtered = state.items.filter(p => p.price <= action.payload);
+      state.filters.maxPrice = action.payload;
+      applyFilters(state);
     },
     filterByRating: (state, action) => {
-      state.filtered = state.items.filter(p => p.rating >= action.payload);
+      state.filters.minRating = action.payload;
+      applyFilters(state);
     },
     searchProducts: (state, action) => {
-      state.filtered = state.items.filter(p =>
-        p.title.toLowerCase().includes(action.payload.toLowerCase())
-      );
+      state.filters.search = action.payload;
+      applyFilters(state);
+    },
+    filterByMaterial: (state, action) => {
+      state.filters.material = action.payload || null;
+      applyFilters(state);
+    },
+    filterByFinish: (state, action) => {
+      state.filters.finish = action.payload || null;
+      applyFilters(state);
+    },
+    filterBySize: (state, action) => {
+      state.filters.size = action.payload || null;
+      applyFilters(state);
+    },
+    filterByColor: (state, action) => {
+      state.filters.color = action.payload || null;
+      applyFilters(state);
     },
     resetFilters: (state) => {
+      state.filters = { ...initialState.filters };
       state.filtered = state.items;
     },
     clearError: (state) => {
@@ -117,6 +146,18 @@ const slice = createSlice({
     },
     setRetrying: (state, action) => {
       state.retrying = action.payload;
+    },
+    updateProductReviews: (state, action) => {
+      const { productId, reviews, rating, reviewCount } = action.payload;
+      const updateItem = (item: Product) => {
+        if (String(item.id) === String(productId)) {
+          item.reviews = reviews;
+          item.rating = rating;
+          item.reviewCount = reviewCount;
+        }
+      };
+      state.items.forEach(updateItem);
+      state.filtered.forEach(updateItem);
     }
   },
   extraReducers: builder => {
@@ -143,5 +184,5 @@ const slice = createSlice({
   }
 });
 
-export const { filterByCategory, filterByPrice, filterByRating, searchProducts, resetFilters, clearError, setRetrying } = slice.actions;
+export const { filterByCategory, filterByPrice, filterByRating, searchProducts, filterByMaterial, filterByFinish, filterBySize, filterByColor, resetFilters, clearError, setRetrying, updateProductReviews } = slice.actions;
 export default slice.reducer;

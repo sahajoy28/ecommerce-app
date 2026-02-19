@@ -217,6 +217,56 @@ const RelatedSection = styled.div`
   }
 `;
 
+const SpecsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: ${spacing[2]};
+  padding: ${spacing[4]};
+  background: var(--color-neutral-50, ${colors.neutral[50]});
+  border-radius: ${borderRadius.md};
+  border: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
+
+  ${media.mobile} {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const SpecItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: ${spacing[2]};
+`;
+
+const SpecLabel = styled.span`
+  font-size: ${typography.fontSize.xs};
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-tertiary, ${colors.neutral[500]});
+  font-weight: ${typography.fontWeight.semibold};
+`;
+
+const SpecValue = styled.span`
+  font-size: ${typography.fontSize.sm};
+  color: var(--color-text-primary, ${colors.neutral[900]});
+  font-weight: ${typography.fontWeight.medium};
+`;
+
+const SizeBadges = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${spacing[2]};
+`;
+
+const SizeBadge = styled.span`
+  padding: ${spacing[1]} ${spacing[3]};
+  border-radius: 20px;
+  background: var(--color-primary-lighter, ${colors.primary.lighter});
+  color: var(--color-primary-dark, ${colors.primary.dark});
+  font-size: ${typography.fontSize.xs};
+  font-weight: ${typography.fontWeight.semibold};
+`;
+
 const SectionTitle = styled.h2`
   margin: 0 0 ${spacing[6]} 0;
   font-size: ${typography.fontSize["3xl"]};
@@ -263,6 +313,7 @@ export const ProductDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
+  const [reviewsKey, setReviewsKey] = useState(0);
   const fetchAbortControllerRef = useRef<AbortController | null>(null);
 
   const dispatch = useAppDispatch();
@@ -386,6 +437,61 @@ export const ProductDetails = () => {
 
           <Description>{product.description}</Description>
 
+          {(product.material || product.finish || (product.sizes && product.sizes.length > 0) || product.color) && (
+            <SpecsGrid>
+              {product.material && (
+                <SpecItem>
+                  <SpecLabel>Material</SpecLabel>
+                  <SpecValue>{product.material}</SpecValue>
+                </SpecItem>
+              )}
+              {product.finish && (
+                <SpecItem>
+                  <SpecLabel>Finish</SpecLabel>
+                  <SpecValue>{product.finish}</SpecValue>
+                </SpecItem>
+              )}
+              {product.color && (
+                <SpecItem>
+                  <SpecLabel>Color</SpecLabel>
+                  <SpecValue>{product.color}</SpecValue>
+                </SpecItem>
+              )}
+              {product.specifications?.thickness && (
+                <SpecItem>
+                  <SpecLabel>Thickness</SpecLabel>
+                  <SpecValue>{product.specifications.thickness}</SpecValue>
+                </SpecItem>
+              )}
+              {product.specifications?.weight && (
+                <SpecItem>
+                  <SpecLabel>Weight</SpecLabel>
+                  <SpecValue>{product.specifications.weight}</SpecValue>
+                </SpecItem>
+              )}
+              {product.specifications?.waterAbsorption && (
+                <SpecItem>
+                  <SpecLabel>Water Absorption</SpecLabel>
+                  <SpecValue>{product.specifications.waterAbsorption}</SpecValue>
+                </SpecItem>
+              )}
+              {product.specifications?.mohs && (
+                <SpecItem>
+                  <SpecLabel>Mohs Hardness</SpecLabel>
+                  <SpecValue>{product.specifications.mohs}</SpecValue>
+                </SpecItem>
+              )}
+              {product.sizes && product.sizes.length > 0 && (
+                <SpecItem style={{ gridColumn: '1 / -1' }}>
+                  <SpecLabel>Available Sizes</SpecLabel>
+                  <SizeBadges>
+                    {product.sizes.map((s: string) => <SizeBadge key={s}>{s}</SizeBadge>)}
+                  </SizeBadges>
+                </SpecItem>
+              )}
+            </SpecsGrid>
+          )}
+
           <AvailabilityBox $outOfStock={product.stock != null && product.stock <= 0}>
             <AvailabilityLabel weight="bold" size={200}>
               Availability
@@ -420,10 +526,10 @@ export const ProductDetails = () => {
       )}
 
       <RelatedSection>
-        <ReviewsList productId={product.id} />
+        <ReviewsList key={reviewsKey} productId={product.id} />
       </RelatedSection>
 
-      <AddReviewForm productId={product.id} />
+      <AddReviewForm productId={product.id} onReviewAdded={() => setReviewsKey(k => k + 1)} />
 
       {showToast && (
         <Toast 

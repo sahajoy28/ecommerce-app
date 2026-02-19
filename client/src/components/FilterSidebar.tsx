@@ -1,10 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import styled from "styled-components";
-import { Label, Checkbox, Slider, Button } from "@fluentui/react-components";
+import { Checkbox, Slider, Button } from "@fluentui/react-components";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
-import { filterByCategory, filterByPrice, filterByRating, resetFilters } from "../features/products/productsSlice";
+import {
+  filterByCategory, filterByPrice, filterByRating,
+  filterByMaterial, filterByFinish, filterBySize, filterByColor,
+  resetFilters
+} from "../features/products/productsSlice";
 import { RatingInput } from "./RatingDisplay";
-import { useStrings } from "../utils/strings";
 import { colors, spacing, typography, shadows, borderRadius, transitions, media } from "../styles/designTokens";
 
 const SidebarContainer = styled.div`
@@ -27,21 +30,18 @@ const SidebarContainer = styled.div`
     border-right: none;
     border-bottom: 1px solid ${colors.neutral[200]};
     padding: ${spacing[4]};
-    background: ${colors.neutral[0]};
   }
 
   ${media.mobile} {
     padding: ${spacing[3]};
-    border-radius: 0;
     border: none;
-    background: ${colors.neutral[0]};
   }
 `;
 
 const FilterSection = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${spacing[3]};
+  gap: ${spacing[2]};
   margin-bottom: ${spacing[5]};
   padding-bottom: ${spacing[5]};
   border-bottom: 1px solid ${colors.neutral[200]};
@@ -54,7 +54,7 @@ const FilterSection = styled.div`
 `;
 
 const SectionTitle = styled.h3`
-  margin: 0;
+  margin: 0 0 ${spacing[1]} 0;
   font-size: ${typography.fontSize.sm};
   font-weight: ${typography.fontWeight.bold};
   color: ${colors.neutral[900]};
@@ -63,34 +63,23 @@ const SectionTitle = styled.h3`
   display: flex;
   align-items: center;
   gap: ${spacing[2]};
+  cursor: pointer;
+  user-select: none;
 `;
 
-const CategoryItem = styled.div`
+const FilterItem = styled.div`
   display: flex;
   align-items: center;
   gap: ${spacing[2]};
-  padding: ${spacing[2]} 0;
-  transition: all ${transitions.fast};
+  padding: ${spacing[1]} 0;
   cursor: pointer;
-
-  input {
-    cursor: pointer;
-    accent-color: ${colors.secondary.main};
-    width: 18px;
-    height: 18px;
-  }
 
   label {
     cursor: pointer;
     color: ${colors.neutral[700]};
-    font-weight: ${typography.fontWeight.normal};
     font-size: ${typography.fontSize.sm};
-    margin: 0;
     user-select: none;
-
-    &:hover {
-      color: ${colors.secondary.main};
-    }
+    &:hover { color: ${colors.secondary.main}; }
   }
 `;
 
@@ -102,7 +91,6 @@ const PriceDisplay = styled.div`
   font-size: ${typography.fontSize.sm};
   font-weight: ${typography.fontWeight.semibold};
   color: ${colors.neutral[900]};
-
   span {
     color: ${colors.secondary.main};
     font-weight: ${typography.fontWeight.bold};
@@ -120,16 +108,8 @@ const ResetButton = styled(Button)`
   border-radius: ${borderRadius.md} !important;
   transition: all ${transitions.fast} !important;
   font-size: ${typography.fontSize.sm} !important;
-
-  &:hover {
-    background: #ff9500 !important;
-    box-shadow: ${shadows.md} !important;
-  }
-
-  &:active {
-    background: #e68900 !important;
-    transform: scale(0.98);
-  }
+  &:hover { background: #ff9500 !important; box-shadow: ${shadows.md} !important; }
+  &:active { background: #e68900 !important; transform: scale(0.98); }
 `;
 
 const FilterCount = styled.span`
@@ -142,25 +122,88 @@ const FilterCount = styled.span`
   margin-left: auto;
 `;
 
+const ColorSwatch = styled.button<{ $color: string; $active: boolean }>`
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2.5px solid ${(p: any) => p.$active ? colors.primary.main : colors.neutral[300]};
+  background: ${(p: any) => p.$color};
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: ${(p: any) => p.$active ? `2px solid ${colors.primary.lighter}` : 'none'};
+  outline-offset: 2px;
+  &:hover { border-color: ${colors.primary.main}; transform: scale(1.1); }
+`;
+
+const ColorGrid = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${spacing[2]};
+  padding: ${spacing[1]} 0;
+`;
+
+const SizeChip = styled.button<{ $active: boolean }>`
+  padding: 3px 10px;
+  border-radius: 14px;
+  border: 1.5px solid ${(p: any) => p.$active ? colors.primary.main : colors.neutral[300]};
+  background: ${(p: any) => p.$active ? colors.primary.main : 'white'};
+  color: ${(p: any) => p.$active ? 'white' : colors.neutral[700]};
+  font-size: ${typography.fontSize.xs};
+  font-weight: ${typography.fontWeight.medium};
+  cursor: pointer;
+  transition: all 0.15s ease;
+  &:hover { border-color: ${colors.primary.main}; }
+`;
+
+const SizeGrid = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+`;
+
+const COLOR_MAP: Record<string, string> = {
+  White: '#ffffff', Beige: '#f5f0e1', Cream: '#fffdd0', Ivory: '#fffff0',
+  Grey: '#9e9e9e', Black: '#333333', Brown: '#795548', Blue: '#2196f3',
+  Green: '#4caf50', Red: '#f44336', Yellow: '#fdd835', Pink: '#e91e63',
+  Orange: '#ff9800', Gold: '#ffd700', Silver: '#c0c0c0', Maroon: '#800000',
+};
+
 export const FilterSidebar = () => {
   const dispatch = useAppDispatch();
-  const { t } = useStrings();
   const products = useAppSelector(state => state.products.items);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [priceRange, setPriceRange] = useState(1000);
-  const [minRating, setMinRating] = useState(0);
+  const filters = useAppSelector(state => state.products.filters);
 
-  const categories = [...new Set(products.map(p => p.category))];
+  const [priceRange, setPriceRange] = useState(filters.maxPrice || 100000);
+
+  // Derive unique values from product data
+  const categories = [...new Set(products.map(p => p.category))].filter(Boolean).sort();
+  const materials = [...new Set(products.map(p => p.material).filter(Boolean))].sort();
+  const finishes = [...new Set(products.map(p => p.finish).filter(Boolean))].sort();
+  const allSizes = [...new Set(products.flatMap(p => p.sizes || []))].sort((a, b) => {
+    const numA = parseInt(a); const numB = parseInt(b);
+    return (isNaN(numA) || isNaN(numB)) ? a.localeCompare(b) : numA - numB;
+  });
+  const allColors = [...new Set(products.map(p => p.color).filter(Boolean))].sort();
   const maxPrice = Math.max(...products.map(p => p.price), 1000);
 
   const handleCategoryChange = (category: string, checked: boolean) => {
-    if (checked) {
-      setSelectedCategory(category);
-      dispatch(filterByCategory(category));
-    } else {
-      setSelectedCategory(null);
-      dispatch(resetFilters());
-    }
+    dispatch(filterByCategory(checked ? category : null));
+  };
+
+  const handleMaterialChange = (mat: string, checked: boolean) => {
+    dispatch(filterByMaterial(checked ? mat : null));
+  };
+
+  const handleFinishChange = (fin: string, checked: boolean) => {
+    dispatch(filterByFinish(checked ? fin : null));
+  };
+
+  const handleSizeClick = (size: string) => {
+    dispatch(filterBySize(filters.size === size ? null : size));
+  };
+
+  const handleColorClick = (col: string) => {
+    dispatch(filterByColor(filters.color === col ? null : col));
   };
 
   const handlePriceChange = (_ev: any, data: any) => {
@@ -170,63 +213,139 @@ export const FilterSidebar = () => {
   };
 
   const handleRatingChange = (rating: number) => {
-    setMinRating(rating);
     dispatch(filterByRating(rating));
   };
 
   const handleReset = () => {
-    setSelectedCategory(null);
-    setPriceRange(1000);
-    setMinRating(0);
+    setPriceRange(maxPrice);
     dispatch(resetFilters());
   };
 
-  const activeFilters = (selectedCategory ? 1 : 0) + (minRating > 0 ? 1 : 0) + (priceRange < maxPrice ? 1 : 0);
+  const activeFilters =
+    (filters.category ? 1 : 0) +
+    (filters.material ? 1 : 0) +
+    (filters.finish ? 1 : 0) +
+    (filters.size ? 1 : 0) +
+    (filters.color ? 1 : 0) +
+    (filters.minRating > 0 ? 1 : 0) +
+    (filters.maxPrice !== null && filters.maxPrice < maxPrice ? 1 : 0);
 
   return (
     <SidebarContainer>
+      {/* Category */}
       <FilterSection>
-        <SectionTitle>
-          📂 {t("filters.categories")}
-          {selectedCategory && <FilterCount>{categories.length}</FilterCount>}
-        </SectionTitle>
-        {categories.map(category => (
-          <CategoryItem key={category}>
+        <SectionTitle>📂 Categories</SectionTitle>
+        {categories.map(cat => (
+          <FilterItem key={cat}>
             <Checkbox
-              checked={selectedCategory === category}
-              onChange={(e, data) =>
-                handleCategoryChange(category, data.checked as boolean)
-              }
-              label={category.charAt(0).toUpperCase() + category.slice(1)}
+              checked={filters.category === cat}
+              onChange={(_, data) => handleCategoryChange(cat, data.checked as boolean)}
+              label={cat.charAt(0).toUpperCase() + cat.slice(1)}
             />
-          </CategoryItem>
+          </FilterItem>
         ))}
       </FilterSection>
 
-      <FilterSection>
-        <SectionTitle>
-          ⭐ {t("filters.minimumRating")}
-          {minRating > 0 && <FilterCount>⭐{minRating.toFixed(1)}</FilterCount>}
-        </SectionTitle>
-        <RatingInput value={minRating} onChange={handleRatingChange} />
-      </FilterSection>
+      {/* Material */}
+      {materials.length > 0 && (
+        <FilterSection>
+          <SectionTitle>🧱 Material</SectionTitle>
+          {materials.map(mat => (
+            <FilterItem key={mat}>
+              <Checkbox
+                checked={filters.material === mat}
+                onChange={(_, data) => handleMaterialChange(mat, data.checked as boolean)}
+                label={mat}
+              />
+            </FilterItem>
+          ))}
+        </FilterSection>
+      )}
 
+      {/* Finish */}
+      {finishes.length > 0 && (
+        <FilterSection>
+          <SectionTitle>✨ Finish</SectionTitle>
+          {finishes.map(fin => (
+            <FilterItem key={fin}>
+              <Checkbox
+                checked={filters.finish === fin}
+                onChange={(_, data) => handleFinishChange(fin, data.checked as boolean)}
+                label={fin}
+              />
+            </FilterItem>
+          ))}
+        </FilterSection>
+      )}
+
+      {/* Size */}
+      {allSizes.length > 0 && (
+        <FilterSection>
+          <SectionTitle>
+            📐 Size
+            {filters.size && <FilterCount>{filters.size}</FilterCount>}
+          </SectionTitle>
+          <SizeGrid>
+            {allSizes.map(size => (
+              <SizeChip
+                key={size}
+                $active={filters.size === size}
+                onClick={() => handleSizeClick(size)}
+              >
+                {size}
+              </SizeChip>
+            ))}
+          </SizeGrid>
+        </FilterSection>
+      )}
+
+      {/* Color */}
+      {allColors.length > 0 && (
+        <FilterSection>
+          <SectionTitle>
+            🎨 Color
+            {filters.color && <FilterCount>{filters.color}</FilterCount>}
+          </SectionTitle>
+          <ColorGrid>
+            {allColors.map(col => (
+              <ColorSwatch
+                key={col}
+                $color={COLOR_MAP[col] || col}
+                $active={filters.color === col}
+                onClick={() => handleColorClick(col)}
+                title={col}
+              />
+            ))}
+          </ColorGrid>
+        </FilterSection>
+      )}
+
+      {/* Price */}
       <FilterSection>
         <SectionTitle>
-          💰 {t("filters.priceRange")}
-          {priceRange < maxPrice && <FilterCount>${priceRange.toFixed(0)}</FilterCount>}
+          💰 Price Range
+          {filters.maxPrice !== null && filters.maxPrice < maxPrice && <FilterCount>₹{filters.maxPrice}</FilterCount>}
         </SectionTitle>
         <PriceDisplay>
-          <span>{t("filters.startPrice")}</span>
-          <span>${priceRange.toFixed(0)}</span>
+          <span>₹0</span>
+          <span>₹{priceRange.toLocaleString()}</span>
         </PriceDisplay>
         <Slider
           value={priceRange}
           onChange={handlePriceChange}
           min={0}
           max={maxPrice}
-          step={10}
+          step={Math.max(10, Math.floor(maxPrice / 100))}
         />
+      </FilterSection>
+
+      {/* Rating */}
+      <FilterSection>
+        <SectionTitle>
+          ⭐ Min. Rating
+          {filters.minRating > 0 && <FilterCount>⭐{filters.minRating.toFixed(1)}</FilterCount>}
+        </SectionTitle>
+        <RatingInput value={filters.minRating} onChange={handleRatingChange} />
       </FilterSection>
 
       {activeFilters > 0 && (

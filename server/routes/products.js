@@ -27,7 +27,12 @@ const transformProduct = (p) => ({
   reviewCount: p.reviewCount || 0,
   reviews: p.reviews || [],
   isAdminProduct: true,
-  createdBy: p.createdBy
+  createdBy: p.createdBy,
+  material: p.material || '',
+  finish: p.finish || '',
+  sizes: p.sizes || [],
+  color: p.color || '',
+  specifications: p.specifications || {}
 });
 
 /**
@@ -89,7 +94,8 @@ router.post('/admin/create', verify, async (req, res, next) => {
 
     const {
       title, description, price, mrp, retailPrice, discount,
-      showPriceInListing, category, quantity, images
+      showPriceInListing, category, quantity, images,
+      material, finish, sizes, color, specifications
     } = req.body;
 
     if (!title || !description || !price || !category || !quantity || !images || images.length === 0) {
@@ -112,7 +118,12 @@ router.post('/admin/create', verify, async (req, res, next) => {
       images: images.map(img => convertGoogleDriveUrl(img)),
       createdBy: user.id,
       isActive: true,
-      published: false
+      published: false,
+      material: material || 'Tiles',
+      finish: finish || 'Glossy',
+      sizes: sizes || [],
+      color: color || '',
+      specifications: specifications || {}
     });
 
     console.log(`✅ Admin product created: ${product._id}`);
@@ -181,7 +192,8 @@ router.put('/admin/:id', verify, async (req, res, next) => {
 
     const {
       title, description, price, mrp, retailPrice, discount,
-      showPriceInListing, category, quantity, images, isActive
+      showPriceInListing, category, quantity, images, isActive,
+      material, finish, sizes, color, specifications
     } = req.body;
 
     if (title) product.title = title;
@@ -197,6 +209,11 @@ router.put('/admin/:id', verify, async (req, res, next) => {
       product.images = images.map(img => convertGoogleDriveUrl(img));
     }
     if (isActive !== undefined) product.isActive = isActive;
+    if (material !== undefined) product.material = material;
+    if (finish !== undefined) product.finish = finish;
+    if (sizes !== undefined) product.sizes = sizes;
+    if (color !== undefined) product.color = color;
+    if (specifications !== undefined) product.specifications = specifications;
     product.updatedAt = new Date();
 
     await product.save();
@@ -490,6 +507,157 @@ router.patch('/admin/:id/unpublish', verify, async (req, res, next) => {
   } catch (error) {
     console.error('❌ Error unpublishing product:', error.message);
     next({ status: 500, message: 'Failed to unpublish product', details: error.message });
+  }
+});
+
+// ──────────────────────────────────────────────
+// REVIEW ENDPOINTS
+// ──────────────────────────────────────────────
+
+/**
+ * POST /api/products/:id/reviews
+ * Add a review to a product (requires auth)
+ */
+router.post('/:id/reviews', verify, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { rating, title, comment } = req.body;
+    const user = req.user;
+
+    if (!rating || !title || !comment) {
+      return res.status(400).json({ success: false, message: 'Rating, title, and comment are required' });
+    }
+
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({ success: false, message: 'Rating must be between 1 and 5' });
+    }
+
+    const product = await AdminProduct.findById(id);
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+
+    // Check if user already reviewed this product
+    const existingReview = product.reviews.find(r => r.userId === user.id);
+    if (existingReview) {
+      return res.status(400).json({ success: false, message: 'You have already reviewed this product' });
+    }
+
+    const newReview = {
+      id: `review_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      userId: user.id,
+      userName: user.name || 'Anonymous',
+      rating: Number(rating),
+      title: title.trim(),
+      comment: comment.trim(),
+      date: new Date().toISOString(),
+      helpful: 0
+    };
+
+    product.reviews.push(newReview);
+
+    // Recalculate average rating and review count
+    const totalRating = product.reviews.reduce((sum, r) => sum + r.rating, 0);
+    product.rating = Number((totalRating / product.reviews.length).toFixed(1));
+    product.reviewCount = product.reviews.length;
+
+    await product.save();
+
+    console.log(`✅ Review added to product ${id} by user ${user.id}`);
+
+    res.status(201).json({
+      success: true,
+      message: 'Review added successfully',
+      review: newReview,
+      rating: product.rating,
+      reviewCount: product.reviewCount
+    });
+  } catch (error) {
+    console.error('❌ Error adding review:', error.message);
+    next({ status: 500, message: 'Failed to add review', details: error.message });
+  }
+});
+
+/**
+ * DELETE /api/products/:id/reviews/:reviewId
+ * Delete a review (only the author can delete their review)
+ */
+router.delete('/:id/reviews/:reviewId', verify, async (req, res, next) => {
+  try {
+    const { id, reviewId } = req.params;
+    const user = req.user;
+
+    const product = await AdminProduct.findById(id);
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+
+    const reviewIndex = product.reviews.findIndex(r => r.id === reviewId);
+    if (reviewIndex === -1) {
+      return res.status(404).json({ success: false, message: 'Review not found' });
+    }
+
+    // Only the review author can delete
+    if (product.reviews[reviewIndex].userId !== user.id) {
+      return res.status(403).json({ success: false, message: 'You can only delete your own reviews' });
+    }
+
+    product.reviews.splice(reviewIndex, 1);
+
+    // Recalculate average rating and review count
+    if (product.reviews.length > 0) {
+      const totalRating = product.reviews.reduce((sum, r) => sum + r.rating, 0);
+      product.rating = Number((totalRating / product.reviews.length).toFixed(1));
+    } else {
+      product.rating = 0;
+    }
+    product.reviewCount = product.reviews.length;
+
+    await product.save();
+
+    console.log(`✅ Review ${reviewId} deleted from product ${id}`);
+
+    res.json({
+      success: true,
+      message: 'Review deleted successfully',
+      rating: product.rating,
+      reviewCount: product.reviewCount
+    });
+  } catch (error) {
+    console.error('❌ Error deleting review:', error.message);
+    next({ status: 500, message: 'Failed to delete review', details: error.message });
+  }
+});
+
+/**
+ * PATCH /api/products/:id/reviews/:reviewId/helpful
+ * Increment the helpful count on a review
+ */
+router.patch('/:id/reviews/:reviewId/helpful', async (req, res, next) => {
+  try {
+    const { id, reviewId } = req.params;
+
+    const product = await AdminProduct.findById(id);
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+
+    const review = product.reviews.find(r => r.id === reviewId);
+    if (!review) {
+      return res.status(404).json({ success: false, message: 'Review not found' });
+    }
+
+    review.helpful = (review.helpful || 0) + 1;
+    await product.save();
+
+    res.json({
+      success: true,
+      message: 'Helpful count updated',
+      helpful: review.helpful
+    });
+  } catch (error) {
+    console.error('❌ Error updating helpful:', error.message);
+    next({ status: 500, message: 'Failed to update helpful count', details: error.message });
   }
 });
 

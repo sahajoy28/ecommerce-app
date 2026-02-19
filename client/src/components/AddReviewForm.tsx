@@ -1,9 +1,10 @@
 import styled from "styled-components";
 import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
-import { addReview } from "../features/reviews/reviewsSlice";
+import { updateProductReviews } from "../features/products/productsSlice";
 import { RatingInput } from "./RatingDisplay";
 import { useStrings } from "../utils/strings";
+import { authApi } from "../services/apiClient";
 
 const FormContainer = styled.div`
   background: #f9f9f9;
@@ -156,7 +157,7 @@ export const AddReviewForm = ({ productId, onReviewAdded }: AddReviewFormProps) 
     );
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccess("");
@@ -176,32 +177,41 @@ export const AddReviewForm = ({ productId, onReviewAdded }: AddReviewFormProps) 
 
     setLoading(true);
 
-    setTimeout(() => {
-      dispatch(
-        addReview({
-          productId,
-          review: {
-            userId: user.id,
-            userName: user.name,
-            rating,
-            title,
-            comment,
-            date: new Date().toLocaleDateString(),
-            helpful: 0,
-          },
-        })
-      );
+    try {
+      const result = await authApi.post<any>(`/products/${productId}/reviews`, {
+        rating,
+        title: title.trim(),
+        comment: comment.trim(),
+      });
 
-      setSuccess(t("reviews.reviewAdded"));
-      setRating(0);
-      setTitle("");
-      setComment("");
-      setLoading(false);
+      if (result.success) {
+        // Refresh product reviews from the server
+        const productData = await authApi.get<any>(`/products/${productId}`);
+        if (productData) {
+          const product = productData.product || productData;
+          dispatch(updateProductReviews({
+            productId,
+            reviews: product.reviews || [],
+            rating: product.rating || 0,
+            reviewCount: product.reviewCount || 0,
+          }));
+        }
 
-      if (onReviewAdded) {
-        setTimeout(onReviewAdded, 1500);
+        setSuccess(t("reviews.reviewAdded"));
+        setRating(0);
+        setTitle("");
+        setComment("");
+
+        if (onReviewAdded) {
+          setTimeout(onReviewAdded, 1500);
+        }
       }
-    }, 800);
+    } catch (err: any) {
+      const message = err?.details?.message || err?.message || "Failed to add review";
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
