@@ -6,13 +6,10 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { HomePage } from "./pages/HomePage";
 import { CatalogPage } from "./pages/CatalogPage";
 import { ProductDetails } from "./pages/ProductDetails";
-import { CartPage } from "./pages/CartPage";
 import { AuthPage } from "./pages/AuthPage";
 import { AdminPage } from "./pages/AdminPage";
 import { AdminDashboard } from "./pages/AdminDashboard";
 import { AccountPage } from "./pages/AccountPage";
-import { OrderPage } from "./pages/OrderPage";
-import { WishlistPage } from "./pages/WishlistPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { AboutPage } from "./pages/AboutPage";
 import { ContactPage } from "./pages/ContactPage";
@@ -23,7 +20,6 @@ import { useAppSelector, useAppDispatch } from "./app/hooks";
 import { authApi } from "./services/apiClient";
 import { getUser } from "./features/auth/authSlice";
 import { loadCartAPI } from "./features/cart/cartSlice";
-import { loadWishlistAPI } from "./features/wishlist/wishlistSlice";
 import { ThemeProvider } from "./app/themeContext";
 
 const AppWrapper = styled.div`
@@ -47,9 +43,8 @@ function App() {
     if (token) {
       authApi.setAuthToken(token);
       dispatch(getUser());
-      // Load user's cart and wishlist
+      // Load user's cart
       dispatch(loadCartAPI() as any).catch(() => {});
-      dispatch(loadWishlistAPI() as any).catch(() => {});
     } else {
       authApi.clearAuthToken();
     }
@@ -74,11 +69,8 @@ function App() {
                     <Route path="/product/:id" element={<ErrorBoundary><ProductDetails /></ErrorBoundary>} />
                     <Route path="/about" element={<ErrorBoundary><AboutPage /></ErrorBoundary>} />
                     <Route path="/contact" element={<ErrorBoundary><ContactPage /></ErrorBoundary>} />
-                    <Route path="/cart" element={<ErrorBoundary><CartPage /></ErrorBoundary>} />
-                    <Route path="/wishlist" element={<ErrorBoundary><WishlistPage /></ErrorBoundary>} />
                     <Route path="/login" element={<ErrorBoundary><AuthPage /></ErrorBoundary>} />
                     <Route path="/account" element={<ErrorBoundary><AccountPage /></ErrorBoundary>} />
-                    <Route path="/order" element={<ErrorBoundary><OrderPage /></ErrorBoundary>} />
                     <Route path="/settings" element={<ErrorBoundary><SettingsPage /></ErrorBoundary>} />
                     <Route path="/checkout" element={<ErrorBoundary><AddressForm /></ErrorBoundary>} />
                     <Route path="/admin" element={<ErrorBoundary><AdminPage /></ErrorBoundary>} />

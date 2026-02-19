@@ -153,11 +153,13 @@ const Description = styled.p`
   border-left: 4px solid var(--color-primary, ${colors.primary.main});
 `;
 
-const AvailabilityBox = styled.div`
+const AvailabilityBox = styled.div<{ $outOfStock?: boolean }>`
   padding: ${spacing[4]};
-  background: linear-gradient(135deg, var(--color-primary-lighter, ${colors.primary.lighter}) 0%, ${colors.secondary.lighter} 100%);
+  background: ${(props: any) => props.$outOfStock
+    ? 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)'
+    : `linear-gradient(135deg, var(--color-primary-lighter, ${colors.primary.lighter}) 0%, ${colors.secondary.lighter} 100%)`};
   border-radius: ${borderRadius.md};
-  border-left: 4px solid ${colors.success};
+  border-left: 4px solid ${(props: any) => props.$outOfStock ? colors.error : colors.success};
 `;
 
 const AvailabilityLabel = styled(Text)`
@@ -393,13 +395,19 @@ export const ProductDetails = () => {
 
           <Description>{product.description}</Description>
 
-          <AvailabilityBox>
+          <AvailabilityBox $outOfStock={product.stock != null && product.stock <= 0}>
             <AvailabilityLabel weight="bold" size={200}>
               Availability
             </AvailabilityLabel>
-            <AvailabilityStatus weight="semibold" style={{ color: "#10b981" }}>
-              ✓ In Stock
-            </AvailabilityStatus>
+            {product.stock != null && product.stock <= 0 ? (
+              <AvailabilityStatus weight="semibold" style={{ color: "#ef4444" }}>
+                ✕ Out of Stock
+              </AvailabilityStatus>
+            ) : (
+              <AvailabilityStatus weight="semibold" style={{ color: "#10b981" }}>
+                ✓ In Stock
+              </AvailabilityStatus>
+            )}
           </AvailabilityBox>
 
           <InquiryForm 

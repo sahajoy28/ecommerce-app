@@ -11,31 +11,10 @@ const Container = styled.div`
   max-width: 900px;
 `;
 
-const TabBar = styled.div`
-  display: flex;
-  gap: ${spacing[1]};
-  border-bottom: 2px solid ${colors.neutral[200]};
-  margin-bottom: ${spacing[6]};
-  overflow-x: auto;
-  padding-bottom: 0;
-  &::-webkit-scrollbar { display: none; }
-  scrollbar-width: none;
-`;
-
-const Tab = styled.button<{ $active: boolean }>`
-  padding: ${spacing[3]} ${spacing[4]};
-  font-size: ${typography.fontSize.sm};
-  font-weight: ${(props: any) => props.$active ? typography.fontWeight.semibold : typography.fontWeight.normal};
-  color: ${(props: any) => props.$active ? colors.primary.main : colors.neutral[500]};
-  background: ${(props: any) => props.$active ? colors.primary.lighter : 'transparent'};
+const Divider = styled.hr`
   border: none;
-  border-bottom: 2px solid ${(props: any) => props.$active ? colors.primary.main : 'transparent'};
-  margin-bottom: -2px;
-  cursor: pointer;
-  white-space: nowrap;
-  border-radius: ${borderRadius.sm} ${borderRadius.sm} 0 0;
-  transition: all 0.2s;
-  &:hover { color: ${colors.primary.main}; background: ${colors.primary.lighter}; }
+  border-top: 2px solid ${colors.neutral[200]};
+  margin: ${spacing[6]} 0;
 `;
 
 const TabContent = styled.div`
@@ -219,17 +198,6 @@ const RemoveButton = styled.button`
 
 // ===================== TYPES =====================
 
-type TabKey = 'general' | 'theme' | 'home' | 'about' | 'contact' | 'email';
-
-const TABS: { key: TabKey; label: string; icon: string }[] = [
-  { key: 'general', label: 'General', icon: '🏢' },
-  { key: 'theme', label: 'Appearance', icon: '🎨' },
-  { key: 'home', label: 'Home Page', icon: '🏠' },
-  { key: 'about', label: 'About Page', icon: '📄' },
-  { key: 'contact', label: 'Contact / Map', icon: '📍' },
-  { key: 'email', label: 'Email', icon: '📧' },
-];
-
 interface SiteSettingsData {
   businessName: string;
   phone: string;
@@ -334,7 +302,6 @@ function arrToStr(val: any): string {
 // ===================== COMPONENT =====================
 
 export const SiteSettingsPanel = () => {
-  const [activeTab, setActiveTab] = useState<TabKey>('general');
   const [settings, setSettings] = useState<SiteSettingsData>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -471,7 +438,7 @@ export const SiteSettingsPanel = () => {
 
   // ===================== TAB RENDERERS =====================
 
-  const renderGeneralTab = () => (
+  const renderGeneralSection = () => (
     <TabContent>
       <SectionHeader>🏢 Business Information</SectionHeader>
       <FieldGroup>
@@ -500,7 +467,7 @@ export const SiteSettingsPanel = () => {
     </TabContent>
   );
 
-  const renderThemeTab = () => (
+  const renderThemeSection = () => (
     <TabContent>
       <SectionHeader>🎨 Site Appearance</SectionHeader>
       <HelpText>These settings apply to all pages for all visitors.</HelpText>
@@ -536,7 +503,7 @@ export const SiteSettingsPanel = () => {
     </TabContent>
   );
 
-  const renderHomeTab = () => (
+  const renderHomeSection = () => (
     <TabContent>
       <SectionHeader>🏠 Hero Section</SectionHeader>
       <FieldGroup>
@@ -601,7 +568,7 @@ export const SiteSettingsPanel = () => {
     </TabContent>
   );
 
-  const renderAboutTab = () => (
+  const renderAboutSection = () => (
     <TabContent>
       <SectionHeader>📄 About Page Content</SectionHeader>
       <FieldGroup>
@@ -649,7 +616,7 @@ export const SiteSettingsPanel = () => {
     </TabContent>
   );
 
-  const renderContactTab = () => (
+  const renderContactSection = () => (
     <TabContent>
       <SectionHeader>📍 Map Location</SectionHeader>
       <FieldGroup>
@@ -680,11 +647,7 @@ export const SiteSettingsPanel = () => {
           </MapPreview>
         </FieldGroup>
       )}
-    </TabContent>
-  );
 
-  const renderEmailTab = () => (
-    <TabContent>
       <SectionHeader>📧 Email Notifications (Gmail)</SectionHeader>
       <FieldGroup>
         <Label>Gmail Address</Label>
@@ -702,25 +665,8 @@ export const SiteSettingsPanel = () => {
     </TabContent>
   );
 
-  const TAB_RENDERERS: Record<TabKey, () => JSX.Element> = {
-    general: renderGeneralTab,
-    theme: renderThemeTab,
-    home: renderHomeTab,
-    about: renderAboutTab,
-    contact: renderContactTab,
-    email: renderEmailTab,
-  };
-
   return (
     <Container>
-      <TabBar>
-        {TABS.map(tab => (
-          <Tab key={tab.key} $active={activeTab === tab.key} onClick={() => setActiveTab(tab.key)}>
-            {tab.icon} {tab.label}
-          </Tab>
-        ))}
-      </TabBar>
-
       <form onSubmit={handleSubmit}>
         {message && (
           message.type === 'success'
@@ -728,7 +674,15 @@ export const SiteSettingsPanel = () => {
             : <ErrorMessage>{message.text}</ErrorMessage>
         )}
 
-        {TAB_RENDERERS[activeTab]()}
+        {renderGeneralSection()}
+        <Divider />
+        {renderThemeSection()}
+        <Divider />
+        {renderHomeSection()}
+        <Divider />
+        {renderAboutSection()}
+        <Divider />
+        {renderContactSection()}
 
         <ButtonRow>
           <Button

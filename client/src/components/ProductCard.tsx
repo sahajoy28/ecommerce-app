@@ -2,9 +2,6 @@ import { useNavigate } from "react-router-dom";
 import { Card, Button } from "@fluentui/react-components";
 import styled from "styled-components";
 import { Product } from "../types/product";
-import { useAppDispatch, useAppSelector } from "../app/hooks";
-import { addToCartLocal, addToCartAPI } from "../features/cart/cartSlice";
-import { addToWishlistLocal, removeFromWishlistLocal, addToWishlistAPI, selectWishlist } from "../features/wishlist/wishlistSlice";
 import { Toast } from "./Toast";
 import { RatingDisplay } from "./RatingDisplay";
 import { useState } from "react";
@@ -46,33 +43,17 @@ const ImageContainer = styled.div`
   transition: background-color 0.3s ease;
 `;
 
-const WishlistButton = styled.button`
+const OutOfStockBadge = styled.div`
   position: absolute;
   top: ${spacing[2]};
   right: ${spacing[2]};
-  background: rgba(255, 255, 255, 0.9);
-  border: none;
-  border-radius: ${borderRadius.full};
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: ${typography.fontSize.xl};
-  transition: all ${transitions.fast};
-  box-shadow: ${shadows.md};
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+  border-radius: ${borderRadius.md};
+  padding: ${spacing[1]} ${spacing[2]};
+  font-size: ${typography.fontSize.xs};
+  font-weight: ${typography.fontWeight.semibold};
   z-index: 10;
-
-  &:hover {
-    background: ${colors.neutral[0]};
-    transform: scale(1.15);
-    box-shadow: ${shadows.lg};
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
 `;
 
 const Image = styled.img`
@@ -192,15 +173,31 @@ const AddButton = styled(Button)`
   }
 `;
 
+const OutOfStockButton = styled(Button)`
+  width: 100%;
+  padding: ${spacing[2]} ${spacing[3]} !important;
+  background: ${colors.neutral[300]} !important;
+  color: ${colors.neutral[600]} !important;
+  border: none !important;
+  border-radius: ${borderRadius.md} !important;
+  font-weight: ${typography.fontWeight.semibold} !important;
+  font-size: ${typography.fontSize.sm} !important;
+  cursor: not-allowed;
+  margin-top: auto;
+
+  ${media.mobile} {
+    padding: ${spacing[2]} ${spacing[2]} !important;
+    font-size: ${typography.fontSize.xs} !important;
+  }
+`;
+
 export const ProductCard = ({ product }: { product: Product }) => {
-  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [imageError, setImageError] = useState(false);
-  const cartItems = useAppSelector(state => state.cart.items);
-  const wishlistItems = useAppSelector(selectWishlist);
-  const isInWishlist = wishlistItems.some(item => item.id === product.id);
+
+  const isOutOfStock = (product.stock != null && product.stock <= 0) || (product.quantity != null && product.quantity <= 0);
 
   const handleCardClick = () => {
     navigate(`/product/${product.id}`);
@@ -210,40 +207,9 @@ export const ProductCard = ({ product }: { product: Product }) => {
     setImageError(true);
   };
 
-  const handleAddToCart = async (e: React.MouseEvent) => {
+  const handleEnquire = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Optimistic update
-    dispatch(addToCartLocal(product));
-    
-    // Save to MongoDB
-    try {
-      await dispatch(addToCartAPI(product) as any).unwrap();
-      setToastMessage("Added to cart");
-    } catch (error) {
-      setToastMessage("Failed to add to cart");
-    }
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
-  };
-
-  const handleWishlistToggle = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      if (isInWishlist) {
-        dispatch(removeFromWishlistLocal(product.id));
-        setToastMessage("Removed from wishlist");
-      } else {
-        // Optimistic update
-        dispatch(addToWishlistLocal(product));
-        // Save to MongoDB
-        await dispatch(addToWishlistAPI(product) as any).unwrap();
-        setToastMessage("Added to wishlist");
-      }
-    } catch (error) {
-      setToastMessage("Failed to update wishlist");
-    }
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
+    navigate(`/product/${product.id}`);
   };
 
   // Calculate discount
@@ -254,12 +220,7 @@ export const ProductCard = ({ product }: { product: Product }) => {
     <>
       <StyledCard onClick={handleCardClick}>
         <ImageContainer>
-          <WishlistButton 
-            onClick={handleWishlistToggle}
-            title={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
-          >
-            {isInWishlist ? "❤️" : "🤍"}
-          </WishlistButton>
+          {isOutOfStock && <OutOfStockBadge>Out of Stock</OutOfStockBadge>}
           {!imageError && product.image ? (
             <Image 
               src={convertGoogleDriveUrl(product.image)} 
@@ -291,12 +252,18 @@ export const ProductCard = ({ product }: { product: Product }) => {
 
           <Description>{product.description}</Description>
 
-          <AddButton
-            appearance="primary"
-            onClick={handleAddToCart}
-          >
-            Add to Cart
-          </AddButton>
+          {isOutOfStock ? (
+            <OutOfStockButton appearance="secondary" disabled>
+              Out of Stock
+            </OutOfStockButton>
+          ) : (
+            <AddButton
+              appearance="primary"
+              onClick={handleEnquire}
+            >
+              Enquire Now
+            </AddButton>
+          )}
         </ContentContainer>
       </StyledCard>
       
