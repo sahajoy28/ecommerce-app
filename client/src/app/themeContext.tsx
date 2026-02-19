@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAppSelector } from './hooks';
-import { userPreferencesAPI } from '../services/userPreferencesAPI';
+import { userAPI } from '../services/userAPI';
 
 
 export type ThemeMode = 'light' | 'dark';
@@ -18,54 +17,40 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [mode, setModeState] = useState<ThemeMode>('light');
   const [accentColor, setAccentColorState] = useState<AccentColor>('blue');
-  const { user, token } = useAppSelector(state => state.auth);
 
-  // Load theme from localStorage on mount
+  // Load global theme from SiteSettings (admin-configured) on mount
   useEffect(() => {
-    const savedTheme = localStorage.getItem('app-theme-mode') as ThemeMode | null;
-    const savedAccent = localStorage.getItem('app-accent-color') as AccentColor | null;
-    
-    if (savedTheme) setModeState(savedTheme);
-    if (savedAccent) setAccentColorState(savedAccent);
+    // First apply cached values from localStorage for instant display
+    const cachedMode = localStorage.getItem('app-theme-mode') as ThemeMode | null;
+    const cachedAccent = localStorage.getItem('app-accent-color') as AccentColor | null;
+    if (cachedMode) setModeState(cachedMode);
+    if (cachedAccent) setAccentColorState(cachedAccent);
+
+    // Then fetch the admin-configured global theme
+    userAPI.getSiteSettings()
+      .then((data: any) => {
+        const serverMode = (data.themeMode as ThemeMode) || 'light';
+        const serverAccent = (data.accentColor as AccentColor) || 'blue';
+        setModeState(serverMode);
+        setAccentColorState(serverAccent);
+        // Cache for instant load next time
+        localStorage.setItem('app-theme-mode', serverMode);
+        localStorage.setItem('app-accent-color', serverAccent);
+      })
+      .catch(() => {
+        // Silently ignore — use cached or defaults
+      });
   }, []);
 
-  // Load preferences from API when user logs in AND token is available
-  useEffect(() => {
-    if (user && token) {
-      userPreferencesAPI
-        .getPreferences()
-        .then((prefs: { theme?: ThemeMode; accentColor?: AccentColor }) => {
-          if (prefs?.theme) setModeState(prefs.theme);
-          if (prefs?.accentColor) setAccentColorState(prefs.accentColor);
-        })
-        .catch(() => {
-          // Silently ignore - token may be expired or user not authenticated
-        });
-    }
-  }, [user, token]);
-
+  // setMode and setAccentColor only update local state (admin saves via SiteSettings)
   const setMode = (newMode: ThemeMode) => {
     setModeState(newMode);
     localStorage.setItem('app-theme-mode', newMode);
-    
-    // Save to API if user and token are available
-    if (user && token) {
-      userPreferencesAPI
-        .savePreferences({ theme: newMode, accentColor })
-        .catch(err => console.error('Failed to save theme preference:', err));
-    }
   };
 
   const setAccentColor = (color: AccentColor) => {
     setAccentColorState(color);
     localStorage.setItem('app-accent-color', color);
-    
-    // Save to API if user and token are available
-    if (user && token) {
-      userPreferencesAPI
-        .savePreferences({ theme: mode, accentColor: color })
-        .catch(err => console.error('Failed to save accent preference:', err));
-    }
   };
 
   return (

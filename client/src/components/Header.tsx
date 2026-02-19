@@ -7,7 +7,7 @@ import { useStrings } from "../utils/strings";
 import { colors, spacing, typography, shadows, borderRadius, transitions, media } from "../styles/designTokens";
 import { SearchBar } from "./SearchBar";
 import { UserMenu, GuestMenu } from "./UserMenu";
-import { SettingsModal } from "./SettingsModal";
+
 import { userAPI } from "../services/userAPI";
 
 export const FilterContext = React.createContext<{toggleFilters: () => void} | null>(null);
@@ -311,7 +311,6 @@ export const Header = () => {
   const location = useLocation();
   const authUser = useAppSelector(state => state.auth.user);
   const filterToggle = useFilterToggle();
-  const [showSettings, setShowSettings] = useState(false);
   const [storeName, setStoreName] = useState('Store');
 
   useEffect(() => {
@@ -359,16 +358,13 @@ export const Header = () => {
             {authUser ? (
               <UserMenu 
                 userName={authUser.name || authUser.email?.split('@')[0]}
-                onSettingsClick={() => setShowSettings(true)}
               />
             ) : (
-              <GuestMenu onSettingsClick={() => setShowSettings(true)} />
+              <GuestMenu />
             )}
           </NavSection>
         </RightSection>
       </Wrapper>
-      
-      <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
     </>
   );
 };

@@ -161,7 +161,6 @@ export const GlobalStyle = createGlobalStyle`
       border-color: var(--color-primary, ${colors.primary.main});
       box-shadow: 0 0 0 3px var(--color-primary-lighter, ${colors.primary.lighter});
     }
-    }
 
     &:disabled {
       background: ${colors.neutral[100]};

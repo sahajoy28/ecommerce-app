@@ -11,13 +11,13 @@ import { colors, spacing, typography, media } from "../styles/designTokens";
 
 const Container = styled.div`
   width: 100%;
-  background: white;
+  background: var(--color-bg-primary, white);
 `;
 
 const HeroBanner = styled.section`
   width: 100%;
   min-height: 500px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-primary, #667eea) 0%, var(--color-primary-dark, #764ba2) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -90,7 +90,7 @@ const SectionTitle = styled.h2`
   font-weight: bold;
   margin-bottom: ${spacing[8]};
   text-align: center;
-  color: ${colors.neutral[900]};
+  color: var(--color-text-primary, ${colors.neutral[900]});
 
   ${media.mobile} {
     font-size: 1.75rem;
@@ -115,7 +115,7 @@ const CategoriesGrid = styled.div`
 `;
 
 const CategoryCard = styled.div`
-  background: white;
+  background: var(--color-bg-primary, white);
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -131,7 +131,7 @@ const CategoryCard = styled.div`
 const CategoryImage = styled.div`
   width: 100%;
   height: 150px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-primary, #667eea) 0%, var(--color-primary-dark, #764ba2) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -147,7 +147,7 @@ const CategoryName = styled.h3`
   font-size: ${typography.fontSize.base};
   font-weight: 600;
   margin: 0;
-  color: ${colors.neutral[900]};
+  color: var(--color-text-primary, ${colors.neutral[900]});
 `;
 
 const ProductsGrid = styled.div`
@@ -161,7 +161,7 @@ const ProductsGrid = styled.div`
   }
 
   ${media.mobile} {
-    grid-template-columns: repeat(2, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: ${spacing[3]};
   }
 `;
@@ -173,23 +173,23 @@ const TestimonialsGrid = styled.div`
 `;
 
 const TestimonialCard = styled.div`
-  background: white;
+  background: var(--color-bg-primary, white);
   padding: ${spacing[6]};
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-left: 4px solid #667eea;
+  border-left: 4px solid var(--color-primary, #667eea);
 `;
 
 const TestimonialText = styled.p`
   font-size: ${typography.fontSize.base};
-  color: ${colors.neutral[600]};
+  color: var(--color-text-secondary, ${colors.neutral[600]});
   margin-bottom: ${spacing[4]};
   font-style: italic;
 `;
 
 const TestimonialAuthor = styled.p`
   font-weight: 600;
-  color: ${colors.neutral[900]};
+  color: var(--color-text-primary, ${colors.neutral[900]});
   margin: 0;
 `;
 
@@ -252,13 +252,13 @@ const StatCard = styled.div`
 const StatNumber = styled.div`
   font-size: 2.5rem;
   font-weight: bold;
-  color: #667eea;
+  color: var(--color-primary, #667eea);
   margin-bottom: ${spacing[2]};
 `;
 
 const StatLabel = styled.div`
   font-size: ${typography.fontSize.base};
-  color: ${colors.neutral[600]};
+  color: var(--color-text-secondary, ${colors.neutral[600]});
 `;
 
 const ProductListContainer = styled.div`
@@ -267,7 +267,7 @@ const ProductListContainer = styled.div`
   margin-top: ${spacing[8]};
 `;
 
-const CATEGORIES = [
+const DEFAULT_CATEGORIES = [
   { id: 'floor-tiles', name: 'Floor Tiles', icon: '🏠' },
   { id: 'wall-tiles', name: 'Wall Tiles', icon: '🧱' },
   { id: 'marble', name: 'Marble', icon: '💎' },
@@ -276,22 +276,10 @@ const CATEGORIES = [
   { id: 'outdoor', name: 'Outdoor Tiles', icon: '🌳' },
 ];
 
-const TESTIMONIALS = [
-  {
-    id: 1,
-    text: "Excellent quality tiles and outstanding customer service. We've been sourcing from them for over 5 years.",
-    author: "Rajesh Kumar - Contractor",
-  },
-  {
-    id: 2,
-    text: "The variety of designs and competitive pricing is unmatched. Highly recommended for bulk orders.",
-    author: "Priya Sharma - Interior Designer",
-  },
-  {
-    id: 3,
-    text: "Professional team, reliable delivery, and premium products. They've become our trusted supplier.",
-    author: "Amit Patel - Project Manager",
-  },
+const DEFAULT_TESTIMONIALS = [
+  { text: "Excellent quality tiles and outstanding customer service. We've been sourcing from them for over 5 years.", author: "Rajesh Kumar - Contractor" },
+  { text: "The variety of designs and competitive pricing is unmatched. Highly recommended for bulk orders.", author: "Priya Sharma - Interior Designer" },
+  { text: "Professional team, reliable delivery, and premium products. They've become our trusted supplier.", author: "Amit Patel - Project Manager" },
 ];
 
 export const HomePage = () => {
@@ -300,13 +288,20 @@ export const HomePage = () => {
   const { items, loading } = useAppSelector(state => state.products);
   const featuredProducts = items.slice(0, 6);
   const [mapUrl, setMapUrl] = useState('');
+  const [heroTitle, setHeroTitle] = useState('Premium Building Materials & Tiles Showroom');
+  const [heroSubtitle, setHeroSubtitle] = useState('Explore our extensive collection of high-quality tiles, marble, granite, and bathroom fittings');
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+  const [stats, setStats] = useState({ products: '500+', years: '15+', clients: '5000+', brands: '50+' });
+  const [testimonials, setTestimonials] = useState(DEFAULT_TESTIMONIALS);
+  const [whatsappNumber, setWhatsappNumber] = useState('919876543210');
 
   useEffect(() => {
     if (items.length === 0) {
       dispatch(fetchProducts() as any);
     }
-    // Load map settings
+    // Load all homepage settings
     userAPI.getSiteSettings().then((data: any) => {
+      // Map
       if (data.mapEmbedUrl) {
         const url = data.mapEmbedUrl.trim();
         const srcMatch = url.match(/src=["']([^"']+)["']/i);
@@ -315,6 +310,31 @@ export const HomePage = () => {
         const zoom = data.mapZoom || 15;
         setMapUrl(`https://maps.google.com/maps?width=100%25&height=400&hl=en&q=${data.mapLatitude},${data.mapLongitude}&t=&z=${zoom}&ie=UTF8&iwloc=B&output=embed`);
       }
+      // Hero
+      if (data.heroTitle) setHeroTitle(data.heroTitle);
+      if (data.heroSubtitle) setHeroSubtitle(data.heroSubtitle);
+      // Categories
+      if (Array.isArray(data.heroCategories) && data.heroCategories.length > 0) {
+        const icons = Array.isArray(data.heroCategoryIcons) ? data.heroCategoryIcons : [];
+        setCategories(data.heroCategories.map((name: string, i: number) => ({
+          id: name.toLowerCase().replace(/\s+/g, '-'),
+          name,
+          icon: icons[i] || '📦',
+        })));
+      }
+      // Stats
+      setStats({
+        products: data.statsProducts || '500+',
+        years: data.statsYears || '15+',
+        clients: data.statsClients || '5000+',
+        brands: data.statsBrands || '50+',
+      });
+      // Testimonials
+      if (Array.isArray(data.testimonials) && data.testimonials.length > 0) {
+        setTestimonials(data.testimonials);
+      }
+      // WhatsApp
+      if (data.whatsappNumber) setWhatsappNumber(data.whatsappNumber);
     }).catch(() => {});
   }, []);
 
@@ -332,10 +352,8 @@ export const HomePage = () => {
       {/* Hero Banner */}
       <HeroBanner>
         <HeroContent>
-          <HeroTitle>Premium Building Materials & Tiles Showroom</HeroTitle>
-          <HeroSubtitle>
-            Explore our extensive collection of high-quality tiles, marble, granite, and bathroom fittings
-          </HeroSubtitle>
+          <HeroTitle>{heroTitle}</HeroTitle>
+          <HeroSubtitle>{heroSubtitle}</HeroSubtitle>
           <CTAButtons>
             <Button
               appearance="primary"
@@ -357,7 +375,7 @@ export const HomePage = () => {
       <Section>
         <SectionTitle>Our Categories</SectionTitle>
         <CategoriesGrid>
-          {CATEGORIES.map(category => (
+          {categories.map(category => (
             <CategoryCard key={category.id} onClick={() => handleCategoryClick(category.id)}>
               <CategoryImage>{category.icon}</CategoryImage>
               <CategoryInfo>
@@ -369,7 +387,7 @@ export const HomePage = () => {
       </Section>
 
       {/* Featured Products */}
-      <Section style={{ backgroundColor: '#f9f9f9' }}>
+      <Section style={{ backgroundColor: 'var(--color-bg-secondary, #f9f9f9)' }}>
         <SectionTitle>Featured Products</SectionTitle>
         {loading ? (
           <div style={{ textAlign: 'center', padding: '40px' }}>Loading products...</div>
@@ -400,30 +418,30 @@ export const HomePage = () => {
       <Section>
         <StatsContainer>
           <StatCard>
-            <StatNumber>500+</StatNumber>
+            <StatNumber>{stats.products}</StatNumber>
             <StatLabel>Premium Products</StatLabel>
           </StatCard>
           <StatCard>
-            <StatNumber>15+</StatNumber>
+            <StatNumber>{stats.years}</StatNumber>
             <StatLabel>Years Experience</StatLabel>
           </StatCard>
           <StatCard>
-            <StatNumber>5000+</StatNumber>
+            <StatNumber>{stats.clients}</StatNumber>
             <StatLabel>Happy Customers</StatLabel>
           </StatCard>
           <StatCard>
-            <StatNumber>50+</StatNumber>
+            <StatNumber>{stats.brands}</StatNumber>
             <StatLabel>Brands Available</StatLabel>
           </StatCard>
         </StatsContainer>
       </Section>
 
       {/* Testimonials */}
-      <Section style={{ backgroundColor: '#f9f9f9' }}>
+      <Section style={{ backgroundColor: 'var(--color-bg-secondary, #f9f9f9)' }}>
         <SectionTitle>What Our Customers Say</SectionTitle>
         <TestimonialsGrid>
-          {TESTIMONIALS.map(testimonial => (
-            <TestimonialCard key={testimonial.id}>
+          {testimonials.map((testimonial, idx) => (
+            <TestimonialCard key={idx}>
               <TestimonialText>"{testimonial.text}"</TestimonialText>
               <TestimonialAuthor>{testimonial.author}</TestimonialAuthor>
             </TestimonialCard>
@@ -451,7 +469,7 @@ export const HomePage = () => {
 
       {/* WhatsApp Button */}
       <WhatsAppButton
-        href="https://wa.me/919876543210?text=Hello%2C%20I%20would%20like%20to%20know%20more%20about%20your%20products"
+        href={`https://wa.me/${whatsappNumber}?text=Hello%2C%20I%20would%20like%20to%20know%20more%20about%20your%20products`}
         target="_blank"
         rel="noopener noreferrer"
         title="Chat on WhatsApp"

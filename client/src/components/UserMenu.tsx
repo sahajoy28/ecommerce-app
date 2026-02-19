@@ -169,10 +169,9 @@ const AdminBadge = styled.span`
 
 interface UserMenuProps {
   userName?: string;
-  onSettingsClick: () => void;
 }
 
-export const UserMenu = ({ userName, onSettingsClick }: UserMenuProps) => {
+export const UserMenu = ({ userName }: UserMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -189,11 +188,6 @@ export const UserMenu = ({ userName, onSettingsClick }: UserMenuProps) => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  const handleSettingsClick = () => {
-    onSettingsClick();
-    setIsOpen(false);
-  };
 
   return (
     <UserMenuWrapper ref={menuRef}>
@@ -224,10 +218,6 @@ export const UserMenu = ({ userName, onSettingsClick }: UserMenuProps) => {
           </DropdownItem>
         )}
         
-        <DropdownButton onClick={handleSettingsClick}>
-          ⚙️ Settings
-        </DropdownButton>
-        
         <DropdownButton onClick={() => {
           dispatch(logout());
           setIsOpen(false);
@@ -240,11 +230,7 @@ export const UserMenu = ({ userName, onSettingsClick }: UserMenuProps) => {
   );
 };
 
-interface GuestMenuProps {
-  onSettingsClick: () => void;
-}
-
-export const GuestMenu = ({ onSettingsClick }: GuestMenuProps) => {
+export const GuestMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -269,10 +255,6 @@ export const GuestMenu = ({ onSettingsClick }: GuestMenuProps) => {
       </UserButton>
 
       <Dropdown $isOpen={isOpen}>
-        <DropdownButton onClick={onSettingsClick}>
-          ⚙️ Settings
-        </DropdownButton>
-        
         <DropdownItem as={Link} to="/login">
           🔐 Login
         </DropdownItem>

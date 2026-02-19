@@ -23,11 +23,22 @@ router.put('/', verify, async (req, res) => {
     }
 
     const allowedFields = [
-      'mapEmbedUrl', 'mapLatitude', 'mapLongitude', 'mapZoom',
+      // General / Business
       'businessName', 'phone', 'whatsappNumber', 'email', 'address',
+      // Theme
+      'themeMode', 'accentColor',
+      // Home page
+      'heroTitle', 'heroSubtitle', 'heroCategories', 'heroCategoryIcons',
+      'statsProducts', 'statsYears', 'statsClients', 'statsBrands',
+      'testimonials',
+      // About page
       'aboutTitle', 'aboutSubtitle', 'aboutStory', 'aboutOfferings',
       'aboutCategories', 'aboutBrands', 'aboutShowroom', 'aboutWhyChooseUs',
-      'aboutShowroomImages'
+      'aboutShowroomImages',
+      // Contact / Map
+      'mapEmbedUrl', 'mapLatitude', 'mapLongitude', 'mapZoom',
+      // Email / SMTP
+      'smtpEmail', 'smtpAppPassword'
     ];
 
     const updates = {};

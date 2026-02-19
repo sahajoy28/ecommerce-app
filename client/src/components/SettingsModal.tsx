@@ -1,7 +1,5 @@
 import styled from 'styled-components';
-import { useState, useEffect } from 'react';
-import { useTheme, ThemeMode, AccentColor } from '../app/themeContext';
-import { useAppSelector } from '../app/hooks';
+import { useTheme, AccentColor } from '../app/themeContext';
 import { colors, spacing, typography, borderRadius, transitions, media, shadows } from '../styles/designTokens';
 
 const Backdrop = styled.div<{ $isOpen: boolean }>`
@@ -244,21 +242,7 @@ interface SettingsModalProps {
 }
 
 export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
-  const { mode, accentColor, setMode, setAccentColor } = useTheme();
-  const [showSaveMessage, setShowSaveMessage] = useState(false);
-  const { user } = useAppSelector(state => state.auth);
-
-  const handleThemeChange = (newMode: ThemeMode) => {
-    setMode(newMode);
-    setShowSaveMessage(true);
-    setTimeout(() => setShowSaveMessage(false), 2000);
-  };
-
-  const handleAccentChange = (newAccent: AccentColor) => {
-    setAccentColor(newAccent);
-    setShowSaveMessage(true);
-    setTimeout(() => setShowSaveMessage(false), 2000);
-  };
+  const { mode, accentColor } = useTheme();
 
   return (
     <>
@@ -272,32 +256,17 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
         <ModalBody>
           <SettingSection>
             <SectionTitle>Theme</SectionTitle>
-            <SectionDescription>Choose your preferred theme</SectionDescription>
-            <OptionGrid>
-              <OptionButton
-                $isActive={mode === 'light'}
-                onClick={() => handleThemeChange('light')}
-              >
-                ☀️ Light
-              </OptionButton>
-              <OptionButton
-                $isActive={mode === 'dark'}
-                onClick={() => handleThemeChange('dark')}
-              >
-                🌙 Dark
-              </OptionButton>
-            </OptionGrid>
+            <SectionDescription>Current: {mode === 'light' ? '☀️ Light' : '🌙 Dark'}</SectionDescription>
           </SettingSection>
 
           <SettingSection>
             <SectionTitle>Accent Color</SectionTitle>
-            <SectionDescription>Customize the primary accent color</SectionDescription>
             <OptionGrid>
               {(Object.keys(accentColorMap) as AccentColor[]).map((color) => (
                 <OptionButton
                   key={color}
                   $isActive={accentColor === color}
-                  onClick={() => handleAccentChange(color)}
+                  style={{ cursor: 'default', opacity: accentColor === color ? 1 : 0.4 }}
                 >
                   <ColorOption>
                     <ColorPreview color={accentColorMap[color]} />
@@ -311,17 +280,10 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
           </SettingSection>
 
           <SettingSection>
-            <SectionTitle>Storage</SectionTitle>
             <SectionDescription>
-              {user 
-                ? '✅ Your preferences are saved to your account.' 
-                : '💾 Your preferences are saved locally on this device.'}
+              🎨 The site theme is managed by the administrator.
             </SectionDescription>
           </SettingSection>
-
-          <SaveMessage $show={showSaveMessage}>
-            ✅ Settings saved {user ? 'to your account' : 'locally'}
-          </SaveMessage>
         </ModalBody>
       </ModalContent>
     </>

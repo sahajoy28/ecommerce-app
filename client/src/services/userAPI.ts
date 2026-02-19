@@ -1,4 +1,4 @@
-import { authApi } from "./apiClient";
+import { authApi, productsApi } from "./apiClient";
 
 export const userAPI = {
   getAddresses: async () => {
@@ -80,12 +80,16 @@ export const userAPI = {
   promotUserToAdmin: async (email: string) => {
     return await authApi.post<{ success: boolean; message: string; user: any }>("/auth/promote-to-admin", { email });
   },
-  // Site settings endpoints
+  // Site settings endpoints (public read, admin write)
   getSiteSettings: async () => {
-    const response = await authApi.get<{ success: boolean; data: any }>("/settings");
+    const response = await productsApi.get<{ success: boolean; data: any }>("/settings");
     return response.data || {};
   },
   updateSiteSettings: async (data: any) => {
     return await authApi.put<{ success: boolean; data: any; message: string }>("/settings", data);
+  },
+  // Contact form (public)
+  submitContactForm: async (data: { name: string; email: string; phone: string; subject: string; message: string }) => {
+    return await productsApi.post<{ success: boolean; message: string }>("/inquiries/contact", data);
   }
 };

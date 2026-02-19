@@ -195,17 +195,35 @@ export const ContactPage = () => {
     message: ''
   });
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const [mapUrl, setMapUrl] = useState('');
+  const [contactInfo, setContactInfo] = useState({
+    phone: '',
+    email: '',
+    whatsappNumber: '',
+    address: '',
+    businessName: '',
+  });
 
   useEffect(() => {
     userAPI.getSiteSettings().then((data: any) => {
-      if (data.mapEmbedUrl) {
-        const url = data.mapEmbedUrl.trim();
-        const srcMatch = url.match(/src=["']([^"']+)["']/i);
-        setMapUrl(srcMatch ? srcMatch[1] : url);
-      } else if (data.mapLatitude != null && data.mapLongitude != null) {
-        const zoom = data.mapZoom || 15;
-        setMapUrl(`https://maps.google.com/maps?width=100%25&height=400&hl=en&q=${data.mapLatitude},${data.mapLongitude}&t=&z=${zoom}&ie=UTF8&iwloc=B&output=embed`);
+      if (data) {
+        setContactInfo({
+          phone: data.phone || '',
+          email: data.email || '',
+          whatsappNumber: data.whatsappNumber || '',
+          address: data.address || '',
+          businessName: data.businessName || '',
+        });
+        if (data.mapEmbedUrl) {
+          const url = data.mapEmbedUrl.trim();
+          const srcMatch = url.match(/src=["']([^"']+)["']/i);
+          setMapUrl(srcMatch ? srcMatch[1] : url);
+        } else if (data.mapLatitude != null && data.mapLongitude != null) {
+          const zoom = data.mapZoom || 15;
+          setMapUrl(`https://maps.google.com/maps?width=100%25&height=400&hl=en&q=${data.mapLatitude},${data.mapLongitude}&t=&z=${zoom}&ie=UTF8&iwloc=B&output=embed`);
+        }
       }
     }).catch(() => {});
   }, []);
@@ -216,17 +234,24 @@ export const ContactPage = () => {
       ...prev,
       [name]: value
     }));
+    setError('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would send the form data to your backend
-    console.log('Form submitted:', formData);
-    setSubmitted(true);
-    setTimeout(() => {
+    setSubmitting(true);
+    setError('');
+
+    try {
+      await userAPI.submitContactForm(formData);
+      setSubmitted(true);
       setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
-      setSubmitted(false);
-    }, 3000);
+      setTimeout(() => setSubmitted(false), 5000);
+    } catch (err: any) {
+      setError(err?.details?.message || err?.message || 'Failed to send message. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -239,51 +264,54 @@ export const ContactPage = () => {
       <ContentGrid>
         {/* Contact Info */}
         <ContactInfo>
-          <InfoCard>
-            <InfoTitle>📍 Address</InfoTitle>
-            <InfoContent>
-              123 Marble Showroom Lane<br />
-              Ahmedabad, Gujarat 380001<br />
-              India
-            </InfoContent>
-          </InfoCard>
+          {contactInfo.address && (
+            <InfoCard>
+              <InfoTitle>📍 Address</InfoTitle>
+              <InfoContent>
+                {contactInfo.address.split('\n').map((line, i) => (
+                  <span key={i}>{line}<br /></span>
+                ))}
+              </InfoContent>
+            </InfoCard>
+          )}
 
-          <InfoCard>
-            <InfoTitle>📞 Phone</InfoTitle>
-            <InfoContent>
-              <LinkButton href="tel:+919876543210">+91 98765 43210</LinkButton>
-              <br />
-              <LinkButton href="tel:+919123456789">+91 91234 56789</LinkButton>
-            </InfoContent>
-          </InfoCard>
+          {contactInfo.phone && (
+            <InfoCard>
+              <InfoTitle>📞 Phone</InfoTitle>
+              <InfoContent>
+                <LinkButton href={`tel:${contactInfo.phone}`}>{contactInfo.phone}</LinkButton>
+              </InfoContent>
+            </InfoCard>
+          )}
 
-          <InfoCard>
-            <InfoTitle>📧 Email</InfoTitle>
-            <InfoContent>
-              <LinkButton href="mailto:info@showroom.com">info@showroom.com</LinkButton>
-              <br />
-              <LinkButton href="mailto:sales@showroom.com">sales@showroom.com</LinkButton>
-            </InfoContent>
-          </InfoCard>
+          {contactInfo.email && (
+            <InfoCard>
+              <InfoTitle>📧 Email</InfoTitle>
+              <InfoContent>
+                <LinkButton href={`mailto:${contactInfo.email}`}>{contactInfo.email}</LinkButton>
+              </InfoContent>
+            </InfoCard>
+          )}
 
-          <InfoCard>
-            <InfoTitle>💬 WhatsApp</InfoTitle>
-            <InfoContent>
-              <WhatsAppButton
-                href="https://wa.me/919876543210"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                💬 Chat on WhatsApp
-              </WhatsAppButton>
-            </InfoContent>
-          </InfoCard>
+          {contactInfo.whatsappNumber && (
+            <InfoCard>
+              <InfoTitle>💬 WhatsApp</InfoTitle>
+              <InfoContent>
+                <WhatsAppButton
+                  href={`https://wa.me/${contactInfo.whatsappNumber}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  💬 Chat on WhatsApp
+                </WhatsAppButton>
+              </InfoContent>
+            </InfoCard>
+          )}
 
           <InfoCard>
             <InfoTitle>🕐 Business Hours</InfoTitle>
             <InfoContent>
-              Monday - Friday: 10:00 AM - 6:00 PM<br />
-              Saturday: 11:00 AM - 5:00 PM<br />
+              Monday - Saturday: 10:00 AM - 7:00 PM<br />
               Sunday: Closed
             </InfoContent>
           </InfoCard>
@@ -360,9 +388,20 @@ export const ContactPage = () => {
           <SubmitButton
             appearance="primary"
             type="submit"
+            disabled={submitting}
           >
-            {submitted ? '✓ Message Sent!' : 'Send Message'}
+            {submitting ? 'Sending...' : submitted ? '✓ Message Sent!' : 'Send Message'}
           </SubmitButton>
+          {error && (
+            <div style={{ color: colors.error, fontSize: '0.9rem', marginTop: spacing[2] }}>
+              {error}
+            </div>
+          )}
+          {submitted && (
+            <div style={{ color: colors.success, fontSize: '0.9rem', marginTop: spacing[2] }}>
+              ✓ Your message has been sent. We'll get back to you soon!
+            </div>
+          )}
         </ContactForm>
       </ContentGrid>
 
