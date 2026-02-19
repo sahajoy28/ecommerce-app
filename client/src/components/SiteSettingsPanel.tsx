@@ -137,6 +137,15 @@ interface SiteSettingsData {
   whatsappNumber: string;
   email: string;
   address: string;
+  aboutTitle: string;
+  aboutSubtitle: string;
+  aboutStory: string;
+  aboutOfferings: string;
+  aboutCategories: string;
+  aboutBrands: string;
+  aboutShowroom: string;
+  aboutWhyChooseUs: string;
+  aboutShowroomImages: string;
 }
 
 const DEFAULT_SETTINGS: SiteSettingsData = {
@@ -149,17 +158,35 @@ const DEFAULT_SETTINGS: SiteSettingsData = {
   whatsappNumber: '',
   email: '',
   address: '',
+  aboutTitle: 'About Us',
+  aboutSubtitle: '',
+  aboutStory: '',
+  aboutOfferings: '',
+  aboutCategories: '',
+  aboutBrands: '',
+  aboutShowroom: '',
+  aboutWhyChooseUs: '',
+  aboutShowroomImages: '',
 };
 
+function extractMapUrl(input: string): string {
+  const trimmed = input.trim();
+  // If user pasted a full <iframe> tag, extract the src URL
+  const match = trimmed.match(/src=["']([^"']+)["']/i);
+  if (match) return match[1];
+  return trimmed;
+}
+
 function buildMapPreviewUrl(settings: SiteSettingsData): string {
-  if (settings.mapEmbedUrl.trim()) {
-    return settings.mapEmbedUrl.trim();
+  const embedUrl = extractMapUrl(settings.mapEmbedUrl);
+  if (embedUrl) {
+    return embedUrl;
   }
   const lat = parseFloat(settings.mapLatitude);
   const lng = parseFloat(settings.mapLongitude);
   const zoom = parseInt(settings.mapZoom) || 15;
   if (!isNaN(lat) && !isNaN(lng)) {
-    return `https://www.google.com/maps?q=${lat},${lng}&z=${zoom}&output=embed`;
+    return `https://maps.google.com/maps?width=100%25&height=400&hl=en&q=${lat},${lng}&t=&z=${zoom}&ie=UTF8&iwloc=B&output=embed`;
   }
   return '';
 }
@@ -188,6 +215,15 @@ export const SiteSettingsPanel = () => {
         whatsappNumber: data.whatsappNumber || '',
         email: data.email || '',
         address: data.address || '',
+        aboutTitle: data.aboutTitle || 'About Us',
+        aboutSubtitle: data.aboutSubtitle || '',
+        aboutStory: data.aboutStory || '',
+        aboutOfferings: data.aboutOfferings || '',
+        aboutCategories: Array.isArray(data.aboutCategories) ? data.aboutCategories.join(', ') : (data.aboutCategories || ''),
+        aboutBrands: Array.isArray(data.aboutBrands) ? data.aboutBrands.join(', ') : (data.aboutBrands || ''),
+        aboutShowroom: data.aboutShowroom || '',
+        aboutWhyChooseUs: data.aboutWhyChooseUs || '',
+        aboutShowroomImages: Array.isArray(data.aboutShowroomImages) ? data.aboutShowroomImages.join(', ') : (data.aboutShowroomImages || ''),
       });
     } catch (err) {
       console.error('Failed to load settings:', err);
@@ -203,13 +239,22 @@ export const SiteSettingsPanel = () => {
 
     try {
       const payload: any = {
-        mapEmbedUrl: settings.mapEmbedUrl,
+        mapEmbedUrl: extractMapUrl(settings.mapEmbedUrl),
         mapZoom: parseInt(settings.mapZoom) || 15,
         businessName: settings.businessName,
         phone: settings.phone,
         whatsappNumber: settings.whatsappNumber,
         email: settings.email,
         address: settings.address,
+        aboutTitle: settings.aboutTitle,
+        aboutSubtitle: settings.aboutSubtitle,
+        aboutStory: settings.aboutStory,
+        aboutOfferings: settings.aboutOfferings,
+        aboutCategories: settings.aboutCategories.split(',').map(s => s.trim()).filter(Boolean),
+        aboutBrands: settings.aboutBrands.split(',').map(s => s.trim()).filter(Boolean),
+        aboutShowroom: settings.aboutShowroom,
+        aboutWhyChooseUs: settings.aboutWhyChooseUs,
+        aboutShowroomImages: settings.aboutShowroomImages.split(',').map(s => s.trim()).filter(Boolean),
       };
 
       if (settings.mapLatitude) payload.mapLatitude = parseFloat(settings.mapLatitude);
@@ -228,7 +273,12 @@ export const SiteSettingsPanel = () => {
   const handleChange = (field: keyof SiteSettingsData) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | { target: { value: string } }
   ) => {
-    setSettings(prev => ({ ...prev, [field]: e.target.value }));
+    let value = e.target.value;
+    // Auto-extract src URL if user pastes a full <iframe> tag into the map field
+    if (field === 'mapEmbedUrl' && value.includes('<iframe')) {
+      value = extractMapUrl(value);
+    }
+    setSettings(prev => ({ ...prev, [field]: value }));
   };
 
   const previewUrl = buildMapPreviewUrl(settings);
@@ -359,6 +409,99 @@ export const SiteSettingsPanel = () => {
             placeholder="Full business address"
             value={settings.address}
             onChange={handleChange('address')}
+          />
+        </FieldGroup>
+
+        {/* About Page Section */}
+        <SectionHeader>📄 About Page Content</SectionHeader>
+
+        <FieldGroup>
+          <Label>Page Title</Label>
+          <StyledInput
+            placeholder="About Us"
+            value={settings.aboutTitle}
+            onChange={(e) => handleChange('aboutTitle')({ target: { value: e.target.value } })}
+          />
+        </FieldGroup>
+
+        <FieldGroup>
+          <Label>Subtitle</Label>
+          <StyledInput
+            placeholder="Your trusted partner for premium building materials..."
+            value={settings.aboutSubtitle}
+            onChange={(e) => handleChange('aboutSubtitle')({ target: { value: e.target.value } })}
+          />
+        </FieldGroup>
+
+        <FieldGroup>
+          <Label>Our Story</Label>
+          <HelpText>Use separate paragraphs with a blank line between them.</HelpText>
+          <TextArea
+            placeholder="Tell your company story here..."
+            value={settings.aboutStory}
+            onChange={handleChange('aboutStory')}
+            style={{ minHeight: '140px' }}
+          />
+        </FieldGroup>
+
+        <FieldGroup>
+          <Label>What We Offer</Label>
+          <HelpText>Each line becomes a bullet point. Start each line with what you offer.</HelpText>
+          <TextArea
+            placeholder={"500+ premium products from leading brands\nExpert design consultation\nCompetitive wholesale and retail pricing"}
+            value={settings.aboutOfferings}
+            onChange={handleChange('aboutOfferings')}
+            style={{ minHeight: '120px' }}
+          />
+        </FieldGroup>
+
+        <FieldGroup>
+          <Label>Product Categories</Label>
+          <HelpText>Comma-separated list, e.g. Floor Tiles, Wall Tiles, Marble, Granite</HelpText>
+          <TextArea
+            placeholder="Floor Tiles, Wall Tiles, Marble, Granite, Bathroom Fittings"
+            value={settings.aboutCategories}
+            onChange={handleChange('aboutCategories')}
+          />
+        </FieldGroup>
+
+        <FieldGroup>
+          <Label>Featured Brands</Label>
+          <HelpText>Comma-separated list of brand names</HelpText>
+          <TextArea
+            placeholder="Brand A, Brand B, Brand C"
+            value={settings.aboutBrands}
+            onChange={handleChange('aboutBrands')}
+          />
+        </FieldGroup>
+
+        <FieldGroup>
+          <Label>Showroom Description</Label>
+          <TextArea
+            placeholder="Visit our modern showroom to experience our collection..."
+            value={settings.aboutShowroom}
+            onChange={handleChange('aboutShowroom')}
+          />
+        </FieldGroup>
+
+        <FieldGroup>
+          <Label>Showroom Image URLs</Label>
+          <HelpText>Comma-separated Google Drive or image URLs for the showroom gallery</HelpText>
+          <TextArea
+            placeholder="https://drive.google.com/..., https://drive.google.com/..."
+            value={settings.aboutShowroomImages}
+            onChange={handleChange('aboutShowroomImages')}
+          />
+        </FieldGroup>
+
+        <FieldGroup>
+          <Label>Why Choose Us</Label>
+          <HelpText>Each line becomes a highlight. Format: Title - Description</HelpText>
+          <TextArea
+            placeholder={"15+ Years Experience - We've been in the industry long enough to know quality\nCertified Products - All our products meet international standards"}
+            value={settings.aboutWhyChooseUs}
+            onChange={handleChange('aboutWhyChooseUs')}
+            style={{ minHeight: '140px' }}
           />
         </FieldGroup>
 

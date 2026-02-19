@@ -43,6 +43,44 @@ const siteSettingsSchema = new mongoose.Schema({
     default: ''
   },
 
+  // About page content
+  aboutTitle: {
+    type: String,
+    default: 'About Us'
+  },
+  aboutSubtitle: {
+    type: String,
+    default: ''
+  },
+  aboutStory: {
+    type: String,
+    default: ''
+  },
+  aboutOfferings: {
+    type: String,
+    default: ''
+  },
+  aboutCategories: {
+    type: [String],
+    default: []
+  },
+  aboutBrands: {
+    type: [String],
+    default: []
+  },
+  aboutShowroom: {
+    type: String,
+    default: ''
+  },
+  aboutWhyChooseUs: {
+    type: String,
+    default: ''
+  },
+  aboutShowroomImages: {
+    type: [String],
+    default: []
+  },
+
   updatedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'

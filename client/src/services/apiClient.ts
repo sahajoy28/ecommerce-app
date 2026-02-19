@@ -135,7 +135,10 @@ class ApiClient {
    * Handle error response
    */
   private handleError(error: any) {
-    console.error("[API Error]", error);
+    const status = error?.response?.status;
+    if (status !== 401) {
+      console.error("[API Error]", error);
+    }
     return Promise.reject(error);
   }
 
@@ -158,6 +161,13 @@ class ApiClient {
    */
   clearAuthToken() {
     delete this.client.defaults.headers.common["Authorization"];
+  }
+
+  /**
+   * Check if auth token is set
+   */
+  hasToken(): boolean {
+    return !!this.client.defaults.headers.common?.["Authorization"];
   }
 }
 

@@ -200,10 +200,12 @@ export const ContactPage = () => {
   useEffect(() => {
     userAPI.getSiteSettings().then((data: any) => {
       if (data.mapEmbedUrl) {
-        setMapUrl(data.mapEmbedUrl);
+        const url = data.mapEmbedUrl.trim();
+        const srcMatch = url.match(/src=["']([^"']+)["']/i);
+        setMapUrl(srcMatch ? srcMatch[1] : url);
       } else if (data.mapLatitude != null && data.mapLongitude != null) {
         const zoom = data.mapZoom || 15;
-        setMapUrl(`https://www.google.com/maps?q=${data.mapLatitude},${data.mapLongitude}&z=${zoom}&output=embed`);
+        setMapUrl(`https://maps.google.com/maps?width=100%25&height=400&hl=en&q=${data.mapLatitude},${data.mapLongitude}&t=&z=${zoom}&ie=UTF8&iwloc=B&output=embed`);
       }
     }).catch(() => {});
   }, []);

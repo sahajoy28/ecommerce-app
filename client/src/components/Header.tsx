@@ -1,14 +1,14 @@
 import { Link, useLocation } from "react-router-dom";
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import styled from "styled-components";
-import { Badge, Button } from "@fluentui/react-components";
-import { ShoppingBag24Filled, Home24Filled, Person24Filled } from "@fluentui/react-icons";
+import { Button } from "@fluentui/react-components";
 import { useAppSelector } from "../app/hooks";
 import { useStrings } from "../utils/strings";
 import { colors, spacing, typography, shadows, borderRadius, transitions, media } from "../styles/designTokens";
 import { SearchBar } from "./SearchBar";
 import { UserMenu, GuestMenu } from "./UserMenu";
 import { SettingsModal } from "./SettingsModal";
+import { userAPI } from "../services/userAPI";
 
 export const FilterContext = React.createContext<{toggleFilters: () => void} | null>(null);
 export const useFilterToggle = () => useContext(FilterContext);
@@ -18,7 +18,6 @@ const Wrapper = styled.header`
   backdrop-filter: blur(12px);
   padding: ${spacing[3]} ${spacing[6]};
   display: flex;
-  justify-content: space-between;
   align-items: center;
   gap: ${spacing[4]};
   position: sticky;
@@ -33,15 +32,13 @@ const Wrapper = styled.header`
   ${media.tablet} {
     padding: ${spacing[2]} ${spacing[4]};
     gap: ${spacing[3]};
-    flex-wrap: wrap;
   }
 
   ${media.mobile} {
     padding: ${spacing[2]} ${spacing[3]};
     gap: ${spacing[2]};
-    flex-direction: row;
-    align-items: center;
     flex-wrap: wrap;
+    justify-content: space-between;
   }
 `;
 
@@ -56,36 +53,24 @@ const LeftSection = styled.div`
   }
 `;
 
-const CenterSection = styled.div`
+const SearchSection = styled.div`
   flex: 1;
-  max-width: 600px;
   display: flex;
+  justify-content: center;
   align-items: center;
-  gap: ${spacing[3]};
   min-width: 0;
 
-  ${media.tablet} {
-    max-width: 100%;
-    flex-basis: 100%;
-    margin-top: ${spacing[2]};
-    order: 3;
-    gap: ${spacing[2]};
-  }
-
   ${media.mobile} {
-    max-width: 100%;
-    width: 100%;
+    order: 10;
     flex-basis: 100%;
-    margin-top: ${spacing[2]};
-    order: 3;
-    gap: ${spacing[1]};
   }
 `;
 
-const NavMenu = styled.nav`
+const NavLinksSection = styled.nav`
   display: flex;
-  gap: ${spacing[3]};
   align-items: center;
+  gap: ${spacing[3]};
+  flex-shrink: 0;
 
   ${media.tablet} {
     gap: ${spacing[2]};
@@ -96,16 +81,20 @@ const NavMenu = styled.nav`
   }
 `;
 
-const NavMenuItem = styled(Link)<{ isActive?: boolean }>`
+
+
+const NavMenuItem = styled(Link)<{ $isActive?: boolean }>`
   text-decoration: none;
-  color: ${props => props.isActive ? colors.primary.main : colors.neutral[700]};
-  font-weight: ${props => props.isActive ? '600' : '500'};
+  color: ${props => props.$isActive ? colors.primary.main : colors.neutral[700]};
+  font-weight: ${props => props.$isActive ? '600' : '500'};
   font-size: ${typography.fontSize.sm};
   padding: ${spacing[2]} ${spacing[3]};
   border-radius: ${borderRadius.md};
   transition: all ${transitions.fast};
   white-space: nowrap;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
 
   &:hover {
     background: var(--color-neutral-100, ${colors.neutral[100]});
@@ -115,11 +104,13 @@ const NavMenuItem = styled(Link)<{ isActive?: boolean }>`
   ${media.tablet} {
     padding: ${spacing[1]} ${spacing[2]};
     font-size: ${typography.fontSize.xs};
+    height: 32px;
   }
 
   ${media.mobile} {
     padding: ${spacing[1]};
     font-size: 0.75rem;
+    height: 28px;
   }
 `;
 
@@ -130,7 +121,7 @@ const RightSection = styled.div`
   flex-shrink: 0;
 
   ${media.mobile} {
-    gap: ${spacing[1]};
+    gap: ${spacing[2]};
   }
 `;
 
@@ -223,7 +214,7 @@ const NavLinkWrapper = styled.div`
   position: relative;
 `;
 
-const NavLink = styled(Button)<{ isActive?: boolean }>`
+const NavLink = styled(Button)<{ $isActive?: boolean }>`
   background: none;
   border: none;
   cursor: pointer;
@@ -280,9 +271,10 @@ const BadgeCount = styled.span`
 
 const Divider = styled.div`
   width: 1px;
-  height: 24px;
+  height: 20px;
   background: var(--color-neutral-300, ${colors.neutral[300]});
   margin: 0 ${spacing[1]};
+  align-self: center;
 
   ${media.mobile} {
     display: none;
@@ -318,12 +310,17 @@ const AuthButton = styled(Button)`
 export const Header = () => {
   const location = useLocation();
   const authUser = useAppSelector(state => state.auth.user);
-  const cartCount = useAppSelector(state => 
-    state.cart.items.reduce((acc, item) => acc + item.quantity, 0)
-  );
-  const wishlistItems = useAppSelector(state => state.wishlist.items);
   const filterToggle = useFilterToggle();
   const [showSettings, setShowSettings] = useState(false);
+  const [storeName, setStoreName] = useState('Store');
+
+  useEffect(() => {
+    userAPI.getSiteSettings().then((data: any) => {
+      if (data?.businessName) {
+        setStoreName(data.businessName);
+      }
+    }).catch(() => {});
+  }, []);
 
   const isHome = location.pathname === "/";
 
@@ -338,44 +335,27 @@ export const Header = () => {
             ☰
           </FilterToggleButton>
           <Logo to="/">
-            🛍 Store
+            🛍 {storeName}
           </Logo>
         </LeftSection>
 
-        <CenterSection>
+        <SearchSection>
           <SearchBar />
-          <NavMenu>
-            <NavMenuItem to="/about" isActive={location.pathname === "/about"}>
-              About
-            </NavMenuItem>
-            <NavMenuItem to="/contact" isActive={location.pathname === "/contact"}>
-              Contact
-            </NavMenuItem>
-          </NavMenu>
-        </CenterSection>
+        </SearchSection>
 
         <RightSection>
+          <NavLinksSection>
+            <NavMenuItem to="/about" $isActive={location.pathname === "/about"}>
+              About
+            </NavMenuItem>
+            <NavMenuItem to="/contact" $isActive={location.pathname === "/contact"}>
+              Contact
+            </NavMenuItem>
+          </NavLinksSection>
+
+          <Divider />
+
           <NavSection>
-            <Link to="/wishlist" style={{ textDecoration: "none" }}>
-              <IconBadgeWrapper>
-                <IconButton title="Wishlist">
-                  ❤️
-                </IconButton>
-                {wishlistItems.length > 0 && <BadgeCount>{wishlistItems.length}</BadgeCount>}
-              </IconBadgeWrapper>
-            </Link>
-            
-            <Link to="/cart" style={{ textDecoration: "none" }}>
-              <IconBadgeWrapper>
-                <IconButton title="Cart">
-                  <ShoppingBag24Filled />
-                </IconButton>
-                {cartCount > 0 && <BadgeCount>{cartCount}</BadgeCount>}
-              </IconBadgeWrapper>
-            </Link>
-
-            <Divider />
-
             {authUser ? (
               <UserMenu 
                 userName={authUser.name || authUser.email?.split('@')[0]}

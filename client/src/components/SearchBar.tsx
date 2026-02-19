@@ -8,7 +8,7 @@ import { colors, spacing, typography, borderRadius, transitions, media } from ".
 const SearchWrapper = styled.div`
   position: relative;
   width: 100%;
-  max-width: 320px;
+  max-width: 500px;
 
   ${media.mobile} {
     max-width: 100%;

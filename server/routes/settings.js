@@ -24,7 +24,10 @@ router.put('/', verify, async (req, res) => {
 
     const allowedFields = [
       'mapEmbedUrl', 'mapLatitude', 'mapLongitude', 'mapZoom',
-      'businessName', 'phone', 'whatsappNumber', 'email', 'address'
+      'businessName', 'phone', 'whatsappNumber', 'email', 'address',
+      'aboutTitle', 'aboutSubtitle', 'aboutStory', 'aboutOfferings',
+      'aboutCategories', 'aboutBrands', 'aboutShowroom', 'aboutWhyChooseUs',
+      'aboutShowroomImages'
     ];
 
     const updates = {};

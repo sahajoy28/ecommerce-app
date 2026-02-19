@@ -38,8 +38,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           if (prefs?.theme) setModeState(prefs.theme);
           if (prefs?.accentColor) setAccentColorState(prefs.accentColor);
         })
-        .catch((err) => {
-          console.error('Failed to load user preferences:', err);
+        .catch(() => {
+          // Silently ignore - token may be expired or user not authenticated
         });
     }
   }, [user, token]);
