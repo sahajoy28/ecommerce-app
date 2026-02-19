@@ -49,6 +49,7 @@ router.post('/signup', async (req, res, next) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role,
         cart: user.cart,
         wishlist: user.wishlist
       }
@@ -117,6 +118,7 @@ router.post('/login', async (req, res, next) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role,
         cart: user.cart,
         wishlist: user.wishlist
       }

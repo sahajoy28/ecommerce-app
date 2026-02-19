@@ -7,6 +7,7 @@ export interface User {
   email: string;
   phone?: string;
   gender?: string;
+  role?: 'user' | 'admin';
   cart?: any[];
   wishlist?: any[];
   addresses?: Address[];

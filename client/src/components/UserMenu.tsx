@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Person24Filled } from '@fluentui/react-icons';
 import { useTheme } from '../app/themeContext';
-import { useAppDispatch } from '../app/hooks';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { logout } from '../features/auth/authSlice';
 import { colors, spacing, typography, borderRadius, transitions, media, shadows } from '../styles/designTokens';
 
@@ -159,6 +159,7 @@ export const UserMenu = ({ userName, onSettingsClick }: UserMenuProps) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -196,6 +197,12 @@ export const UserMenu = ({ userName, onSettingsClick }: UserMenuProps) => {
         <DropdownItem as={Link} to="/account">
           👤 Account
         </DropdownItem>
+        
+        {user?.role === 'admin' && (
+          <DropdownItem as={Link} to="/admin-dashboard">
+            🔧 Admin Dashboard
+          </DropdownItem>
+        )}
         
         <DropdownButton onClick={handleSettingsClick}>
           ⚙️ Settings

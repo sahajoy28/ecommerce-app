@@ -2,11 +2,14 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Header, FilterContext } from "./components/Header";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ThemeProviderWrapper } from "./components/ThemeWrapper";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import { HomePage } from "./pages/HomePage";
 import { CatalogPage } from "./pages/CatalogPage";
 import { ProductDetails } from "./pages/ProductDetails";
 import { CartPage } from "./pages/CartPage";
 import { AuthPage } from "./pages/AuthPage";
+import { AdminPage } from "./pages/AdminPage";
+import { AdminDashboard } from "./pages/AdminDashboard";
 import { AccountPage } from "./pages/AccountPage";
 import { OrderPage } from "./pages/OrderPage";
 import { WishlistPage } from "./pages/WishlistPage";
@@ -74,6 +77,17 @@ function App() {
                     <Route path="/order" element={<ErrorBoundary><OrderPage /></ErrorBoundary>} />
                     <Route path="/settings" element={<ErrorBoundary><SettingsPage /></ErrorBoundary>} />
                     <Route path="/checkout" element={<ErrorBoundary><AddressForm /></ErrorBoundary>} />
+                    <Route path="/admin" element={<ErrorBoundary><AdminPage /></ErrorBoundary>} />
+                    <Route
+                      path="/admin-dashboard"
+                      element={
+                        <ErrorBoundary>
+                          <ProtectedRoute requiredRole="admin">
+                            <AdminDashboard />
+                          </ProtectedRoute>
+                        </ErrorBoundary>
+                      }
+                    />
                   </Routes>
                 </MainContent>
               </FilterContext.Provider>

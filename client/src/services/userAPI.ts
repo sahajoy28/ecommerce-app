@@ -42,5 +42,19 @@ export const userAPI = {
   },
   changePassword: async (data: any) => {
     return await authApi.post<{ success: boolean; message: string }>("/user/change-password", data);
+  },
+  // Admin product endpoints
+  createAdminProduct: async (data: any) => {
+    return await authApi.post<{ success: boolean; message: string; product: any }>("/products/admin/create", data);
+  },
+  getAdminProducts: async () => {
+    const response = await authApi.get<{ success: boolean; products: any[] }>("/products/admin/all");
+    return response.products || [];
+  },
+  updateAdminProduct: async (id: string, data: any) => {
+    return await authApi.put<{ success: boolean; message: string; product: any }>(`/products/admin/${id}`, data);
+  },
+  deleteAdminProduct: async (id: string) => {
+    return await authApi.delete<{ success: boolean; message: string }>(`/products/admin/${id}`);
   }
 };
