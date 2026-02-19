@@ -63,6 +63,15 @@ export const userAPI = {
   unpublishAdminProduct: async (id: string) => {
     return await authApi.patch<{ success: boolean; message: string; product: any }>(`/products/admin/${id}/unpublish`, {});
   },
+  bulkPublishProducts: async (ids: string[]) => {
+    return await authApi.post<{ success: boolean; message: string; modifiedCount: number }>("/products/admin/bulk-publish", { ids });
+  },
+  bulkUnpublishProducts: async (ids: string[]) => {
+    return await authApi.post<{ success: boolean; message: string; modifiedCount: number }>("/products/admin/bulk-unpublish", { ids });
+  },
+  bulkDeleteProducts: async (ids: string[]) => {
+    return await authApi.post<{ success: boolean; message: string; deletedCount: number }>("/products/admin/bulk-delete", { ids });
+  },
   // User management endpoints (admin only)
   getAllUsers: async () => {
     const response = await authApi.get<{ success: boolean; users: any[] }>("/auth/users");
@@ -70,5 +79,13 @@ export const userAPI = {
   },
   promotUserToAdmin: async (email: string) => {
     return await authApi.post<{ success: boolean; message: string; user: any }>("/auth/promote-to-admin", { email });
+  },
+  // Site settings endpoints
+  getSiteSettings: async () => {
+    const response = await authApi.get<{ success: boolean; data: any }>("/settings");
+    return response.data || {};
+  },
+  updateSiteSettings: async (data: any) => {
+    return await authApi.put<{ success: boolean; data: any; message: string }>("/settings", data);
   }
 };

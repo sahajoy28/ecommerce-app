@@ -6,51 +6,132 @@ import { ProductForm } from '../components/ProductForm';
 import { ProductManagement } from '../components/ProductManagement';
 import { BannerManagement } from '../components/BannerManagement';
 import { AdminUsers } from '../components/AdminUsers';
+import { SiteSettingsPanel } from '../components/SiteSettingsPanel';
 import { userAPI } from '../services/userAPI';
 
 const DashboardContainer = styled.div`
   min-height: 100vh;
   background: var(--color-bg-primary, ${colors.neutral[50]});
   padding: ${spacing[8]};
+
+  @media (max-width: 768px) {
+    padding: ${spacing[4]} ${spacing[3]};
+  }
 `;
 
 const Header = styled.div`
   margin-bottom: ${spacing[12]};
+
+  @media (max-width: 768px) {
+    margin-bottom: ${spacing[6]};
+  }
 `;
 
 const Title = styled.h1`
   font-size: ${typography.fontSize["7xl"]};
   color: var(--color-text-primary, ${colors.neutral[900]});
   margin-bottom: ${spacing[2]};
+
+  @media (max-width: 768px) {
+    font-size: ${typography.fontSize["3xl"]};
+  }
 `;
 
 const Subtitle = styled.p`
   font-size: ${typography.fontSize.lg};
   color: ${colors.neutral[600]};
+
+  @media (max-width: 768px) {
+    font-size: ${typography.fontSize.sm};
+  }
 `;
 
 const Content = styled.div`
   max-width: 1400px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: ${spacing[12]};
+`;
 
-  @media (max-width: 1024px) {
-    grid-template-columns: 1fr;
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: ${spacing[4]};
+  box-sizing: border-box;
+`;
+
+const ModalContent = styled.div`
+  background: white;
+  border-radius: 12px;
+  padding: ${spacing[8]};
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  position: relative;
+
+  @media (max-width: 768px) {
+    padding: ${spacing[4]};
+    max-width: 100%;
+    max-height: 95vh;
+    border-radius: 8px;
   }
 `;
 
-const LeftSection = styled.div`
+const ModalHeader = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: ${spacing[8]};
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: ${spacing[6]};
+  padding-bottom: ${spacing[4]};
+  border-bottom: 1px solid ${colors.neutral[200]};
 `;
 
-const RightSection = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${spacing[8]};
+const ModalTitle = styled.h2`
+  font-size: ${typography.fontSize['xl']};
+  font-weight: ${typography.fontWeight.bold};
+  color: ${colors.neutral[900]};
+  margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: ${typography.fontSize.lg};
+  }
+`;
+
+const CloseButton = styled.button`
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: ${colors.neutral[500]};
+  padding: ${spacing[1]};
+  line-height: 1;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: ${colors.neutral[100]};
+    color: ${colors.neutral[800]};
+  }
+`;
+
+const AddProductButton = styled(Button)`
+  margin-bottom: ${spacing[6]};
+  padding: ${spacing[3]} ${spacing[6]};
+  font-weight: ${typography.fontWeight.semibold};
+  font-size: ${typography.fontSize.base};
+
+  @media (max-width: 768px) {
+    width: 100%;
+    padding: ${spacing[3]} ${spacing[4]};
+  }
 `;
 
 const SectionTitle = styled.h2`
@@ -58,6 +139,11 @@ const SectionTitle = styled.h2`
   font-weight: ${typography.fontWeight.bold};
   color: var(--color-text-primary, ${colors.neutral[900]});
   margin-bottom: ${spacing[4]};
+
+  @media (max-width: 768px) {
+    font-size: ${typography.fontSize.lg};
+    margin-bottom: ${spacing[3]};
+  }
 `;
 
 const Card = styled.div`
@@ -65,6 +151,12 @@ const Card = styled.div`
   border-radius: 8px;
   padding: ${spacing[8]};
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+
+  @media (max-width: 768px) {
+    padding: ${spacing[4]};
+    border-radius: 6px;
+  }
 `;
 
 const StatsContainer = styled.div`
@@ -102,6 +194,15 @@ const TabContainer = styled.div`
   gap: ${spacing[2]};
   margin-bottom: ${spacing[8]};
   border-bottom: 2px solid ${colors.neutral[200]};
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+
+  @media (max-width: 768px) {
+    gap: ${spacing[1]};
+    margin-bottom: ${spacing[4]};
+  }
 `;
 
 const TabButton = styled(Button)<{ $active: boolean }>`
@@ -113,9 +214,16 @@ const TabButton = styled(Button)<{ $active: boolean }>`
   cursor: pointer;
   font-weight: ${p => p.$active ? typography.fontWeight.semibold : 'normal'};
   transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
 
   &:hover {
     background: ${p => p.$active ? colors.primary.main : colors.neutral[100]};
+  }
+
+  @media (max-width: 768px) {
+    padding: ${spacing[2]} ${spacing[3]};
+    font-size: ${typography.fontSize.sm};
   }
 `;
 
@@ -127,17 +235,34 @@ export const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [bannerRefreshTrigger, setBannerRefreshTrigger] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'products' | 'banners' | 'users'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'banners' | 'users' | 'settings'>('products');
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any | null>(null);
 
   const handleProductSubmit = async (data: any) => {
     setIsLoading(true);
     try {
-      await userAPI.createAdminProduct(data);
-      // Refresh product list
+      if (editingProduct) {
+        await userAPI.updateAdminProduct(editingProduct._id, data);
+      } else {
+        await userAPI.createAdminProduct(data);
+      }
+      setShowProductModal(false);
+      setEditingProduct(null);
       setRefreshTrigger(prev => prev + 1);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleEditProduct = (product: any) => {
+    setEditingProduct(product);
+    setShowProductModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowProductModal(false);
+    setEditingProduct(null);
   };
 
   return (
@@ -166,26 +291,44 @@ export const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
         >
           👥 Users
         </TabButton>
+        <TabButton
+          $active={activeTab === 'settings'}
+          onClick={() => setActiveTab('settings')}
+        >
+          ⚙️ Settings
+        </TabButton>
       </TabContainer>
 
       {activeTab === 'products' && (
-        <>
-          <Content>
-            <LeftSection>
-              <Card>
-                <SectionTitle>➕ Add New Product</SectionTitle>
-                <ProductForm onSubmit={handleProductSubmit} isLoading={isLoading} />
-              </Card>
-            </LeftSection>
-            
-            <RightSection>
-              <Card>
-                <SectionTitle>📦 Your Products</SectionTitle>
-                <ProductManagement refreshTrigger={refreshTrigger} />
-              </Card>
-            </RightSection>
-          </Content>
-        </>
+        <Content>
+          <AddProductButton
+            appearance="primary"
+            onClick={() => { setEditingProduct(null); setShowProductModal(true); }}
+          >
+            ➕ Add New Product
+          </AddProductButton>
+          <Card>
+            <SectionTitle>📦 Your Products</SectionTitle>
+            <ProductManagement refreshTrigger={refreshTrigger} onEdit={handleEditProduct} />
+          </Card>
+        </Content>
+      )}
+
+      {showProductModal && (
+        <ModalOverlay onClick={handleCloseModal}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <ModalTitle>{editingProduct ? '✏️ Edit Product' : '➕ Add New Product'}</ModalTitle>
+              <CloseButton onClick={handleCloseModal}>✕</CloseButton>
+            </ModalHeader>
+            <ProductForm
+              key={editingProduct?._id || 'new'}
+              onSubmit={handleProductSubmit}
+              initialData={editingProduct}
+              isLoading={isLoading}
+            />
+          </ModalContent>
+        </ModalOverlay>
       )}
 
       {activeTab === 'banners' && (
@@ -199,6 +342,13 @@ export const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
         <Card style={{ maxWidth: '100%' }}>
           <SectionTitle>👥 Manage Users</SectionTitle>
           <AdminUsers />
+        </Card>
+      )}
+
+      {activeTab === 'settings' && (
+        <Card style={{ maxWidth: '100%' }}>
+          <SectionTitle>⚙️ Site Settings</SectionTitle>
+          <SiteSettingsPanel />
         </Card>
       )}
     </DashboardContainer>

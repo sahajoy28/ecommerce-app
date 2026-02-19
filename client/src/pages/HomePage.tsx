@@ -2,10 +2,11 @@ import styled from "styled-components";
 import { Button } from "@fluentui/react-components";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { fetchProducts } from "../features/products/productsSlice";
 import { ProductCard } from "../components/ProductCard";
 import { BannerDisplay } from "../components/BannerDisplay";
+import { userAPI } from "../services/userAPI";
 import { colors, spacing, typography, media } from "../styles/designTokens";
 
 const Container = styled.div`
@@ -298,11 +299,21 @@ export const HomePage = () => {
   const dispatch = useAppDispatch();
   const { items, loading } = useAppSelector(state => state.products);
   const featuredProducts = items.slice(0, 6);
+  const [mapUrl, setMapUrl] = useState('');
 
   useEffect(() => {
     if (items.length === 0) {
       dispatch(fetchProducts() as any);
     }
+    // Load map settings
+    userAPI.getSiteSettings().then((data: any) => {
+      if (data.mapEmbedUrl) {
+        setMapUrl(data.mapEmbedUrl);
+      } else if (data.mapLatitude != null && data.mapLongitude != null) {
+        const zoom = data.mapZoom || 15;
+        setMapUrl(`https://www.google.com/maps?q=${data.mapLatitude},${data.mapLongitude}&z=${zoom}&output=embed`);
+      }
+    }).catch(() => {});
   }, []);
 
   const handleCategoryClick = (categoryId: string) => {
@@ -419,20 +430,22 @@ export const HomePage = () => {
       </Section>
 
       {/* Location Map */}
-      <Section>
-        <SectionTitle>Visit Our Showroom</SectionTitle>
-        <MapContainer>
-          <iframe
-            width="100%"
-            height="100%"
-            style={{ border: 0 }}
-            loading="lazy"
-            allowFullScreen
-            referrerPolicy="no-referrer-when-downgrade"
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3671.4244489996937!2d72.58316!3d23.025122!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x395e84a7f000001%3A0x1a3a3a3a3a3a3a3a!2sAhmedabad%2C%20Gujarat!5e0!3m2!1sen!2sin!4v1234567890"
-          />
-        </MapContainer>
-      </Section>
+      {mapUrl && (
+        <Section>
+          <SectionTitle>Visit Our Showroom</SectionTitle>
+          <MapContainer>
+            <iframe
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              loading="lazy"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+              src={mapUrl}
+            />
+          </MapContainer>
+        </Section>
+      )}
 
       {/* WhatsApp Button */}
       <WhatsAppButton

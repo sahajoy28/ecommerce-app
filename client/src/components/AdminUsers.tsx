@@ -23,6 +23,14 @@ const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
   background: white;
+  min-width: 500px;
+`;
+
+const TableWrapper = styled.div`
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 8px;
 `;
 
 const Th = styled.th`
@@ -32,12 +40,15 @@ const Th = styled.th`
   font-weight: ${typography.fontWeight.semibold};
   border-bottom: 2px solid ${colors.neutral[200]};
   color: ${colors.primary.main};
+  white-space: nowrap;
+  font-size: ${typography.fontSize.sm};
 `;
 
 const Td = styled.td`
   padding: ${spacing[4]};
   border-bottom: 1px solid ${colors.neutral[200]};
   color: var(--color-text-primary, ${colors.neutral[900]});
+  font-size: ${typography.fontSize.sm};
 `;
 
 const Tr = styled.tr`
@@ -46,15 +57,15 @@ const Tr = styled.tr`
   }
 `;
 
-const RoleBadge = styled.span<{ isAdmin: boolean }>`
+const RoleBadge = styled.span<{ $isAdmin: boolean }>`
   padding: 4px 12px;
   border-radius: 20px;
   font-size: ${typography.fontSize.sm};
   display: inline-flex;
   align-items: center;
   gap: ${spacing[1]};
-  background: ${p => p.isAdmin ? colors.primary.lighter : colors.neutral[100]};
-  color: ${p => p.isAdmin ? colors.primary.main : colors.neutral[600]};
+  background: ${p => p.$isAdmin ? colors.primary.lighter : colors.neutral[100]};
+  color: ${p => p.$isAdmin ? colors.primary.main : colors.neutral[600]};
   font-weight: ${typography.fontWeight.semibold};
 `;
 
@@ -165,6 +176,7 @@ export const AdminUsers = () => {
       <h3 style={{ marginTop: spacing[8], marginBottom: spacing[4], color: colors.primary.main }}>
         Current Admins ({adminUsers.length})
       </h3>
+      <TableWrapper>
       <Table>
         <thead>
           <Tr>
@@ -183,7 +195,7 @@ export const AdminUsers = () => {
               </Td>
               <Td>{user.email}</Td>
               <Td>
-                <RoleBadge isAdmin={true}>
+                <RoleBadge $isAdmin={true}>
                   <Shield24Filled /> Admin
                 </RoleBadge>
               </Td>
@@ -192,6 +204,7 @@ export const AdminUsers = () => {
           ))}
         </tbody>
       </Table>
+      </TableWrapper>
 
       <h3 style={{ marginTop: spacing[12], marginBottom: spacing[4], color: colors.neutral[700] }}>
         Users to Promote ({nonAdminUsers.length})
@@ -201,6 +214,7 @@ export const AdminUsers = () => {
           All users are already admins!
         </p>
       ) : (
+        <TableWrapper>
         <Table>
           <thead>
             <Tr>
@@ -217,7 +231,7 @@ export const AdminUsers = () => {
                 <Td><strong>{user.name}</strong></Td>
                 <Td>{user.email}</Td>
                 <Td>
-                  <RoleBadge isAdmin={false}>
+                  <RoleBadge $isAdmin={false}>
                     User
                   </RoleBadge>
                 </Td>
@@ -240,6 +254,7 @@ export const AdminUsers = () => {
             ))}
           </tbody>
         </Table>
+        </TableWrapper>
       )}
     </Container>
   );

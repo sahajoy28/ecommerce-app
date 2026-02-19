@@ -1,163 +1,116 @@
-import { useState } from "react";
-import { Input, Button } from "@fluentui/react-components";
-import { Search24Filled, Dismiss24Filled } from "@fluentui/react-icons";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Search20Regular, Dismiss16Regular } from "@fluentui/react-icons";
 import styled from "styled-components";
 import { useAppDispatch } from "../app/hooks";
 import { searchProducts, resetFilters } from "../features/products/productsSlice";
 import { colors, spacing, typography, borderRadius, transitions, media } from "../styles/designTokens";
 
-const SearchContainer = styled.div`
-  display: flex;
-  gap: ${spacing[2]};
-  width: 100%;
-  align-items: center;
-
-  ${media.mobile} {
-    gap: ${spacing[2]};
-    flex-wrap: wrap;
-  }
-`;
-
-const SearchInputWrapper = styled.div`
-  flex: 1;
-  min-width: 300px;
+const SearchWrapper = styled.div`
   position: relative;
-  display: flex;
-  align-items: center;
+  width: 100%;
+  max-width: 320px;
 
   ${media.mobile} {
-    min-width: 100%;
-    flex-basis: 100%;
+    max-width: 100%;
   }
 `;
 
-const SearchIconLeft = styled.div`
+const IconWrapper = styled.div`
   position: absolute;
   left: ${spacing[3]};
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
-  color: ${colors.neutral[600]};
+  color: ${colors.neutral[400]};
   pointer-events: none;
-  font-size: ${typography.fontSize.lg};
+  transition: color ${transitions.fast};
 `;
 
-const SearchInput = styled(Input)`
-  width: 100%;
-  
-  input {
-    background: ${colors.neutral[50]};
-    border: 2px solid ${colors.neutral[200]};
-    border-radius: ${borderRadius.lg};
-    padding: ${spacing[3]} ${spacing[4]} ${spacing[3]} ${spacing[12]};
-    font-size: ${typography.fontSize.base};
-    min-height: 48px;
-    transition: all ${transitions.fast};
-
-    &:hover {
-      border-color: ${colors.neutral[300]};
-      background: ${colors.neutral[100]};
-    }
-
-    &:focus {
-      outline: none;
-      border-color: ${colors.primary.main};
-      background: ${colors.neutral[0]};
-      box-shadow: 0 0 0 3px ${colors.primary.lighter};
-    }
-
-    &::placeholder {
-      color: ${colors.neutral[600]};
-    }
-  }
-`;
-
-const ButtonGroup = styled.div`
+const ClearBtn = styled.button`
+  position: absolute;
+  right: ${spacing[2]};
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
-  gap: ${spacing[1]};
   align-items: center;
-
-  ${media.mobile} {
-    width: 100%;
-    flex-basis: 100%;
-    gap: ${spacing[2]};
-
-    button {
-      flex: 1;
-      min-height: 44px;
-    }
-  }
-`;
-
-const SearchButton = styled(Button)`
-  font-weight: ${typography.fontWeight.semibold};
-  border-radius: ${borderRadius.md};
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: ${colors.neutral[200]};
+  color: ${colors.neutral[500]};
+  cursor: pointer;
+  padding: 0;
   transition: all ${transitions.fast};
-  min-height: 48px;
-  background: ${colors.primary.main} !important;
-  color: ${colors.neutral[0]} !important;
-  border: none !important;
 
   &:hover {
-    background: ${colors.primary.dark} !important;
-    transform: translateY(-2px);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-
-  ${media.tablet} {
-    padding: 0 ${spacing[2]} !important;
-    width: auto;
-  }
-
-  ${media.mobile} {
-    min-width: 100%;
-    width: 100%;
+    background: ${colors.neutral[300]};
+    color: ${colors.neutral[700]};
   }
 `;
 
-const ClearButton = styled(Button)`
-  font-weight: ${typography.fontWeight.semibold};
-  border-radius: ${borderRadius.md};
+const StyledInput = styled.input`
+  width: 100%;
+  background: ${colors.neutral[100]};
+  border: 1px solid transparent;
+  border-radius: ${borderRadius.full || '9999px'};
+  padding: ${spacing[2]} ${spacing[8]} ${spacing[2]} ${spacing[9]};
+  font-size: ${typography.fontSize.sm};
+  color: ${colors.neutral[800]};
+  height: 36px;
   transition: all ${transitions.fast};
-  min-height: 48px;
-  background: ${colors.neutral[200]} !important;
-  color: ${colors.neutral[700]} !important;
-  border: none !important;
+  outline: none;
+  font-family: inherit;
+
+  &::placeholder {
+    color: ${colors.neutral[400]};
+  }
 
   &:hover {
-    background: ${colors.neutral[300]} !important;
+    background: ${colors.neutral[200]};
+    border-color: ${colors.neutral[200]};
   }
 
-  ${media.tablet} {
-    padding: 0 ${spacing[2]} !important;
-    width: auto;
+  &:focus {
+    background: white;
+    border-color: ${colors.primary.main};
+    box-shadow: 0 0 0 2px ${colors.primary.lighter};
   }
 
-  ${media.mobile} {
-    min-width: 100%;
-    width: 100%;
+  &:focus ~ ${IconWrapper}, &:focus + ${IconWrapper} {
+    color: ${colors.primary.main};
   }
 `;
+
+const DEBOUNCE_DELAY = 350;
 
 export const SearchBar = () => {
   const [query, setQuery] = useState("");
   const dispatch = useAppDispatch();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleSearch = () => {
-    if (query.trim()) {
-      dispatch(searchProducts(query));
+  const performSearch = useCallback((value: string) => {
+    if (value.trim()) {
+      dispatch(searchProducts(value.trim()));
     } else {
       dispatch(resetFilters());
     }
-  };
+  }, [dispatch]);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleSearch();
+  useEffect(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
     }
-  };
+    timerRef.current = setTimeout(() => {
+      performSearch(query);
+    }, DEBOUNCE_DELAY);
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [query, performSearch]);
 
   const handleClear = () => {
     setQuery("");
@@ -165,36 +118,21 @@ export const SearchBar = () => {
   };
 
   return (
-    <SearchContainer>
-      <SearchInputWrapper>
-        <SearchIconLeft>
-          <Search24Filled />
-        </SearchIconLeft>
-        <SearchInput
-          placeholder="Search products..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyPress={handleKeyPress}
-        />
-      </SearchInputWrapper>
-      <ButtonGroup>
-        <SearchButton
-          appearance="primary"
-          onClick={handleSearch}
-          title="Search products"
-        >
-          <Search24Filled style={{ marginRight: 0 }} />
-        </SearchButton>
-        {query && (
-          <ClearButton 
-            appearance="secondary" 
-            onClick={handleClear}
-            title="Clear search"
-          >
-            <Dismiss24Filled style={{ marginRight: 0 }} />
-          </ClearButton>
-        )}
-      </ButtonGroup>
-    </SearchContainer>
+    <SearchWrapper>
+      <IconWrapper>
+        <Search20Regular />
+      </IconWrapper>
+      <StyledInput
+        type="text"
+        placeholder="Search products..."
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+      />
+      {query && (
+        <ClearBtn onClick={handleClear} title="Clear search">
+          <Dismiss16Regular />
+        </ClearBtn>
+      )}
+    </SearchWrapper>
   );
 };

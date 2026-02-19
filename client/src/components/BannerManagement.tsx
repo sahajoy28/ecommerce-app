@@ -5,6 +5,8 @@ import { Delete24Filled, Edit24Filled } from '@fluentui/react-icons';
 import { colors, spacing, typography } from '../styles/designTokens';
 import { convertGoogleDriveUrl } from '../utils/googleDriveUrl';
 
+const API_BASE = import.meta.env.MODE === 'production' ? '/api' : 'http://localhost:5000/api';
+
 const Container = styled.div`
   width: 100%;
 `;
@@ -17,6 +19,15 @@ const Table = styled.table`
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   margin-bottom: ${spacing[8]};
+  min-width: 650px;
+`;
+
+const TableWrapper = styled.div`
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 8px;
+  margin-bottom: ${spacing[8]};
 `;
 
 const Th = styled.th`
@@ -25,12 +36,15 @@ const Th = styled.th`
   background: ${colors.primary.lighter};
   font-weight: ${typography.fontWeight.semibold};
   border-bottom: 2px solid ${colors.neutral[200]};
+  white-space: nowrap;
+  font-size: ${typography.fontSize.sm};
 `;
 
 const Td = styled.td`
   padding: ${spacing[4]};
   border-bottom: 1px solid ${colors.neutral[200]};
   color: var(--color-text-primary, ${colors.neutral[900]});
+  font-size: ${typography.fontSize.sm};
 `;
 
 const Tr = styled.tr`
@@ -107,6 +121,11 @@ const ModalContent = styled.div`
   max-height: 90vh;
   overflow: auto;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+
+  @media (max-width: 600px) {
+    padding: ${spacing[4]};
+    width: 95%;
+  }
 `;
 
 const ModalHeader = styled.div`
@@ -205,6 +224,16 @@ const ModalActions = styled.div`
   justify-content: flex-end;
   padding-top: ${spacing[4]};
   border-top: 1px solid ${colors.neutral[200]};
+
+  @media (max-width: 600px) {
+    flex-wrap: wrap;
+    gap: ${spacing[2]};
+
+    button {
+      flex: 1;
+      min-width: 0;
+    }
+  }
 `;
 
 const PreviewImage = styled.img`
@@ -246,7 +275,7 @@ export const BannerManagement = ({ refreshTrigger = 0 }: BannerManagementProps) 
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/banners/admin/list', {
+      const response = await fetch(`${API_BASE}/banners/admin/list`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -273,7 +302,7 @@ export const BannerManagement = ({ refreshTrigger = 0 }: BannerManagementProps) 
     if (window.confirm('Are you sure you want to delete this banner?')) {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`/api/banners/admin/${bannerId}`, {
+        const response = await fetch(`${API_BASE}/banners/admin/${bannerId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -305,8 +334,8 @@ export const BannerManagement = ({ refreshTrigger = 0 }: BannerManagementProps) 
       const token = localStorage.getItem('token');
       const method = isEditMode ? 'PATCH' : 'POST';
       const url = isEditMode 
-        ? `/api/banners/admin/${selectedBanner?._id}` 
-        : '/api/banners/admin/create';
+        ? `${API_BASE}/banners/admin/${selectedBanner?._id}` 
+        : `${API_BASE}/banners/admin/create`;
 
       const response = await fetch(url, {
         method,
@@ -386,6 +415,7 @@ export const BannerManagement = ({ refreshTrigger = 0 }: BannerManagementProps) 
         {banners.length === 0 ? (
           <Nobanners>No banners created yet. Click "Add New Banner" above to get started!</Nobanners>
         ) : (
+          <TableWrapper>
           <Table>
             <thead>
               <Tr>
@@ -458,6 +488,7 @@ export const BannerManagement = ({ refreshTrigger = 0 }: BannerManagementProps) 
                 ))}
             </tbody>
           </Table>
+          </TableWrapper>
         )}
       </Container>
 

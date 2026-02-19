@@ -249,6 +249,83 @@ router.delete('/admin/:id', verify, async (req, res, next) => {
 });
 
 /**
+ * POST /api/products/admin/bulk-publish
+ * Bulk publish products (Admin only)
+ */
+router.post('/admin/bulk-publish', verify, async (req, res, next) => {
+  try {
+    const { user } = req;
+    if (user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Only admins can publish products' });
+    }
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: 'Please provide an array of product IDs' });
+    }
+    const result = await AdminProduct.updateMany(
+      { _id: { $in: ids }, createdBy: user.id },
+      { $set: { published: true } }
+    );
+    console.log(`✅ Bulk published ${result.modifiedCount} products`);
+    res.json({ success: true, message: `${result.modifiedCount} products published`, modifiedCount: result.modifiedCount });
+  } catch (error) {
+    console.error('❌ Error bulk publishing:', error.message);
+    next({ status: 500, message: 'Failed to bulk publish products', details: error.message });
+  }
+});
+
+/**
+ * POST /api/products/admin/bulk-unpublish
+ * Bulk unpublish products (Admin only)
+ */
+router.post('/admin/bulk-unpublish', verify, async (req, res, next) => {
+  try {
+    const { user } = req;
+    if (user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Only admins can unpublish products' });
+    }
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: 'Please provide an array of product IDs' });
+    }
+    const result = await AdminProduct.updateMany(
+      { _id: { $in: ids }, createdBy: user.id },
+      { $set: { published: false } }
+    );
+    console.log(`✅ Bulk unpublished ${result.modifiedCount} products`);
+    res.json({ success: true, message: `${result.modifiedCount} products unpublished`, modifiedCount: result.modifiedCount });
+  } catch (error) {
+    console.error('❌ Error bulk unpublishing:', error.message);
+    next({ status: 500, message: 'Failed to bulk unpublish products', details: error.message });
+  }
+});
+
+/**
+ * POST /api/products/admin/bulk-delete
+ * Bulk delete products (Admin only)
+ */
+router.post('/admin/bulk-delete', verify, async (req, res, next) => {
+  try {
+    const { user } = req;
+    if (user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Only admins can delete products' });
+    }
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: 'Please provide an array of product IDs' });
+    }
+    const result = await AdminProduct.deleteMany(
+      { _id: { $in: ids }, createdBy: user.id }
+    );
+    console.log(`✅ Bulk deleted ${result.deletedCount} products`);
+    res.json({ success: true, message: `${result.deletedCount} products deleted`, deletedCount: result.deletedCount });
+  } catch (error) {
+    console.error('❌ Error bulk deleting:', error.message);
+    next({ status: 500, message: 'Failed to bulk delete products', details: error.message });
+  }
+});
+
+/**
  * GET /api/products/search
  * Search products by query
  * Query params: q (search query, required)

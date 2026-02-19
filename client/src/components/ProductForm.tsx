@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, Input as FluentInput, Checkbox } from '@fluentui/react-components';
 import { colors, spacing, typography } from '../styles/designTokens';
 import { convertGoogleDriveUrl } from '../utils/googleDriveUrl';
@@ -9,26 +9,59 @@ const FormContainer = styled.form`
   flex-direction: column;
   gap: ${spacing[8]};
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+
+  @media (max-width: 600px) {
+    gap: ${spacing[5]};
+  }
 `;
 
 const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${spacing[2]};
+  min-width: 0;
+  max-width: 100%;
+
+  & > * {
+    min-width: 0;
+  }
 `;
 
 const Label = styled.label`
   font-size: ${typography.fontSize.base};
   font-weight: ${typography.fontWeight.semibold};
   color: var(--color-text-primary, ${colors.neutral[900]});
+
+  @media (max-width: 600px) {
+    font-size: ${typography.fontSize.sm};
+  }
 `;
 
 const Input = styled(FluentInput)`
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  & > * {
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  input {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
 `;
 
 const TextArea = styled.textarea`
   width: 100%;
+  max-width: 100%;
   padding: ${spacing[2]};
   border: 1px solid ${colors.neutral[300]};
   border-radius: 4px;
@@ -36,11 +69,16 @@ const TextArea = styled.textarea`
   font-size: ${typography.fontSize.sm};
   resize: vertical;
   min-height: 120px;
+  box-sizing: border-box;
 
   &:focus {
     outline: none;
     border-color: ${colors.primary.main};
     box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.1);
+  }
+
+  @media (max-width: 600px) {
+    min-height: 80px;
   }
 `;
 
@@ -52,29 +90,60 @@ const PricingSection = styled.div`
   background: ${colors.neutral[50]};
   border-radius: 8px;
   border: 1px solid ${colors.neutral[200]};
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+    padding: ${spacing[3]};
+  }
 `;
 
 const DiscountRow = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: ${spacing[4]};
+  min-width: 0;
+  max-width: 100%;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 const ImageSection = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${spacing[4]};
+  min-width: 0;
+  max-width: 100%;
 `;
 
 const ImageButtonContainer = styled.div`
   display: flex;
   gap: ${spacing[2]};
+  max-width: 100%;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+
+    > input {
+      width: 100%;
+      flex: unset;
+    }
+
+    > button {
+      width: 100%;
+    }
+  }
 `;
 
 const ImagePreview = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: ${spacing[4]};
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: ${spacing[3]};
   margin-top: ${spacing[4]};
 `;
 
@@ -119,6 +188,9 @@ const ImageUrlInput = styled.input`
   border-radius: 4px;
   font-size: ${typography.fontSize.sm};
   flex: 1;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 
   &:focus {
     outline: none;
@@ -135,6 +207,13 @@ const ImageHint = styled.div`
   color: #0c4a6e;
   margin-bottom: ${spacing[3]};
   line-height: 1.5;
+  overflow-wrap: break-word;
+  word-break: break-word;
+
+  @media (max-width: 600px) {
+    font-size: ${typography.fontSize.xs};
+    padding: ${spacing[2]};
+  }
 `;
 
 const HintTitle = styled.strong`
@@ -145,6 +224,11 @@ const HintTitle = styled.strong`
 const SubmitButton = styled(Button)`
   align-self: flex-end;
   min-width: 120px;
+
+  @media (max-width: 600px) {
+    align-self: stretch;
+    width: 100%;
+  }
 `;
 
 const ErrorMessage = styled.div`
@@ -207,6 +291,26 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  const isEditing = !!initialData;
+
+  // Reset form when initialData changes (e.g. switching between edit targets)
+  useEffect(() => {
+    setTitle(initialData?.title || '');
+    setDescription(initialData?.description || '');
+    setPrice(initialData?.price || '');
+    setMrp(initialData?.mrp || '');
+    setRetailPrice(initialData?.retailPrice || '');
+    setDiscountType(initialData?.discount?.discountType || 'percentage');
+    setDiscountValue(initialData?.discount?.discountValue || '');
+    setShowPriceInListing(initialData?.showPriceInListing !== false);
+    setCategory(initialData?.category || '');
+    setQuantity(initialData?.quantity || '');
+    setImages(initialData?.images || []);
+    setImageUrl('');
+    setError('');
+    setSuccess('');
+  }, [initialData]);
+
   const calculateFinalPrice = () => {
     let finalPrice = retailPrice ? parseFloat(retailPrice) : parseFloat(price);
     if (!discountValue || !finalPrice) return finalPrice;
@@ -262,21 +366,23 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
         quantity: parseInt(quantity),
         images
       });
-      setSuccess('Product added successfully!');
-      setTitle('');
-      setDescription('');
-      setPrice('');
-      setMrp('');
-      setRetailPrice('');
-      setDiscountType('percentage');
-      setDiscountValue('');
-      setShowPriceInListing(true);
-      setCategory('');
-      setQuantity('');
-      setImages([]);
+      setSuccess(isEditing ? 'Product updated successfully!' : 'Product added successfully!');
+      if (!isEditing) {
+        setTitle('');
+        setDescription('');
+        setPrice('');
+        setMrp('');
+        setRetailPrice('');
+        setDiscountType('percentage');
+        setDiscountValue('');
+        setShowPriceInListing(true);
+        setCategory('');
+        setQuantity('');
+        setImages([]);
+      }
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {
-      setError(err.message || 'Failed to add product');
+      setError(err.message || (isEditing ? 'Failed to update product' : 'Failed to add product'));
     }
   };
 
@@ -372,10 +478,13 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
           <FormGroup>
             <Label>Discount Type</Label>
             <select value={discountType} onChange={(e) => setDiscountType(e.target.value)} style={{
+              width: '100%',
+              maxWidth: '100%',
               padding: spacing[2],
               border: `1px solid ${colors.neutral[300]}`,
               borderRadius: '4px',
-              fontSize: typography.fontSize.sm
+              fontSize: typography.fontSize.sm,
+              boxSizing: 'border-box' as const
             }}>
               <option value="percentage">Percentage (%)</option>
               <option value="fixed">Fixed Amount ($)</option>
@@ -486,7 +595,7 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
         type="submit"
         disabled={isLoading}
       >
-        {isLoading ? 'Adding...' : 'Add Product'}
+        {isLoading ? (isEditing ? 'Updating...' : 'Adding...') : (isEditing ? 'Update Product' : 'Add Product')}
       </SubmitButton>
     </FormContainer>
   );

@@ -1,7 +1,8 @@
 import styled from "styled-components";
 import { Button, Input, Textarea } from "@fluentui/react-components";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { colors, spacing, typography, media } from "../styles/designTokens";
+import { userAPI } from "../services/userAPI";
 
 const Container = styled.div`
   max-width: 1200px;
@@ -35,17 +36,26 @@ const Subtitle = styled.p`
   text-align: center;
   max-width: 600px;
   margin: 0 auto ${spacing[12]};
+
+  ${media.mobile} {
+    font-size: 1rem;
+    margin-bottom: ${spacing[6]};
+  }
 `;
 
 const ContentGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: ${spacing[12]};
+  grid-template-columns: 1fr;
+  gap: ${spacing[8]};
   margin-bottom: ${spacing[12]};
 
   ${media.tablet} {
-    grid-template-columns: 1fr;
-    gap: ${spacing[8]};
+    grid-template-columns: 1fr 1fr;
+    gap: ${spacing[12]};
+  }
+
+  @media (max-width: 480px) {
+    margin-bottom: ${spacing[6]};
   }
 `;
 
@@ -61,6 +71,10 @@ const InfoCard = styled.div`
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border-left: 4px solid #667eea;
+
+  @media (max-width: 480px) {
+    padding: ${spacing[4]};
+  }
 `;
 
 const InfoTitle = styled.h3`
@@ -68,6 +82,10 @@ const InfoTitle = styled.h3`
   font-weight: 600;
   margin: 0 0 ${spacing[2]} 0;
   color: ${colors.neutral[900]};
+
+  @media (max-width: 480px) {
+    font-size: 1.1rem;
+  }
 `;
 
 const InfoContent = styled.p`
@@ -93,6 +111,10 @@ const ContactForm = styled.form`
   padding: ${spacing[6]};
   background: #f9f9f9;
   border-radius: 8px;
+
+  @media (max-width: 480px) {
+    padding: ${spacing[4]};
+  }
 `;
 
 const FormGroup = styled.div`
@@ -124,6 +146,10 @@ const StyledTextarea = styled(Textarea)`
 const SubmitButton = styled(Button)`
   padding: ${spacing[3]} ${spacing[6]} !important;
   margin-top: ${spacing[4]} !important;
+
+  @media (max-width: 480px) {
+    width: 100%;
+  }
 `;
 
 const MapContainer = styled.div`
@@ -169,6 +195,18 @@ export const ContactPage = () => {
     message: ''
   });
   const [submitted, setSubmitted] = useState(false);
+  const [mapUrl, setMapUrl] = useState('');
+
+  useEffect(() => {
+    userAPI.getSiteSettings().then((data: any) => {
+      if (data.mapEmbedUrl) {
+        setMapUrl(data.mapEmbedUrl);
+      } else if (data.mapLatitude != null && data.mapLongitude != null) {
+        const zoom = data.mapZoom || 15;
+        setMapUrl(`https://www.google.com/maps?q=${data.mapLatitude},${data.mapLongitude}&z=${zoom}&output=embed`);
+      }
+    }).catch(() => {});
+  }, []);
 
   const handleChange = (e: any) => {
     const { name, value } = e.target;
@@ -327,22 +365,24 @@ export const ContactPage = () => {
       </ContentGrid>
 
       {/* Map Section */}
-      <div>
-        <h2 style={{ marginBottom: spacing[6], color: colors.neutral[900] }}>
-          📍 Visit Our Showroom
-        </h2>
-        <MapContainer>
-          <iframe
-            width="100%"
-            height="100%"
-            style={{ border: 0 }}
-            loading="lazy"
-            allowFullScreen
-            referrerPolicy="no-referrer-when-downgrade"
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3671.4244489996937!2d72.58316!3d23.025122!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x395e84a7f000001%3A0x1a3a3a3a3a3a3a3a!2sAhmedabad%2C%20Gujarat!5e0!3m2!1sen!2sin!4v1234567890"
-          />
-        </MapContainer>
-      </div>
+      {mapUrl && (
+        <div>
+          <h2 style={{ marginBottom: spacing[6], color: colors.neutral[900] }}>
+            📍 Visit Our Showroom
+          </h2>
+          <MapContainer>
+            <iframe
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              loading="lazy"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+              src={mapUrl}
+            />
+          </MapContainer>
+        </div>
+      )}
     </Container>
   );
 };
