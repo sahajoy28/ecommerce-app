@@ -1,6 +1,7 @@
 import express from 'express';
 import Banner from '../models/Banner.js';
 import { verify } from '../middleware/auth.js';
+import { convertGoogleDriveUrl } from '../utils/googleDrive.js';
 
 const router = express.Router();
 
@@ -133,7 +134,7 @@ router.post('/admin/create', verify, async (req, res, next) => {
     const banner = new Banner({
       title,
       description: description || '',
-      imageUrl,
+      imageUrl: convertGoogleDriveUrl(imageUrl),
       link: link || '',
       position: position || 0,
       type: type || 'promotional',
@@ -192,7 +193,7 @@ router.patch('/admin/:id', verify, async (req, res, next) => {
     // Update fields
     if (title) banner.title = title;
     if (description !== undefined) banner.description = description;
-    if (imageUrl) banner.imageUrl = imageUrl;
+    if (imageUrl) banner.imageUrl = convertGoogleDriveUrl(imageUrl);
     if (link !== undefined) banner.link = link;
     if (position !== undefined) banner.position = position;
     if (type) banner.type = type;
