@@ -28,7 +28,7 @@ router.put('/', verify, async (req, res) => {
       // Theme
       'themeMode', 'accentColor',
       // Home page
-      'heroTitle', 'heroSubtitle', 'heroCategories', 'heroCategoryIcons',
+      'heroTitle', 'heroSubtitle', 'heroCategories', 'heroCategoryIcons', 'heroCategoryImages',
       'statsProducts', 'statsYears', 'statsClients', 'statsBrands',
       'testimonials',
       // About page

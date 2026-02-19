@@ -11,11 +11,7 @@ const Container = styled.div`
   max-width: 900px;
 `;
 
-const Divider = styled.hr`
-  border: none;
-  border-top: 2px solid ${colors.neutral[200]};
-  margin: ${spacing[6]} 0;
-`;
+
 
 const TabContent = styled.div`
   display: flex;
@@ -198,6 +194,23 @@ const RemoveButton = styled.button`
 
 // ===================== TYPES =====================
 
+export type SettingsTabKey = 'general' | 'appearance' | 'hero' | 'categories' | 'stats' | 'testimonials' | 'about' | 'contact';
+
+export const SETTINGS_TABS: { key: SettingsTabKey; label: string; icon: string }[] = [
+  { key: 'general', label: 'General', icon: '🏢' },
+  { key: 'appearance', label: 'Appearance', icon: '🎨' },
+  { key: 'hero', label: 'Hero', icon: '🏠' },
+  { key: 'categories', label: 'Categories', icon: '📂' },
+  { key: 'stats', label: 'Stats', icon: '📊' },
+  { key: 'testimonials', label: 'Testimonials', icon: '💬' },
+  { key: 'about', label: 'About', icon: '📄' },
+  { key: 'contact', label: 'Contact', icon: '📍' },
+];
+
+interface SiteSettingsPanelProps {
+  activeTab?: SettingsTabKey;
+}
+
 interface SiteSettingsData {
   businessName: string;
   phone: string;
@@ -210,6 +223,7 @@ interface SiteSettingsData {
   heroSubtitle: string;
   heroCategories: string;
   heroCategoryIcons: string;
+  heroCategoryImages: string;
   statsProducts: string;
   statsYears: string;
   statsClients: string;
@@ -244,6 +258,7 @@ const DEFAULT_SETTINGS: SiteSettingsData = {
   heroSubtitle: '',
   heroCategories: '',
   heroCategoryIcons: '',
+  heroCategoryImages: '',
   statsProducts: '500+',
   statsYears: '15+',
   statsClients: '5000+',
@@ -301,7 +316,7 @@ function arrToStr(val: any): string {
 
 // ===================== COMPONENT =====================
 
-export const SiteSettingsPanel = () => {
+export const SiteSettingsPanel = ({ activeTab = 'general' }: SiteSettingsPanelProps) => {
   const [settings, setSettings] = useState<SiteSettingsData>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -325,6 +340,7 @@ export const SiteSettingsPanel = () => {
         heroSubtitle: data.heroSubtitle || '',
         heroCategories: arrToStr(data.heroCategories),
         heroCategoryIcons: arrToStr(data.heroCategoryIcons),
+        heroCategoryImages: arrToStr(data.heroCategoryImages),
         statsProducts: data.statsProducts || '500+',
         statsYears: data.statsYears || '15+',
         statsClients: data.statsClients || '5000+',
@@ -371,6 +387,7 @@ export const SiteSettingsPanel = () => {
         heroSubtitle: settings.heroSubtitle,
         heroCategories: settings.heroCategories.split(',').map(s => s.trim()).filter(Boolean),
         heroCategoryIcons: settings.heroCategoryIcons.split(',').map(s => s.trim()).filter(Boolean),
+        heroCategoryImages: settings.heroCategoryImages.split(',').map(s => s.trim()).filter(Boolean),
         statsProducts: settings.statsProducts,
         statsYears: settings.statsYears,
         statsClients: settings.statsClients,
@@ -438,7 +455,7 @@ export const SiteSettingsPanel = () => {
 
   // ===================== TAB RENDERERS =====================
 
-  const renderGeneralSection = () => (
+  const renderGeneralTab = () => (
     <TabContent>
       <SectionHeader>🏢 Business Information</SectionHeader>
       <FieldGroup>
@@ -467,7 +484,7 @@ export const SiteSettingsPanel = () => {
     </TabContent>
   );
 
-  const renderThemeSection = () => (
+  const renderAppearanceTab = () => (
     <TabContent>
       <SectionHeader>🎨 Site Appearance</SectionHeader>
       <HelpText>These settings apply to all pages for all visitors.</HelpText>
@@ -503,7 +520,7 @@ export const SiteSettingsPanel = () => {
     </TabContent>
   );
 
-  const renderHomeSection = () => (
+  const renderHeroTab = () => (
     <TabContent>
       <SectionHeader>🏠 Hero Section</SectionHeader>
       <FieldGroup>
@@ -514,7 +531,11 @@ export const SiteSettingsPanel = () => {
         <Label>Hero Subtitle</Label>
         <TextArea placeholder="Explore our extensive collection of premium tiles, marble, granite..." value={settings.heroSubtitle} onChange={handleChange('heroSubtitle')} />
       </FieldGroup>
+    </TabContent>
+  );
 
+  const renderCategoriesTab = () => (
+    <TabContent>
       <SectionHeader>📂 Categories</SectionHeader>
       <FieldGroup>
         <Label>Category Names</Label>
@@ -526,7 +547,16 @@ export const SiteSettingsPanel = () => {
         <HelpText>Comma-separated emojis matching each category above, e.g. 🏠, 🧱, 💎, 🪨</HelpText>
         <StyledInput placeholder="🏠, 🧱, 💎, 🪨, 🚿, 🌳" value={settings.heroCategoryIcons} onChange={inputChange('heroCategoryIcons')} />
       </FieldGroup>
+      <FieldGroup>
+        <Label>Category Background Images</Label>
+        <HelpText>Comma-separated image URLs (Google Drive or direct). One per category. If provided, image replaces the gradient background.</HelpText>
+        <TextArea placeholder="https://drive.google.com/..., https://drive.google.com/..." value={settings.heroCategoryImages} onChange={handleChange('heroCategoryImages')} />
+      </FieldGroup>
+    </TabContent>
+  );
 
+  const renderStatsTab = () => (
+    <TabContent>
       <SectionHeader>📊 Stats Section</SectionHeader>
       <Row>
         <FieldGroup>
@@ -548,7 +578,11 @@ export const SiteSettingsPanel = () => {
           <StyledInput placeholder="50+" value={settings.statsBrands} onChange={inputChange('statsBrands')} />
         </FieldGroup>
       </Row>
+    </TabContent>
+  );
 
+  const renderTestimonialsTab = () => (
+    <TabContent>
       <SectionHeader>💬 Testimonials</SectionHeader>
       <HelpText>Add customer testimonials shown on the home page.</HelpText>
       {settings.testimonials.map((t, i) => (
@@ -568,7 +602,7 @@ export const SiteSettingsPanel = () => {
     </TabContent>
   );
 
-  const renderAboutSection = () => (
+  const renderAboutTab = () => (
     <TabContent>
       <SectionHeader>📄 About Page Content</SectionHeader>
       <FieldGroup>
@@ -616,7 +650,7 @@ export const SiteSettingsPanel = () => {
     </TabContent>
   );
 
-  const renderContactSection = () => (
+  const renderContactTab = () => (
     <TabContent>
       <SectionHeader>📍 Map Location</SectionHeader>
       <FieldGroup>
@@ -665,6 +699,17 @@ export const SiteSettingsPanel = () => {
     </TabContent>
   );
 
+  const TAB_RENDERERS: Record<SettingsTabKey, () => JSX.Element> = {
+    general: renderGeneralTab,
+    appearance: renderAppearanceTab,
+    hero: renderHeroTab,
+    categories: renderCategoriesTab,
+    stats: renderStatsTab,
+    testimonials: renderTestimonialsTab,
+    about: renderAboutTab,
+    contact: renderContactTab,
+  };
+
   return (
     <Container>
       <form onSubmit={handleSubmit}>
@@ -674,15 +719,7 @@ export const SiteSettingsPanel = () => {
             : <ErrorMessage>{message.text}</ErrorMessage>
         )}
 
-        {renderGeneralSection()}
-        <Divider />
-        {renderThemeSection()}
-        <Divider />
-        {renderHomeSection()}
-        <Divider />
-        {renderAboutSection()}
-        <Divider />
-        {renderContactSection()}
+        {TAB_RENDERERS[activeTab]()}
 
         <ButtonRow>
           <Button

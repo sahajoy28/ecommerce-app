@@ -48,24 +48,19 @@ const BackButton = styled(Link)`
 
 const ProductWrapper = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: ${spacing[8]};
+  grid-template-columns: 1fr;
+  gap: ${spacing[4]};
   background: var(--color-neutral-0, ${colors.neutral[0]});
-  padding: ${spacing[8]};
+  padding: ${spacing[4]};
   border-radius: ${borderRadius.lg};
   box-shadow: ${shadows.md};
   border: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
   margin-bottom: ${spacing[8]};
 
   ${media.tablet} {
-    grid-template-columns: 1fr;
-    gap: ${spacing[6]};
-    padding: ${spacing[6]};
-  }
-
-  ${media.mobile} {
-    gap: ${spacing[4]};
-    padding: ${spacing[4]};
+    grid-template-columns: 1fr 1fr;
+    gap: ${spacing[8]};
+    padding: ${spacing[8]};
   }
 `;
 
@@ -75,18 +70,14 @@ const ImageContainer = styled.div`
   justify-content: center;
   background: ${colors.gradients.cool};
   border-radius: ${borderRadius.lg};
-  padding: ${spacing[8]};
+  padding: ${spacing[4]};
   height: fit-content;
-  position: sticky;
-  top: 120px;
+  min-height: 200px;
 
   ${media.tablet} {
-    position: static;
-    top: auto;
-  }
-
-  ${media.mobile} {
-    padding: ${spacing[6]};
+    padding: ${spacing[8]};
+    position: sticky;
+    top: 120px;
   }
 `;
 

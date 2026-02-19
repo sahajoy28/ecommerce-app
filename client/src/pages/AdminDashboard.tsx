@@ -6,7 +6,7 @@ import { ProductForm } from '../components/ProductForm';
 import { ProductManagement } from '../components/ProductManagement';
 import { BannerManagement } from '../components/BannerManagement';
 import { AdminUsers } from '../components/AdminUsers';
-import { SiteSettingsPanel } from '../components/SiteSettingsPanel';
+import { SiteSettingsPanel, SETTINGS_TABS, SettingsTabKey } from '../components/SiteSettingsPanel';
 import { userAPI } from '../services/userAPI';
 
 const DashboardContainer = styled.div`
@@ -191,39 +191,74 @@ const StatLabel = styled.div`
 
 const TabContainer = styled.div`
   display: flex;
-  gap: ${spacing[2]};
+  gap: ${spacing[1]};
   margin-bottom: ${spacing[8]};
   border-bottom: 2px solid ${colors.neutral[200]};
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
+  flex-wrap: nowrap;
 
   @media (max-width: 768px) {
-    gap: ${spacing[1]};
-    margin-bottom: ${spacing[4]};
+    display: none;
   }
 `;
 
-const TabButton = styled(Button)<{ $active: boolean }>`
-  padding: ${spacing[4]} ${spacing[6]};
+const TabButton = styled.button<{ $active: boolean }>`
+  padding: ${spacing[3]} ${spacing[4]};
   background: ${p => p.$active ? colors.primary.main : 'transparent'};
   color: ${p => p.$active ? 'white' : colors.neutral[600]};
   border: none;
-  border-bottom: ${p => p.$active ? `3px solid ${colors.primary.main}` : 'none'};
+  border-bottom: ${p => p.$active ? `3px solid ${colors.primary.main}` : '3px solid transparent'};
+  margin-bottom: -2px;
   cursor: pointer;
-  font-weight: ${p => p.$active ? typography.fontWeight.semibold : 'normal'};
+  font-size: ${typography.fontSize.sm};
+  font-weight: ${p => p.$active ? typography.fontWeight.semibold : typography.fontWeight.normal};
   transition: all 0.2s ease;
   white-space: nowrap;
   flex-shrink: 0;
+  border-radius: 6px 6px 0 0;
 
   &:hover {
     background: ${p => p.$active ? colors.primary.main : colors.neutral[100]};
+    color: ${p => p.$active ? 'white' : colors.primary.main};
+  }
+`;
+
+const TabDivider = styled.div`
+  width: 2px;
+  background: ${colors.neutral[200]};
+  margin: ${spacing[2]} 0;
+  flex-shrink: 0;
+`;
+
+const MobileSelect = styled.select`
+  display: none;
+  width: 100%;
+  padding: ${spacing[3]} ${spacing[4]};
+  font-size: ${typography.fontSize.base};
+  font-weight: ${typography.fontWeight.semibold};
+  color: ${colors.neutral[800]};
+  background: white;
+  border: 2px solid ${colors.neutral[200]};
+  border-radius: 8px;
+  margin-bottom: ${spacing[6]};
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right ${spacing[3]} center;
+  background-size: 20px;
+
+  &:focus {
+    outline: none;
+    border-color: ${colors.primary.main};
+    box-shadow: 0 0 0 3px ${colors.primary.lighter};
   }
 
   @media (max-width: 768px) {
-    padding: ${spacing[2]} ${spacing[3]};
-    font-size: ${typography.fontSize.sm};
+    display: block;
   }
 `;
 
@@ -235,7 +270,7 @@ export const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [bannerRefreshTrigger, setBannerRefreshTrigger] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'products' | 'banners' | 'users' | 'settings'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'banners' | 'users' | SettingsTabKey>('products');
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
 
@@ -272,6 +307,18 @@ export const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
         <Subtitle>Manage your products and store</Subtitle>
       </Header>
 
+      <MobileSelect
+        value={activeTab}
+        onChange={(e) => setActiveTab(e.target.value as any)}
+      >
+        <option value="products">📦 Products</option>
+        <option value="banners">🎨 Banners</option>
+        <option value="users">👥 Users</option>
+        {SETTINGS_TABS.map(tab => (
+          <option key={tab.key} value={tab.key}>{tab.icon} {tab.label}</option>
+        ))}
+      </MobileSelect>
+
       <TabContainer>
         <TabButton
           $active={activeTab === 'products'}
@@ -291,12 +338,16 @@ export const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
         >
           👥 Users
         </TabButton>
-        <TabButton
-          $active={activeTab === 'settings'}
-          onClick={() => setActiveTab('settings')}
-        >
-          ⚙️ Settings
-        </TabButton>
+        <TabDivider />
+        {SETTINGS_TABS.map(tab => (
+          <TabButton
+            key={tab.key}
+            $active={activeTab === tab.key}
+            onClick={() => setActiveTab(tab.key)}
+          >
+            {tab.icon} {tab.label}
+          </TabButton>
+        ))}
       </TabContainer>
 
       {activeTab === 'products' && (
@@ -345,10 +396,10 @@ export const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
         </Card>
       )}
 
-      {activeTab === 'settings' && (
+      {SETTINGS_TABS.some(tab => tab.key === activeTab) && (
         <Card style={{ maxWidth: '100%' }}>
-          <SectionTitle>⚙️ Site Settings</SectionTitle>
-          <SiteSettingsPanel />
+          <SectionTitle>⚙️ {SETTINGS_TABS.find(t => t.key === activeTab)?.icon} {SETTINGS_TABS.find(t => t.key === activeTab)?.label} Settings</SectionTitle>
+          <SiteSettingsPanel activeTab={activeTab as SettingsTabKey} />
         </Card>
       )}
     </DashboardContainer>

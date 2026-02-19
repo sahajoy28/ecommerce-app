@@ -52,6 +52,10 @@ const siteSettingsSchema = new mongoose.Schema({
     type: [String],
     default: []
   },
+  heroCategoryImages: {
+    type: [String],
+    default: []
+  },
   statsProducts: { type: String, default: '500+' },
   statsYears: { type: String, default: '15+' },
   statsClients: { type: String, default: '5000+' },

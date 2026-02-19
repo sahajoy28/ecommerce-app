@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { colors, spacing, typography } from '../styles/designTokens';
 import { convertGoogleDriveUrl } from '../utils/googleDriveUrl';
 
+const API_BASE = import.meta.env.MODE === 'production' ? '/api' : 'http://localhost:5000/api';
+
 const BannerContainer = styled.div`
   width: 100%;
   margin-bottom: ${spacing[12]};
@@ -26,13 +28,12 @@ const BannerSlider = styled.div`
   }
 `;
 
-const BannerSlide = styled.div<{ $isActive: boolean; $imageUrl: string }>`
+const BannerSlide = styled.div<{ $isActive: boolean }>`
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: url('${props => convertGoogleDriveUrl(props.$imageUrl)}');
   background-size: cover;
   background-position: center;
   background-color: ${colors.neutral[200]};
@@ -47,7 +48,6 @@ const BannerSlide = styled.div<{ $isActive: boolean; $imageUrl: string }>`
     filter: brightness(0.95);
   }
 
-  /* Fallback text if image fails */
   &::after {
     content: '';
     position: absolute;
@@ -195,8 +195,8 @@ export const BannerDisplay = ({
     const fetchBanners = async () => {
       try {
         const url = type && type !== 'all'
-          ? `/api/banners?type=${type}&limit=${limit}`
-          : `/api/banners?limit=${limit}`;
+          ? `${API_BASE}/banners?type=${type}&limit=${limit}`
+          : `${API_BASE}/banners?limit=${limit}`;
 
         const response = await fetch(url);
         if (!response.ok) throw new Error('Failed to fetch banners');
@@ -251,7 +251,7 @@ export const BannerDisplay = ({
           <BannerSlide
             key={banner._id}
             $isActive={index === currentIndex}
-            $imageUrl={banner.imageUrl}
+            style={{ backgroundImage: `url('${convertGoogleDriveUrl(banner.imageUrl)}')` }}
           >
             <BannerOverlay $hasContent={hasContent}>
               {hasContent && (

@@ -7,6 +7,7 @@ import { fetchProducts } from "../features/products/productsSlice";
 import { ProductCard } from "../components/ProductCard";
 import { BannerDisplay } from "../components/BannerDisplay";
 import { userAPI } from "../services/userAPI";
+import { convertGoogleDriveUrl } from '../utils/googleDriveUrl';
 import { colors, spacing, typography, media } from "../styles/designTokens";
 
 const Container = styled.div`
@@ -128,14 +129,18 @@ const CategoryCard = styled.div`
   }
 `;
 
-const CategoryImage = styled.div`
+const CategoryImage = styled.div<{ $hasImage?: boolean }>`
   width: 100%;
   height: 150px;
-  background: linear-gradient(135deg, var(--color-primary, #667eea) 0%, var(--color-primary-dark, #764ba2) 100%);
+  background: ${p => p.$hasImage ? colors.neutral[200] : `linear-gradient(135deg, var(--color-primary, #667eea) 0%, var(--color-primary-dark, #764ba2) 100%)`};
+  background-size: cover;
+  background-position: center;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 3rem;
+  position: relative;
+  overflow: hidden;
 `;
 
 const CategoryInfo = styled.div`
@@ -268,12 +273,12 @@ const ProductListContainer = styled.div`
 `;
 
 const DEFAULT_CATEGORIES = [
-  { id: 'floor-tiles', name: 'Floor Tiles', icon: '🏠' },
-  { id: 'wall-tiles', name: 'Wall Tiles', icon: '🧱' },
-  { id: 'marble', name: 'Marble', icon: '💎' },
-  { id: 'granite', name: 'Granite', icon: '🪨' },
-  { id: 'bathroom', name: 'Bathroom Fittings', icon: '🚿' },
-  { id: 'outdoor', name: 'Outdoor Tiles', icon: '🌳' },
+  { id: 'floor-tiles', name: 'Floor Tiles', icon: '🏠', image: '' },
+  { id: 'wall-tiles', name: 'Wall Tiles', icon: '🧱', image: '' },
+  { id: 'marble', name: 'Marble', icon: '💎', image: '' },
+  { id: 'granite', name: 'Granite', icon: '🪨', image: '' },
+  { id: 'bathroom', name: 'Bathroom Fittings', icon: '🚿', image: '' },
+  { id: 'outdoor', name: 'Outdoor Tiles', icon: '🌳', image: '' },
 ];
 
 const DEFAULT_TESTIMONIALS = [
@@ -316,10 +321,12 @@ export const HomePage = () => {
       // Categories
       if (Array.isArray(data.heroCategories) && data.heroCategories.length > 0) {
         const icons = Array.isArray(data.heroCategoryIcons) ? data.heroCategoryIcons : [];
+        const images = Array.isArray(data.heroCategoryImages) ? data.heroCategoryImages : [];
         setCategories(data.heroCategories.map((name: string, i: number) => ({
           id: name.toLowerCase().replace(/\s+/g, '-'),
           name,
           icon: icons[i] || '📦',
+          image: images[i] || '',
         })));
       }
       // Stats
@@ -346,7 +353,7 @@ export const HomePage = () => {
     <Container>
       {/* Dynamic Banners from Admin Panel */}
       <Section>
-        <BannerDisplay type="hero" limit={5} autoRotate={true} rotationInterval={5000} />
+        <BannerDisplay type="all" limit={5} autoRotate={true} rotationInterval={5000} />
       </Section>
 
       {/* Hero Banner */}
@@ -377,7 +384,12 @@ export const HomePage = () => {
         <CategoriesGrid>
           {categories.map(category => (
             <CategoryCard key={category.id} onClick={() => handleCategoryClick(category.id)}>
-              <CategoryImage>{category.icon}</CategoryImage>
+              <CategoryImage
+                $hasImage={!!category.image}
+                style={category.image ? { backgroundImage: `url('${convertGoogleDriveUrl(category.image)}')` } : undefined}
+              >
+                {!category.image && category.icon}
+              </CategoryImage>
               <CategoryInfo>
                 <CategoryName>{category.name}</CategoryName>
               </CategoryInfo>

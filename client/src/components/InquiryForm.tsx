@@ -127,23 +127,170 @@ const ErrorMessage = styled.div`
   font-weight: 600;
 `;
 
+const HelpLink = styled.button`
+  background: none;
+  border: none;
+  color: #4338ca;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-top: ${spacing[1]};
+  display: inline-flex;
+  align-items: center;
+  gap: ${spacing[1]};
+  text-decoration: underline;
+  text-underline-offset: 2px;
+
+  &:hover {
+    color: #3730a3;
+  }
+`;
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: ${spacing[4]};
+  animation: fadeIn 0.2s ease;
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+`;
+
+const ModalContent = styled.div`
+  background: #fff;
+  border-radius: 12px;
+  max-width: 520px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  animation: slideUp 0.25s ease;
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+`;
+
+const ModalHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: ${spacing[5]} ${spacing[6]};
+  border-bottom: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, #eef2ff 0%, #e8f0fe 100%);
+  border-radius: 12px 12px 0 0;
+
+  h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #4338ca;
+    display: flex;
+    align-items: center;
+    gap: ${spacing[2]};
+  }
+`;
+
+const CloseButton = styled.button`
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: ${colors.neutral[500]};
+  padding: ${spacing[1]};
+  line-height: 1;
+  border-radius: 4px;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: ${colors.neutral[900]};
+  }
+`;
+
+const ModalBody = styled.div`
+  padding: ${spacing[6]};
+  color: ${colors.neutral[800]};
+  font-size: 0.9rem;
+  line-height: 1.7;
+
+  ul {
+    margin: ${spacing[2]} 0;
+    padding-left: ${spacing[5]};
+  }
+
+  li {
+    margin-bottom: ${spacing[1]};
+  }
+
+  strong {
+    color: ${colors.neutral[900]};
+  }
+
+  code {
+    background: rgba(99, 102, 241, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    color: #4338ca;
+  }
+
+  .step {
+    margin-bottom: ${spacing[4]};
+    padding-bottom: ${spacing[4]};
+    border-bottom: 1px dashed #e5e7eb;
+
+    &:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+  }
+
+  .step-label {
+    display: inline-block;
+    background: #4338ca;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: ${spacing[2]};
+  }
+`;
+
 interface InquiryFormProps {
   productId: string;
   productName: string;
 }
 
 export const InquiryForm = ({ productId, productName }: InquiryFormProps) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    email: string;
+    phone: string;
+    quantity: string;
+    quantityUnit: 'units' | 'boxes' | 'sqft' | 'sqm';
+    message: string;
+  }>({
     name: '',
     email: '',
     phone: '',
     quantity: '',
-    quantityUnit: 'units' as const,
+    quantityUnit: 'units',
     message: ''
   });
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showCalcGuide, setShowCalcGuide] = useState(false);
 
   const handleChange = (e: any) => {
     const { name, value } = e.target;
@@ -257,6 +404,12 @@ export const InquiryForm = ({ productId, productName }: InquiryFormProps) => {
           </StyledInput>
         </FormGroup>
 
+        {formData.quantityUnit === 'sqft' && (
+          <HelpLink type="button" onClick={() => setShowCalcGuide(true)}>
+            📐 How to calculate sq.ft &amp; skirting?
+          </HelpLink>
+        )}
+
         <FormGroup>
           <Label htmlFor="message">Additional Message / Requirements</Label>
           <StyledTextarea
@@ -295,6 +448,49 @@ export const InquiryForm = ({ productId, productName }: InquiryFormProps) => {
           </CallButton>
         </ButtonGroup>
       </FormContainer>
+
+      {showCalcGuide && (
+        <ModalOverlay onClick={() => setShowCalcGuide(false)}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <h3>📐 Sq.ft &amp; Skirting Guide</h3>
+              <CloseButton onClick={() => setShowCalcGuide(false)}>&times;</CloseButton>
+            </ModalHeader>
+            <ModalBody>
+              <div className="step">
+                <span className="step-label">Step 1</span>
+                <br />
+                <strong>Measure your area</strong>
+                <ul>
+                  <li>Measure the <strong>length</strong> and <strong>width</strong> of the room/area in feet.</li>
+                  <li><code>Area (sq.ft) = Length × Width</code></li>
+                  <li>Example: 12 ft × 10 ft = <strong>120 sq.ft</strong></li>
+                </ul>
+              </div>
+              <div className="step">
+                <span className="step-label">Step 2</span>
+                <br />
+                <strong>Add skirting (border tiles along walls)</strong>
+                <ul>
+                  <li>Measure the <strong>total wall length</strong> (perimeter) where skirting is needed.</li>
+                  <li>Skirting height is typically <strong>3–4 inches</strong> (0.25–0.33 ft).</li>
+                  <li><code>Skirting (sq.ft) = Wall Length × Skirting Height</code></li>
+                  <li>Example: 44 ft × 0.33 ft = <strong>≈ 15 sq.ft</strong></li>
+                </ul>
+              </div>
+              <div className="step">
+                <span className="step-label">Step 3</span>
+                <br />
+                <strong>Total with wastage</strong>
+                <ul>
+                  <li><code>Total = (Area + Skirting) + 5–10% extra</code></li>
+                  <li>Example: (120 + 15) × 1.10 = <strong>≈ 149 sq.ft</strong></li>
+                </ul>
+              </div>
+            </ModalBody>
+          </ModalContent>
+        </ModalOverlay>
+      )}
     </>
   );
 };
