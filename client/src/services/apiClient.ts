@@ -76,6 +76,18 @@ class ApiClient {
   }
 
   /**
+   * Perform PATCH request
+   */
+  async patch<T>(url: string, data?: any): Promise<T> {
+    try {
+      const response = await this.client.patch<T>(url, data);
+      return response.data;
+    } catch (error) {
+      throw this.transformError(error);
+    }
+  }
+
+  /**
    * Perform DELETE request
    */
   async delete<T>(url: string): Promise<T> {

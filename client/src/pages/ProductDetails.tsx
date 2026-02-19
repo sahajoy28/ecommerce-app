@@ -9,8 +9,10 @@ import { AddReviewForm } from "../components/AddReviewForm";
 import { ReviewsList } from "../components/ReviewsList";
 import styled from "styled-components";
 import { ArrowLeft24Filled } from "@fluentui/react-icons";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { colors, spacing, typography, shadows, borderRadius, transitions, media } from "../styles/designTokens";
+import { convertGoogleDriveUrl } from "../utils/googleDriveUrl";
+import { productsApi } from "../services/apiClient";
 
 const Container = styled.div`
   max-width: 1200px;
@@ -264,21 +266,83 @@ export const ProductDetails = () => {
   const navigate = useNavigate();
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
-
-  const product = useAppSelector(state =>
-    state.products.items.find(p => p.id === Number(id))
-  );
-
-  const relatedProducts = useAppSelector(state =>
-    state.products.items
-      .filter(p => p.category === product?.category && p.id !== product?.id)
-      .slice(0, 4)
-  );
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [imageError, setImageError] = useState(false);
+  const fetchAbortControllerRef = useRef<AbortController | null>(null);
 
   const dispatch = useAppDispatch();
-  const cartItems = useAppSelector(state => state.cart.items);
 
-  if (!product) {
+  // Fetch product from API when ID changes
+  useEffect(() => {
+    // Abort previous request if still pending
+    if (fetchAbortControllerRef.current) {
+      fetchAbortControllerRef.current.abort();
+    }
+
+    if (!id) {
+      setError("Product ID is missing");
+      setLoading(false);
+      return;
+    }
+
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Create new AbortController for this request
+        fetchAbortControllerRef.current = new AbortController();
+        
+        const response = await productsApi.get<any>(`/products/${id}`);
+        
+        // Only update state if this component is still mounted (request wasn't aborted)
+        if (response?.product) {
+          setProduct(response.product);
+        } else {
+          setError("Product not found");
+        }
+      } catch (err: any) {
+        // Only show error if request wasn't aborted
+        if (err?.name !== 'AbortError') {
+          console.error("Error fetching product:", err);
+          setError("Product not found");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+
+    // Cleanup: abort the request when unmounting or when id changes
+    return () => {
+      if (fetchAbortControllerRef.current) {
+        fetchAbortControllerRef.current.abort();
+      }
+    };
+  }, [id]);
+
+  const allProducts = useAppSelector(state => state.products.items);
+
+  const relatedProducts = product
+    ? allProducts
+        .filter(p => p.category === product?.category && p.id !== product?.id)
+        .slice(0, 4)
+    : [];
+
+  if (loading) {
+    return (
+      <Container>
+        <NotFound>
+          <h2>Loading product...</h2>
+        </NotFound>
+      </Container>
+    );
+  }
+
+  if (!product || error) {
     return (
       <Container>
         <NotFound>
@@ -291,6 +355,8 @@ export const ProductDetails = () => {
       </Container>
     );
   }
+
+  const cartItems = useAppSelector(state => state.cart.items);
 
   const handleAddToCart = async () => {
     // Optimistic update
@@ -314,7 +380,18 @@ export const ProductDetails = () => {
 
       <ProductWrapper>
         <ImageContainer>
-          <ProductImage src={product.image} alt={product.title} />
+          {!imageError && product.image ? (
+            <ProductImage 
+              src={convertGoogleDriveUrl(product.image)} 
+              alt={product.title}
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <ProductImage 
+              src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect fill='%23f0f0f0' width='200' height='200'/%3E%3Ctext x='50%' y='50%' text-anchor='middle' dy='.3em' fill='%23999' font-size='16'%3ENo Image%3C/text%3E%3C/svg%3E"
+              alt="No image available"
+            />
+          )}
         </ImageContainer>
 
         <DetailsContainer>

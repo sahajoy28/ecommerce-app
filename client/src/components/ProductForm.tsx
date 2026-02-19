@@ -1,17 +1,14 @@
 import styled from 'styled-components';
 import { useState } from 'react';
-import { Button, Input as FluentInput, Field } from '@fluentui/react-components';
+import { Button, Input as FluentInput, Checkbox } from '@fluentui/react-components';
 import { colors, spacing, typography } from '../styles/designTokens';
+import { convertGoogleDriveUrl } from '../utils/googleDriveUrl';
 
 const FormContainer = styled.form`
   display: flex;
   flex-direction: column;
   gap: ${spacing[8]};
-  max-width: 600px;
-  padding: ${spacing[8]};
-  background: var(--color-bg-primary, ${colors.neutral[50]});
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
 `;
 
 const FormGroup = styled.div`
@@ -47,40 +44,31 @@ const TextArea = styled.textarea`
   }
 `;
 
-const ImageUrlsContainer = styled.div`
+const PricingSection = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: ${spacing[4]};
+  padding: ${spacing[6]};
+  background: ${colors.neutral[50]};
+  border-radius: 8px;
+  border: 1px solid ${colors.neutral[200]};
+`;
+
+const DiscountRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: ${spacing[4]};
+`;
+
+const ImageSection = styled.div`
   display: flex;
   flex-direction: column;
+  gap: ${spacing[4]};
+`;
+
+const ImageButtonContainer = styled.div`
+  display: flex;
   gap: ${spacing[2]};
-`;
-
-const ImageUrlInput = styled.input`
-  padding: ${spacing[2]};
-  border: 1px solid ${colors.neutral[300]};
-  border-radius: 4px;
-  font-size: ${typography.fontSize.sm};
-
-  &:focus {
-    outline: none;
-    border-color: ${colors.primary.main};
-  }
-`;
-
-const AddImageButton = styled(Button)`
-  width: fit-content;
-`;
-
-const RemoveButton = styled.button`
-  padding: 4px 8px;
-  background: ${colors.error};
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: ${typography.fontSize.sm};
-
-  &:hover {
-    background: rgba(239, 68, 68, 0.8);
-  }
 `;
 
 const ImagePreview = styled.div`
@@ -125,6 +113,19 @@ const RemoveImageButton = styled.button`
   }
 `;
 
+const ImageUrlInput = styled.input`
+  padding: ${spacing[2]};
+  border: 1px solid ${colors.neutral[300]};
+  border-radius: 4px;
+  font-size: ${typography.fontSize.sm};
+  flex: 1;
+
+  &:focus {
+    outline: none;
+    border-color: ${colors.primary.main};
+  }
+`;
+
 const SubmitButton = styled(Button)`
   align-self: flex-end;
   min-width: 120px;
@@ -146,6 +147,27 @@ const SuccessMessage = styled.div`
   border-radius: 4px;
 `;
 
+const CheckboxWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${spacing[2]};
+`;
+
+const PriceInfo = styled.div`
+  font-size: ${typography.fontSize.sm};
+  color: ${colors.neutral[700]};
+  padding: ${spacing[2]};
+  background: white;
+  border-radius: 4px;
+  margin-top: ${spacing[2]};
+`;
+
+const DiscountPreview = styled.div`
+  font-size: ${typography.fontSize.sm};
+  color: ${colors.success};
+  margin-top: ${spacing[1]};
+`;
+
 interface ProductFormProps {
   onSubmit: (data: any) => Promise<void>;
   initialData?: any;
@@ -156,12 +178,29 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
   const [title, setTitle] = useState(initialData?.title || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [price, setPrice] = useState(initialData?.price || '');
+  const [mrp, setMrp] = useState(initialData?.mrp || '');
+  const [retailPrice, setRetailPrice] = useState(initialData?.retailPrice || '');
+  const [discountType, setDiscountType] = useState(initialData?.discount?.discountType || 'percentage');
+  const [discountValue, setDiscountValue] = useState(initialData?.discount?.discountValue || '');
+  const [showPriceInListing, setShowPriceInListing] = useState(initialData?.showPriceInListing !== false);
   const [category, setCategory] = useState(initialData?.category || '');
   const [quantity, setQuantity] = useState(initialData?.quantity || '');
   const [images, setImages] = useState<string[]>(initialData?.images || []);
   const [imageUrl, setImageUrl] = useState('');
+  const [showImageInput, setShowImageInput] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  const calculateFinalPrice = () => {
+    let finalPrice = retailPrice ? parseFloat(retailPrice) : parseFloat(price);
+    if (!discountValue || !finalPrice) return finalPrice;
+
+    if (discountType === 'percentage') {
+      return finalPrice - (finalPrice * parseFloat(discountValue) / 100);
+    } else {
+      return finalPrice - parseFloat(discountValue);
+    }
+  };
 
   const handleAddImage = () => {
     if (!imageUrl.trim()) {
@@ -187,7 +226,7 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
     setSuccess('');
 
     if (!title.trim() || !description.trim() || !price || !category.trim() || !quantity || images.length === 0) {
-      setError('Please fill in all fields and add at least one image');
+      setError('Please fill in all required fields and add at least one image');
       return;
     }
 
@@ -196,6 +235,13 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
         title,
         description,
         price: parseFloat(price),
+        mrp: mrp ? parseFloat(mrp) : null,
+        retailPrice: retailPrice ? parseFloat(retailPrice) : null,
+        discount: discountValue ? {
+          discountType,
+          discountValue: parseFloat(discountValue)
+        } : {},
+        showPriceInListing,
         category,
         quantity: parseInt(quantity),
         images
@@ -204,6 +250,11 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
       setTitle('');
       setDescription('');
       setPrice('');
+      setMrp('');
+      setRetailPrice('');
+      setDiscountType('percentage');
+      setDiscountValue('');
+      setShowPriceInListing(true);
       setCategory('');
       setQuantity('');
       setImages([]);
@@ -215,8 +266,6 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
 
   return (
     <FormContainer onSubmit={handleSubmit}>
-      <h2>Add New Product</h2>
-
       {error && <ErrorMessage>{error}</ErrorMessage>}
       {success && <SuccessMessage>{success}</SuccessMessage>}
 
@@ -237,18 +286,6 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Enter product description"
           disabled={isLoading}
-        />
-      </FormGroup>
-
-      <FormGroup>
-        <Label>Price ($) *</Label>
-        <Input
-          type="number"
-          value={price}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) => setPrice(event.target.value)}
-          placeholder="Enter price"
-          disabled={isLoading}
-          inputMode="numeric"
         />
       </FormGroup>
 
@@ -275,33 +312,139 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
       </FormGroup>
 
       <FormGroup>
-        <Label>Product Images (Google Drive links) *</Label>
-        <ImageUrlsContainer>
-          <div style={{ display: 'flex', gap: spacing[2] }}>
-            <ImageUrlInput
-              type="url"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="Paste Google Drive image URL"
+        <Label>💰 Pricing</Label>
+        <PricingSection>
+          <FormGroup>
+            <Label>Base Price ($) *</Label>
+            <Input
+              type="number"
+              value={price}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setPrice(event.target.value)}
+              placeholder="0.00"
               disabled={isLoading}
+              inputMode="numeric"
+              step="0.01"
             />
-            <AddImageButton
+          </FormGroup>
+
+          <FormGroup>
+            <Label>MRP (Optional)</Label>
+            <Input
+              type="number"
+              value={mrp}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setMrp(event.target.value)}
+              placeholder="Maximum retail price"
+              disabled={isLoading}
+              inputMode="numeric"
+              step="0.01"
+            />
+          </FormGroup>
+
+          <FormGroup>
+            <Label>Retail Price (Optional)</Label>
+            <Input
+              type="number"
+              value={retailPrice}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setRetailPrice(event.target.value)}
+              placeholder="Your selling price"
+              disabled={isLoading}
+              inputMode="numeric"
+              step="0.01"
+            />
+          </FormGroup>
+
+          <FormGroup>
+            <Label>Discount Type</Label>
+            <select value={discountType} onChange={(e) => setDiscountType(e.target.value)} style={{
+              padding: spacing[2],
+              border: `1px solid ${colors.neutral[300]}`,
+              borderRadius: '4px',
+              fontSize: typography.fontSize.sm
+            }}>
+              <option value="percentage">Percentage (%)</option>
+              <option value="fixed">Fixed Amount ($)</option>
+            </select>
+          </FormGroup>
+
+          <FormGroup>
+            <Label>Discount Value</Label>
+            <Input
+              type="number"
+              value={discountValue}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setDiscountValue(event.target.value)}
+              placeholder={discountType === 'percentage' ? '0' : '0.00'}
+              disabled={isLoading}
+              inputMode="numeric"
+              step="0.01"
+            />
+          </FormGroup>
+
+          <FormGroup>
+            <CheckboxWrapper>
+              <Checkbox
+                checked={showPriceInListing}
+                onChange={(e: any) => setShowPriceInListing(e.target.checked)}
+                label="Show price in product listing"
+              />
+            </CheckboxWrapper>
+          </FormGroup>
+
+          {discountValue && calculateFinalPrice() !== parseFloat(retailPrice || price) && (
+            <DiscountPreview>
+              💚 Final Price: ${calculateFinalPrice().toFixed(2)}
+            </DiscountPreview>
+          )}
+        </PricingSection>
+      </FormGroup>
+
+      <FormGroup>
+        <Label>📸 Product Images (Google Drive links) *</Label>
+        <ImageSection>
+          {!showImageInput ? (
+            <Button
               appearance="primary"
-              onClick={handleAddImage}
-              disabled={isLoading || !imageUrl}
+              onClick={() => setShowImageInput(true)}
+              disabled={isLoading}
             >
-              Add Image
-            </AddImageButton>
-          </div>
+              + Add Images
+            </Button>
+          ) : (
+            <ImageButtonContainer>
+              <ImageUrlInput
+                type="url"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="Paste Google Drive image URL"
+                disabled={isLoading}
+              />
+              <Button
+                appearance="primary"
+                onClick={handleAddImage}
+                disabled={isLoading || !imageUrl}
+              >
+                Add
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowImageInput(false);
+                  setImageUrl('');
+                }}
+                disabled={isLoading}
+              >
+                Done
+              </Button>
+            </ImageButtonContainer>
+          )}
+
           {images.length > 0 && (
             <>
-              <p style={{ fontSize: typography.fontSize.sm, color: colors.neutral[600] }}>
-                {images.length} image(s) added
-              </p>
+              <PriceInfo>
+                ✅ {images.length} image(s) added
+              </PriceInfo>
               <ImagePreview>
                 {images.map((img, idx) => (
                   <ImagePreviewItem key={idx}>
-                    <img src={img} alt={`Product ${idx + 1}`} onError={(e) => {
+                    <img src={convertGoogleDriveUrl(img)} alt={`Product ${idx + 1}`} onError={(e) => {
                       (e.target as any).style.display = 'none';
                     }} />
                     <RemoveImageButton onClick={() => handleRemoveImage(idx)}>
@@ -312,7 +455,7 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
               </ImagePreview>
             </>
           )}
-        </ImageUrlsContainer>
+        </ImageSection>
       </FormGroup>
 
       <SubmitButton

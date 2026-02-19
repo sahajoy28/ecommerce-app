@@ -18,7 +18,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [mode, setModeState] = useState<ThemeMode>('light');
   const [accentColor, setAccentColorState] = useState<AccentColor>('blue');
-  const { user } = useAppSelector(state => state.auth);
+  const { user, token } = useAppSelector(state => state.auth);
 
   // Load theme from localStorage on mount
   useEffect(() => {
@@ -29,9 +29,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (savedAccent) setAccentColorState(savedAccent);
   }, []);
 
-  // Load preferences from API when user logs in
+  // Load preferences from API when user logs in AND token is available
   useEffect(() => {
-    if (user) {
+    if (user && token) {
       userPreferencesAPI
         .getPreferences()
         .then((prefs: { theme?: ThemeMode; accentColor?: AccentColor }) => {
@@ -42,14 +42,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           console.error('Failed to load user preferences:', err);
         });
     }
-  }, [user]);
+  }, [user, token]);
 
   const setMode = (newMode: ThemeMode) => {
     setModeState(newMode);
     localStorage.setItem('app-theme-mode', newMode);
     
-    // Save to API if user is logged in
-    if (user) {
+    // Save to API if user and token are available
+    if (user && token) {
       userPreferencesAPI
         .savePreferences({ theme: newMode, accentColor })
         .catch(err => console.error('Failed to save theme preference:', err));
@@ -60,8 +60,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setAccentColorState(color);
     localStorage.setItem('app-accent-color', color);
     
-    // Save to API if user is logged in
-    if (user) {
+    // Save to API if user and token are available
+    if (user && token) {
       userPreferencesAPI
         .savePreferences({ theme: mode, accentColor: color })
         .catch(err => console.error('Failed to save accent preference:', err));

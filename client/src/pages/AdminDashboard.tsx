@@ -29,10 +29,10 @@ const Subtitle = styled.p`
 `;
 
 const Content = styled.div`
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 2fr;
   gap: ${spacing[12]};
 
   @media (max-width: 1024px) {
@@ -52,10 +52,25 @@ const RightSection = styled.div`
   gap: ${spacing[8]};
 `;
 
+const SectionTitle = styled.h2`
+  font-size: ${typography.fontSize["2xl"]};
+  font-weight: ${typography.fontWeight.bold};
+  color: var(--color-text-primary, ${colors.neutral[900]});
+  margin-bottom: ${spacing[4]};
+`;
+
+const Card = styled.div`
+  background: white;
+  border-radius: 8px;
+  padding: ${spacing[8]};
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+`;
+
 const StatsContainer = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: ${spacing[8]};
+  margin-top: ${spacing[8]};
 `;
 
 const StatCard = styled.div`
@@ -64,10 +79,11 @@ const StatCard = styled.div`
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border-left: 4px solid ${colors.primary.main};
+  text-align: center;
 `;
 
 const StatValue = styled.div`
-  font-size: ${typography.fontSize["7xl"]};
+  font-size: ${typography.fontSize["3xl"]};
   font-weight: ${typography.fontWeight.bold};
   color: ${colors.primary.main};
   margin-bottom: ${spacing[2]};
@@ -87,18 +103,18 @@ const TabContainer = styled.div`
   border-bottom: 2px solid ${colors.neutral[200]};
 `;
 
-const TabButton = styled(Button)<{ active: boolean }>`
+const TabButton = styled(Button)<{ $active: boolean }>`
   padding: ${spacing[4]} ${spacing[6]};
-  background: ${p => p.active ? colors.primary.main : 'transparent'};
-  color: ${p => p.active ? 'white' : colors.neutral[600]};
+  background: ${p => p.$active ? colors.primary.main : 'transparent'};
+  color: ${p => p.$active ? 'white' : colors.neutral[600]};
   border: none;
-  border-bottom: ${p => p.active ? `3px solid ${colors.primary.main}` : 'none'};
+  border-bottom: ${p => p.$active ? `3px solid ${colors.primary.main}` : 'none'};
   cursor: pointer;
-  font-weight: ${p => p.active ? typography.fontWeight.semibold : 'normal'};
+  font-weight: ${p => p.$active ? typography.fontWeight.semibold : 'normal'};
   transition: all 0.2s ease;
 
   &:hover {
-    background: ${p => p.active ? colors.primary.main : colors.neutral[100]};
+    background: ${p => p.$active ? colors.primary.main : colors.neutral[100]};
   }
 `;
 
@@ -131,13 +147,13 @@ export const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
 
       <TabContainer>
         <TabButton
-          active={activeTab === 'products'}
+          $active={activeTab === 'products'}
           onClick={() => setActiveTab('products')}
         >
           📦 Products
         </TabButton>
         <TabButton
-          active={activeTab === 'users'}
+          $active={activeTab === 'users'}
           onClick={() => setActiveTab('users')}
         >
           👥 Users
@@ -146,37 +162,29 @@ export const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
 
       {activeTab === 'products' && (
         <>
-          <StatsContainer>
-            <StatCard>
-              <StatValue>+</StatValue>
-              <StatLabel>Add Products</StatLabel>
-            </StatCard>
-            <StatCard>
-              <StatValue>🗂️</StatValue>
-              <StatLabel>Organize by Category</StatLabel>
-            </StatCard>
-            <StatCard>
-              <StatValue>🖼️</StatValue>
-              <StatLabel>Upload Images</StatLabel>
-            </StatCard>
-          </StatsContainer>
-
           <Content>
             <LeftSection>
-              <ProductForm onSubmit={handleProductSubmit} isLoading={isLoading} />
+              <Card>
+                <SectionTitle>➕ Add New Product</SectionTitle>
+                <ProductForm onSubmit={handleProductSubmit} isLoading={isLoading} />
+              </Card>
             </LeftSection>
             
             <RightSection>
-              <ProductManagement refreshTrigger={refreshTrigger} />
+              <Card>
+                <SectionTitle>📦 Your Products</SectionTitle>
+                <ProductManagement refreshTrigger={refreshTrigger} />
+              </Card>
             </RightSection>
           </Content>
         </>
       )}
 
       {activeTab === 'users' && (
-        <div style={{ maxWidth: '100%' }}>
+        <Card style={{ maxWidth: '100%' }}>
+          <SectionTitle>👥 Manage Users</SectionTitle>
           <AdminUsers />
-        </div>
+        </Card>
       )}
     </DashboardContainer>
   );

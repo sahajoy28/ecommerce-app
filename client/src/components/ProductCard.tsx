@@ -9,6 +9,7 @@ import { Toast } from "./Toast";
 import { RatingDisplay } from "./RatingDisplay";
 import { useState } from "react";
 import { colors, spacing, typography, shadows, borderRadius, transitions, media } from "../styles/designTokens";
+import { convertGoogleDriveUrl } from "../utils/googleDriveUrl";
 
 const StyledCard = styled(Card)`
   padding: 0;
@@ -196,12 +197,17 @@ export const ProductCard = ({ product }: { product: Product }) => {
   const navigate = useNavigate();
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [imageError, setImageError] = useState(false);
   const cartItems = useAppSelector(state => state.cart.items);
   const wishlistItems = useAppSelector(selectWishlist);
   const isInWishlist = wishlistItems.some(item => item.id === product.id);
 
   const handleCardClick = () => {
     navigate(`/product/${product.id}`);
+  };
+
+  const handleImageError = () => {
+    setImageError(true);
   };
 
   const handleAddToCart = async (e: React.MouseEvent) => {
@@ -254,7 +260,18 @@ export const ProductCard = ({ product }: { product: Product }) => {
           >
             {isInWishlist ? "❤️" : "🤍"}
           </WishlistButton>
-          <Image src={product.image} alt={product.title} />
+          {!imageError && product.image ? (
+            <Image 
+              src={convertGoogleDriveUrl(product.image)} 
+              alt={product.title}
+              onError={handleImageError}
+            />
+          ) : (
+            <Image 
+              src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect fill='%23f0f0f0' width='200' height='200'/%3E%3Ctext x='50%' y='50%' text-anchor='middle' dy='.3em' fill='%23999' font-size='16'%3ENo Image%3C/text%3E%3C/svg%3E"
+              alt="No image available"
+            />
+          )}
         </ImageContainer>
         <ContentContainer>
           <Category>{product.category}</Category>

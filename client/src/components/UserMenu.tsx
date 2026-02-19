@@ -45,7 +45,7 @@ const UserButton = styled.button`
   }
 `;
 
-const Dropdown = styled.div<{ isOpen: boolean }>`
+const Dropdown = styled.div<{ $isOpen: boolean }>`
   position: absolute;
   top: calc(100% + ${spacing[2]});
   right: 0;
@@ -56,7 +56,7 @@ const Dropdown = styled.div<{ isOpen: boolean }>`
   min-width: 240px;
   z-index: 1000;
   animation: slideDown ${transitions.base};
-  display: ${props => props.isOpen ? 'block' : 'none'};
+  display: ${props => props.$isOpen ? 'block' : 'none'};
 
   @keyframes slideDown {
     from {
@@ -143,10 +143,28 @@ const UserName = styled.div`
   color: ${colors.neutral[900]};
   border-bottom: 1px solid ${colors.neutral[100]};
   font-size: ${typography.fontSize.sm};
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 
   ${media.mobile} {
     padding: ${spacing[2]} ${spacing[3]};
+    flex-direction: column;
+    align-items: flex-start;
+    gap: ${spacing[2]};
   }
+`;
+
+const AdminBadge = styled.span`
+  background: ${colors.primary.main};
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: ${typography.fontWeight.bold};
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
 `;
 
 interface UserMenuProps {
@@ -186,10 +204,12 @@ export const UserMenu = ({ userName, onSettingsClick }: UserMenuProps) => {
         <Person24Filled />
       </UserButton>
 
-      <Dropdown isOpen={isOpen}>
+      <Dropdown $isOpen={isOpen}>
         {userName && (
           <>
-            <UserName>Hi, {userName}</UserName>
+            <UserName>
+              <span>Hi, {userName}{user?.role === 'admin' && ' (admin)'}</span>
+            </UserName>
             <Divider />
           </>
         )}
@@ -248,7 +268,7 @@ export const GuestMenu = ({ onSettingsClick }: GuestMenuProps) => {
         <Person24Filled />
       </UserButton>
 
-      <Dropdown isOpen={isOpen}>
+      <Dropdown $isOpen={isOpen}>
         <DropdownButton onClick={onSettingsClick}>
           ⚙️ Settings
         </DropdownButton>

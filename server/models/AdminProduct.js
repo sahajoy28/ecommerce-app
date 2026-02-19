@@ -18,6 +18,35 @@ const adminProductSchema = new mongoose.Schema(
       required: [true, 'Please add a product price'],
       min: [0, 'Price cannot be negative']
     },
+    mrp: {
+      type: Number,
+      default: null,
+      min: [0, 'MRP cannot be negative']
+    },
+    retailPrice: {
+      type: Number,
+      default: null,
+      min: [0, 'Retail price cannot be negative']
+    },
+    discount: {
+      type: {
+        discountType: {
+          type: String,
+          enum: ['percentage', 'fixed'],
+          default: 'percentage'
+        },
+        discountValue: {
+          type: Number,
+          default: 0,
+          min: [0, 'Discount cannot be negative']
+        }
+      },
+      default: {}
+    },
+    showPriceInListing: {
+      type: Boolean,
+      default: true
+    },
     category: {
       type: String,
       required: [true, 'Please add a product category'],
@@ -77,6 +106,43 @@ const adminProductSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true
+    },
+    published: {
+      type: Boolean,
+      default: false,
+      index: true
+    },
+    // B2B Showroom fields
+    material: {
+      type: String,
+      trim: true,
+      enum: ['Tiles', 'Marble', 'Granite', 'Ceramic', 'Porcelain', 'Natural Stone', 'Bathroom Fittings', 'Other'],
+      default: 'Tiles'
+    },
+    finish: {
+      type: String,
+      enum: ['Glossy', 'Matte', 'Polish', 'Textured', 'Honed'],
+      default: 'Glossy'
+    },
+    sizes: {
+      type: [String],
+      default: [],
+      // e.g., ["2x2", "4x2", "6x4"]
+    },
+    color: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    specifications: {
+      type: {
+        thickness: String,
+        weight: String,
+        waterAbsorption: String,
+        mohs: String,
+        // Add common tile specs here
+      },
+      default: {}
     }
   },
   { timestamps: true }

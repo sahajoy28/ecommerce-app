@@ -10,14 +10,26 @@ export interface Review {
 }
 
 export interface Product {
-  id: number;
-  _id?: string; // MongoDB ID for logged-in users
+  id: string | number;  // MongoDB IDs are strings, legacy IDs might be numbers
+  _id?: string; // MongoDB ID
   title: string;
   price: number;
+  mrp?: number;
+  retailPrice?: number;
+  discount?: {
+    discountType?: 'percentage' | 'fixed';
+    discountValue?: number;
+  };
+  showPriceInListing?: boolean;
   description: string;
   category: string;
   image: string;
+  images?: string[];
   rating: number;
   reviewCount: number;
   reviews: Review[];
+  stock?: number;
+  quantity?: number;
+  isAdminProduct?: boolean;
+  createdBy?: string;
 }

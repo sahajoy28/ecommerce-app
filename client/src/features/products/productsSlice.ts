@@ -52,26 +52,32 @@ export const fetchProducts = createAsyncThunk(
   "products/fetch",
   async (_, { rejectWithValue }) => {
     try {
-      // Using DummyJSON API - provides 100+ products with better data
+      // Fetch from MongoDB via our API - returns published products only
       const res = await productsApi.get<any>("/products?limit=100");
       const products = res.products || res;
 
-      // Transform products and add reviews
+      // Transform products - handle both string IDs (MongoDB) and numeric IDs (legacy)
       return Array.isArray(products)
         ? products.map((product: any) => {
-            const reviews = generateSampleReviews(product.id);
+            const reviews = generateSampleReviews(product.id || product._id);
             const averageRating =
               reviews.length > 0
                 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
                 : product.rating || 4;
 
             return {
-              id: product.id,
+              id: String(product.id || product._id),  // Ensure ID is a string
+              _id: String(product._id || product.id),
               title: product.title,
               price: product.price,
               category: product.category,
               description: product.description,
-              image: product.image || product.thumbnail,
+              image: product.image || product.thumbnail || product.images?.[0],
+              images: product.images,
+              mrp: product.mrp,
+              retailPrice: product.retailPrice,
+              discount: product.discount,
+              showPriceInListing: product.showPriceInListing,
               rating: Number(averageRating.toFixed(1)),
               reviewCount: reviews.length,
               reviews: reviews,

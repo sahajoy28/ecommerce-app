@@ -4,8 +4,8 @@ import { useTheme, ThemeMode, AccentColor } from '../app/themeContext';
 import { useAppSelector } from '../app/hooks';
 import { colors, spacing, typography, borderRadius, transitions, media, shadows } from '../styles/designTokens';
 
-const Backdrop = styled.div<{ isOpen: boolean }>`
-  display: ${props => props.isOpen ? 'fixed' : 'none'};
+const Backdrop = styled.div<{ $isOpen: boolean }>`
+  display: ${props => props.$isOpen ? 'fixed' : 'none'};
   top: 0;
   left: 0;
   right: 0;
@@ -24,11 +24,11 @@ const Backdrop = styled.div<{ isOpen: boolean }>`
   }
 `;
 
-const ModalContent = styled.div<{ isOpen: boolean }>`
+const ModalContent = styled.div<{ $isOpen: boolean }>`
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: ${props => props.isOpen ? 'translate(-50%, -50%)' : 'translate(-50%, -60%)'};
+  transform: ${props => props.$isOpen ? 'translate(-50%, -50%)' : 'translate(-50%, -60%)'};
   background: var(--color-neutral-0, ${colors.neutral[0]});
   border-radius: ${borderRadius.lg};
   box-shadow: ${shadows.xl};
@@ -38,7 +38,7 @@ const ModalContent = styled.div<{ isOpen: boolean }>`
   overflow-y: auto;
   z-index: 2001;
   animation: slideUp ${transitions.base};
-  display: ${props => props.isOpen ? 'block' : 'none'};
+  display: ${props => props.$isOpen ? 'block' : 'none'};
   color: var(--color-text-primary, ${colors.neutral[900]});
   transition: background-color 0.3s ease, color 0.3s ease;
 
@@ -150,18 +150,18 @@ const OptionGrid = styled.div`
 `;
 
 interface OptionButtonProps {
-  isActive: boolean;
+  $isActive: boolean;
 }
 
 const OptionButton = styled.button<OptionButtonProps>`
   padding: ${spacing[4]};
-  border: 2px solid ${props => props.isActive ? 'var(--color-primary, #0066ff)' : 'var(--color-neutral-300, #d1d5db)'};
-  background: ${props => props.isActive ? 'var(--color-primary-lighter, #e6f0ff)' : 'var(--color-neutral-0, #ffffff)'};
+  border: 2px solid ${props => props.$isActive ? 'var(--color-primary, #0066ff)' : 'var(--color-neutral-300, #d1d5db)'};
+  background: ${props => props.$isActive ? 'var(--color-primary-lighter, #e6f0ff)' : 'var(--color-neutral-0, #ffffff)'};
   border-radius: ${borderRadius.md};
   cursor: pointer;
   transition: all ${transitions.fast};
   font-weight: ${typography.fontWeight.semibold};
-  color: ${props => props.isActive ? 'var(--color-primary-dark, #0052cc)' : 'var(--color-text-secondary, #374151)'};
+  color: ${props => props.$isActive ? 'var(--color-primary-dark, #0052cc)' : 'var(--color-text-secondary, #374151)'};
   font-size: ${typography.fontSize.sm};
 
   &:hover {
@@ -196,7 +196,7 @@ const ColorPreview = styled.div<{ color: string }>`
   border: 2px solid ${colors.neutral[300]};
 `;
 
-const SaveMessage = styled.div<{ show: boolean }>`
+const SaveMessage = styled.div<{ $show: boolean }>`
   padding: ${spacing[3]} ${spacing[4]};
   background: #ecfdf5;
   border: 1px solid #d1fae5;
@@ -204,8 +204,8 @@ const SaveMessage = styled.div<{ show: boolean }>`
   color: #065f46;
   text-align: center;
   font-weight: ${typography.fontWeight.medium};
-  animation: ${props => props.show ? 'slideIn' : 'slideOut'} ${transitions.base};
-  display: ${props => props.show ? 'block' : 'none'};
+  animation: ${props => props.$show ? 'slideIn' : 'slideOut'} ${transitions.base};
+  display: ${props => props.$show ? 'block' : 'none'};
 
   @keyframes slideIn {
     from {
@@ -262,8 +262,8 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
 
   return (
     <>
-      <Backdrop isOpen={isOpen} onClick={onClose} />
-      <ModalContent isOpen={isOpen}>
+      <Backdrop $isOpen={isOpen} onClick={onClose} />
+      <ModalContent $isOpen={isOpen}>
         <ModalHeader>
           <ModalTitle>⚙️ Settings</ModalTitle>
           <CloseButton onClick={onClose}>✕</CloseButton>
@@ -275,13 +275,13 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
             <SectionDescription>Choose your preferred theme</SectionDescription>
             <OptionGrid>
               <OptionButton
-                isActive={mode === 'light'}
+                $isActive={mode === 'light'}
                 onClick={() => handleThemeChange('light')}
               >
                 ☀️ Light
               </OptionButton>
               <OptionButton
-                isActive={mode === 'dark'}
+                $isActive={mode === 'dark'}
                 onClick={() => handleThemeChange('dark')}
               >
                 🌙 Dark
@@ -296,7 +296,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
               {(Object.keys(accentColorMap) as AccentColor[]).map((color) => (
                 <OptionButton
                   key={color}
-                  isActive={accentColor === color}
+                  $isActive={accentColor === color}
                   onClick={() => handleAccentChange(color)}
                 >
                   <ColorOption>
@@ -319,7 +319,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
             </SectionDescription>
           </SettingSection>
 
-          <SaveMessage show={showSaveMessage}>
+          <SaveMessage $show={showSaveMessage}>
             ✅ Settings saved {user ? 'to your account' : 'locally'}
           </SaveMessage>
         </ModalBody>

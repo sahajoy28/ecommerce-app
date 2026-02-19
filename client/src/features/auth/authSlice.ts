@@ -31,7 +31,7 @@ export interface Order {
   date: string;
   total: number;
   status: "pending" | "processing" | "shipped" | "delivered";
-  items: Array<{ id: number; title: string; quantity: number; price: number }>;
+  items: Array<{ id: string | number; title: string; quantity: number; price: number }>;
 }
 
 interface AuthState {

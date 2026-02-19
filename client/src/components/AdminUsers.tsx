@@ -7,10 +7,7 @@ import { useAppSelector } from '../app/hooks';
 import { colors, spacing, typography } from '../styles/designTokens';
 
 const Container = styled.div`
-  padding: ${spacing[8]};
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
 `;
 
 const Title = styled.h2`
@@ -19,6 +16,7 @@ const Title = styled.h2`
   display: flex;
   align-items: center;
   gap: ${spacing[2]};
+  display: none;
 `;
 
 const Table = styled.table`
@@ -94,11 +92,13 @@ export const AdminUsers = () => {
   const [loading, setLoading] = useState(false);
   const [promoting, setPromoting] = useState<string | null>(null);
   const [message, setMessage] = useState({ type: '', text: '' });
-  const { user: currentUser } = useAppSelector((state) => state.auth);
+  const { user: currentUser, token } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    if (token) {
+      fetchUsers();
+    }
+  }, [token]);
 
   const fetchUsers = async () => {
     setLoading(true);

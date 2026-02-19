@@ -1,8 +1,8 @@
 import { useState } from "react";
 import styled from "styled-components";
 import { Button, Input as FluentInput } from "@fluentui/react-components";
-import { useNavigate } from "react-router-dom";
-import { useAppDispatch } from "../app/hooks";
+import { useNavigate, Navigate } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { login } from "../features/auth/authSlice";
 import { colors, spacing, typography, shadows, borderRadius, transitions, media } from "../styles/designTokens";
 
@@ -129,6 +129,43 @@ export const AdminPage = () => {
 
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const { user, loading, token } = useAppSelector((state) => state.auth);
+
+  // If already an admin with token, redirect to dashboard
+  if (token && user?.role === 'admin' && !loading) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+
+  // If loading auth state, show nothing
+  if (loading) {
+    return null;
+  }
+
+  // If not authenticated, show login form
+  if (!token) {
+    // Continue to render login form
+  } else if (user && user.role !== 'admin') {
+    // User is logged in but not admin
+    return (
+      <Container>
+        <FormWrapper>
+          <Header>
+            <Title>🚫 Access Denied</Title>
+            <Subtitle>Admin Portal</Subtitle>
+          </Header>
+          <ErrorMessage>
+            ❌ Your account doesn't have admin access. Contact the root administrator to grant you admin privileges.
+          </ErrorMessage>
+          <BackButton
+            appearance="primary"
+            onClick={() => navigate("/")}
+          >
+            ← Back to Store
+          </BackButton>
+        </FormWrapper>
+      </Container>
+    );
+  }
 
   const validateEmail = (email: string) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

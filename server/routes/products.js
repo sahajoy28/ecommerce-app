@@ -1,71 +1,77 @@
 import express from 'express';
-import axios from 'axios';
 import AdminProduct from '../models/AdminProduct.js';
 import { verify } from '../middleware/auth.js';
 
 const router = express.Router();
 
-const EXTERNAL_API_BASE = 'https://dummyjson.com/products';
-
 /**
  * GET /api/products
- * Fetch all products from DummyJSON API + Admin products
- * Query params: limit (default 100)
+ * Fetch all products from MongoDB
+ * Query params: limit (default 100), skip (default 0), category (optional)
  */
 router.get('/', async (req, res, next) => {
   try {
-    const limit = req.query.limit || 100;
-    const skip = req.query.skip || 0;
+    const limit = parseInt(req.query.limit) || 100;
+    const skip = parseInt(req.query.skip) || 0;
+    const category = req.query.category;
 
-    console.log(`📦 Fetching products from DummyJSON: limit=${limit}, skip=${skip}`);
+    console.log(`📦 Fetching products from MongoDB: limit=${limit}, skip=${skip}, category=${category || 'all'}`);
 
-    // Fetch from DummyJSON
-    const response = await axios.get(`${EXTERNAL_API_BASE}?limit=${limit}&skip=${skip}`);
+    // Build query
+    const query = { 
+      isActive: true,
+      published: true
+    };
 
-    if (!response.data || !response.data.products) {
-      throw new Error('Invalid response format from external API');
+    if (category && category !== 'all') {
+      query.category = { $regex: category, $options: 'i' }; // Case-insensitive search
     }
 
-    // Fetch admin-created products
-    const adminProducts = await AdminProduct.find({ isActive: true })
+    // Fetch total count
+    const total = await AdminProduct.countDocuments(query);
+
+    // Fetch products with pagination
+    const products = await AdminProduct.find(query)
+      .skip(skip)
+      .limit(limit)
       .lean()
       .exec();
 
-    // Transform admin products to match DummyJSON format
-    const transformedAdminProducts = adminProducts.map(p => ({
+    // Transform admin products to standard format
+    const transformedProducts = products.map(p => ({
       id: p._id.toString(),
       _id: p._id.toString(),
       title: p.title,
       description: p.description,
       price: p.price,
-      discountPercentage: 0,
+      mrp: p.mrp,
+      retailPrice: p.retailPrice,
+      discount: p.discount,
+      showPriceInListing: p.showPriceInListing,
       rating: p.rating || 0,
       stock: p.quantity,
-      brand: 'Admin',
       category: p.category,
       thumbnail: p.images[0] || '',
+      image: p.images[0] || '',
       images: p.images,
-      reviewCount: p.reviewCount,
-      reviews: p.reviews,
+      reviewCount: p.reviewCount || 0,
+      reviews: p.reviews || [],
       isAdminProduct: true,
       createdBy: p.createdBy
     }));
 
-    // merge products
-    const allProducts = [...response.data.products, ...transformedAdminProducts];
-
     res.json({
       success: true,
-      count: allProducts.length,
-      total: response.data.total + transformedAdminProducts.length,
+      count: transformedProducts.length,
+      total: total,
       skip: skip,
-      products: allProducts.slice(0, limit)
+      products: transformedProducts
     });
   } catch (error) {
     console.error('❌ Error fetching products:', error.message);
     next({
       status: 500,
-      message: 'Failed to fetch products from external API',
+      message: 'Failed to fetch products',
       details: error.message
     });
   }
@@ -304,11 +310,10 @@ router.get('/search', async (req, res, next) => {
 
     console.log(`🔍 Searching products: q=${query}`);
 
-    const response = await axios.get(`${EXTERNAL_API_BASE}/search?q=${query}`);
-
-    // Also search admin products
-    const adminProducts = await AdminProduct.find({ 
+    // Search only in MongoDB
+    const products = await AdminProduct.find({ 
       isActive: true,
+      published: true,
       $or: [
         { title: { $regex: query, $options: 'i' } },
         { description: { $regex: query, $options: 'i' } },
@@ -316,24 +321,33 @@ router.get('/search', async (req, res, next) => {
       ]
     }).lean();
 
-    const transformedAdminProducts = adminProducts.map(p => ({
+    const transformedProducts = products.map(p => ({
       id: p._id.toString(),
+      _id: p._id.toString(),
       title: p.title,
       description: p.description,
       price: p.price,
+      mrp: p.mrp,
+      retailPrice: p.retailPrice,
+      discount: p.discount,
+      showPriceInListing: p.showPriceInListing,
       category: p.category,
       images: p.images,
+      thumbnail: p.images[0] || '',
+      image: p.images[0] || '',
       stock: p.quantity,
-      isAdminProduct: true
+      rating: p.rating || 0,
+      reviews: p.reviews || [],
+      reviewCount: p.reviewCount || 0,
+      isAdminProduct: true,
+      createdBy: p.createdBy
     }));
-
-    const allProducts = [...response.data.products, ...transformedAdminProducts];
 
     res.json({
       success: true,
       query,
-      count: allProducts.length,
-      products: allProducts
+      count: transformedProducts.length,
+      products: transformedProducts
     });
   } catch (error) {
     console.error('❌ Error searching products:', error.message);
@@ -356,41 +370,42 @@ router.get('/:id', async (req, res, next) => {
 
     console.log(`📌 Fetching product: id=${id}`);
 
-    // Try to find in admin products first
-    const adminProduct = await AdminProduct.findById(id);
-    if (adminProduct) {
-      return res.json({
-        success: true,
-        product: {
-          id: adminProduct._id,
-          title: adminProduct.title,
-          description: adminProduct.description,
-          price: adminProduct.price,
-          category: adminProduct.category,
-          stock: adminProduct.quantity,
-          images: adminProduct.images,
-          rating: adminProduct.rating,
-          reviews: adminProduct.reviews,
-          isAdminProduct: true
-        }
-      });
-    }
-
-    // Fall back to DummyJSON
-    const response = await axios.get(`${EXTERNAL_API_BASE}/${id}`);
-
-    res.json({
-      success: true,
-      product: response.data
-    });
-  } catch (error) {
-    if (error.response?.status === 404) {
+    // Find product in MongoDB
+    const product = await AdminProduct.findById(id);
+    
+    if (!product) {
       return res.status(404).json({
         success: false,
-        message: `Product with ID ${req.params.id} not found`
+        message: `Product with ID ${id} not found`
       });
     }
 
+    // Transform product
+    res.json({
+      success: true,
+      product: {
+        id: product._id.toString(),
+        _id: product._id.toString(),
+        title: product.title,
+        description: product.description,
+        price: product.price,
+        mrp: product.mrp,
+        retailPrice: product.retailPrice,
+        discount: product.discount,
+        showPriceInListing: product.showPriceInListing,
+        category: product.category,
+        stock: product.quantity,
+        images: product.images,
+        thumbnail: product.images[0] || '',
+        image: product.images[0] || '',
+        rating: product.rating || 0,
+        reviews: product.reviews || [],
+        reviewCount: product.reviewCount || 0,
+        isAdminProduct: true,
+        createdBy: product.createdBy
+      }
+    });
+  } catch (error) {
     console.error(`❌ Error fetching product ${req.params.id}:`, error.message);
     next({
       status: 500,
@@ -411,33 +426,40 @@ router.get('/category/:category', async (req, res, next) => {
 
     console.log(`🏷️ Fetching products by category: ${category}`);
 
-    const response = await axios.get(`${EXTERNAL_API_BASE}/category/${category}`);
-
-    // Also get admin products in same category
-    const adminProducts = await AdminProduct.find({ 
+    // Get only from MongoDB
+    const products = await AdminProduct.find({ 
       isActive: true,
+      published: true,
       category: { $regex: category, $options: 'i' }
     }).lean();
 
-    const transformedAdminProducts = adminProducts.map(p => ({
+    const transformedProducts = products.map(p => ({
       id: p._id.toString(),
+      _id: p._id.toString(),
       title: p.title,
       description: p.description,
       price: p.price,
+      mrp: p.mrp,
+      retailPrice: p.retailPrice,
+      discount: p.discount,
+      showPriceInListing: p.showPriceInListing,
       category: p.category,
       images: p.images,
+      thumbnail: p.images[0] || '',
+      image: p.images[0] || '',
       stock: p.quantity,
-      rating: p.rating,
-      isAdminProduct: true
+      rating: p.rating || 0,
+      reviews: p.reviews || [],
+      reviewCount: p.reviewCount || 0,
+      isAdminProduct: true,
+      createdBy: p.createdBy
     }));
-
-    const allProducts = [...response.data.products, ...transformedAdminProducts];
 
     res.json({
       success: true,
       category,
-      count: allProducts.length,
-      products: allProducts
+      count: transformedProducts.length,
+      products: transformedProducts
     });
   } catch (error) {
     if (error.response?.status === 404) {
@@ -451,6 +473,110 @@ router.get('/category/:category', async (req, res, next) => {
     next({
       status: 500,
       message: 'Failed to fetch products by category',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * PATCH /api/products/admin/:id/publish
+ * Publish an admin product (Admin only)
+ */
+router.patch('/admin/:id/publish', verify, async (req, res, next) => {
+  try {
+    const { user } = req;
+    const { id } = req.params;
+
+    // Check if user is admin
+    if (user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only admins can publish products'
+      });
+    }
+
+    const product = await AdminProduct.findById(id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found'
+      });
+    }
+
+    // Check if user owns the product
+    if (product.createdBy.toString() !== user.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only publish your own products'
+      });
+    }
+
+    product.published = true;
+    await product.save();
+
+    res.json({
+      success: true,
+      message: 'Product published successfully',
+      product
+    });
+  } catch (error) {
+    console.error('❌ Error publishing product:', error.message);
+    next({
+      status: 500,
+      message: 'Failed to publish product',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * PATCH /api/products/admin/:id/unpublish
+ * Unpublish an admin product (Admin only)
+ */
+router.patch('/admin/:id/unpublish', verify, async (req, res, next) => {
+  try {
+    const { user } = req;
+    const { id } = req.params;
+
+    // Check if user is admin
+    if (user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only admins can unpublish products'
+      });
+    }
+
+    const product = await AdminProduct.findById(id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found'
+      });
+    }
+
+    // Check if user owns the product
+    if (product.createdBy.toString() !== user.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only unpublish your own products'
+      });
+    }
+
+    product.published = false;
+    await product.save();
+
+    res.json({
+      success: true,
+      message: 'Product unpublished successfully',
+      product
+    });
+  } catch (error) {
+    console.error('❌ Error unpublishing product:', error.message);
+    next({
+      status: 500,
+      message: 'Failed to unpublish product',
       details: error.message
     });
   }
