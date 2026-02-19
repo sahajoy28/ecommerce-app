@@ -29,21 +29,26 @@ router.post('/signup', async (req, res, next) => {
       });
     }
 
+    // Check if this is the first user - if so, make them admin
+    const userCount = await User.countDocuments();
+    const isFirstUser = userCount === 0;
+
     // Create user
     const user = await User.create({
       name,
       email,
-      password
+      password,
+      role: isFirstUser ? 'admin' : 'user'
     });
 
     // Generate token
     const token = generateToken(user._id);
 
-    console.log(`✅ User registered: ${email}`);
+    console.log(`✅ User registered: ${email} (Role: ${user.role})`);
 
     res.status(201).json({
       success: true,
-      message: 'Account created successfully',
+      message: isFirstUser ? '🎉 Admin account created! Welcome to your store.' : 'Account created successfully',
       token,
       user: {
         id: user._id,
@@ -204,6 +209,66 @@ router.put('/wishlist', verify, async (req, res, next) => {
     res.json({ success: true, wishlist: user.wishlist });
   } catch (error) {
     next({ status: 500, message: 'Failed to sync wishlist' });
+  }
+});
+
+/**
+ * POST /api/auth/promote-to-admin
+ * Promote a user to admin (for troubleshooting - only works if no admins exist)
+ * Body: { email: string }
+ */
+router.post('/promote-to-admin', async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    // Check if any admin already exists
+    const adminExists = await User.findOne({ role: 'admin' });
+    if (adminExists) {
+      return res.status(403).json({
+        success: false,
+        message: 'An admin account already exists. This endpoint can only be used for initial setup.'
+      });
+    }
+
+    // Find user
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Promote to admin
+    user.role = 'admin';
+    await user.save();
+
+    console.log(`✅ User promoted to admin: ${email}`);
+
+    res.json({
+      success: true,
+      message: `✅ User ${email} has been promoted to admin!`,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error promoting user:', error.message);
+    next({
+      status: 500,
+      message: 'Failed to promote user to admin',
+      details: error.message
+    });
   }
 });
 

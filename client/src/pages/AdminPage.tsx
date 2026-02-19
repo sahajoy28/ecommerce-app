@@ -196,22 +196,26 @@ export const AdminPage = () => {
             navigate("/admin-dashboard");
           }, 1000);
         } else {
-          setError("This account is not an admin account. Please use admin credentials or contact support.");
+          setError("This account is not an admin account.\n\n💡 TIP: If this is your first time, use Sign Up instead. The first registered account automatically becomes an admin.");
         }
       } else {
-        // Signup
+        // Signup - First user becomes admin automatically
         const result = await dispatch(
           signup({ name, email, password }) as any
         );
         if (result.payload) {
-          setSuccess("Account created! Please contact an administrator to enable admin access, then login.");
-          setTimeout(() => {
-            setIsLogin(true);
-            setName("");
-            setPassword("");
-            setConfirmPassword("");
-            setEmail("");
-          }, 2000);
+          if (result.payload.user?.role === "admin") {
+            setSuccess("🎉 Admin account created! You can now login to access the dashboard.");
+            setTimeout(() => {
+              setIsLogin(true);
+              setName("");
+              setPassword("");
+              setConfirmPassword("");
+              setEmail("");
+            }, 2000);
+          } else {
+            setError("Your account was created as a regular user. Only the first registered account becomes admin.");
+          }
         }
       }
     } catch (err: any) {
@@ -231,7 +235,8 @@ export const AdminPage = () => {
 
         <InfoBox>
           <strong>ℹ️  Admin Access Required</strong>
-          <p>Only admin accounts can access this portal. If you don't have admin access, contact the store owner.</p>
+          <p>👉 <strong>First Time?</strong> Use "Sign Up" - the first registered account automatically becomes an admin!</p>
+          <p>👉 <strong>Returning?</strong> Use "Login" with your admin credentials.</p>
         </InfoBox>
 
         {error && <ErrorMessage>{error}</ErrorMessage>}
