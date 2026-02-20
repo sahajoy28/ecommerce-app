@@ -1,3 +1,4 @@
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import styled from "styled-components";
 import { Spinner, Button } from "@fluentui/react-components";
 import { useAppSelector, useAppDispatch } from "../app/hooks";
@@ -5,11 +6,12 @@ import { ProductCard } from "../components/ProductCard";
 import { FilterSidebar } from "../components/FilterSidebar";
 import { fetchProducts, filterByCategory, clearError } from "../features/products/productsSlice";
 import { ProductLoader } from "../components/LoadingStates";
-import { useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { colors, spacing, typography, shadows, borderRadius, transitions, media } from "../styles/designTokens";
 import { Product } from "../types/product";
 import { useFilterToggle } from "../components/Header";
+import { Pagination } from "../components/Pagination";
+import { SearchBar } from "../components/SearchBar";
 
 const CatalogContainer = styled.div`
   background: var(--color-bg-primary, ${colors.neutral[50]});
@@ -186,7 +188,9 @@ const ProductCount = styled.div`
   font-weight: ${typography.fontWeight.medium};
 `;
 
+
 export const CatalogPage = () => {
+
   const { items, filtered, loading, error } = useAppSelector((state) => state.products);
   const filters = useAppSelector((state) => state.products.filters);
   const dispatch = useAppDispatch();
@@ -195,15 +199,31 @@ export const CatalogPage = () => {
   const filterToggle = useFilterToggle();
   const showFilters = filterToggle?.showFilters ?? false;
 
+  // Pagination state and logic
+  const [currentPage, setCurrentPage] = useState(1);
+  const PRODUCTS_PER_PAGE = 12;
+  const totalPages = Math.ceil(filtered.length / PRODUCTS_PER_PAGE);
+
+  // Reset to page 1 when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filtered]);
+
+  // Paginated products
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * PRODUCTS_PER_PAGE;
+    return filtered.slice(start, start + PRODUCTS_PER_PAGE);
+  }, [filtered, currentPage]);
+
   const category = searchParams.get('category');
   const categoryAppliedRef = useRef(false);
 
   // Sync URL category param to Redux filter
   useEffect(() => {
     if (category && items.length > 0 && !categoryAppliedRef.current) {
-      // Find exact category match (case-insensitive)
+      // Match lowercased category
       const match = items.find(
-        (p: Product) => p.category?.toLowerCase() === category.toLowerCase()
+        (p: Product) => p.category?.toLowerCase() === category
       );
       if (match) {
         dispatch(filterByCategory(match.category));
@@ -236,6 +256,7 @@ export const CatalogPage = () => {
           </ProductCount>
         </div>
         <HeaderControls>
+          <SearchBar />
           {(category || filters.category) && (
             <Button 
               appearance="secondary"
@@ -306,11 +327,18 @@ export const CatalogPage = () => {
                 </Button>
               </NoResults>
             ) : (
-              <ProductsGrid>
-                {filtered.map((product: Product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </ProductsGrid>
+              <>
+                <ProductsGrid>
+                  {paginatedProducts.map((product: Product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </ProductsGrid>
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
+              </>
             )}
           </ProductsSection>
         </ContentArea>

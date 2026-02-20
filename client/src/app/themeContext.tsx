@@ -42,6 +42,15 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       });
   }, []);
 
+  // Add/remove dark class on body when mode changes
+  useEffect(() => {
+    if (mode === 'dark') {
+      document.body.classList.add('dark');
+    } else {
+      document.body.classList.remove('dark');
+    }
+  }, [mode]);
+
   // setMode and setAccentColor only update local state (admin saves via SiteSettings)
   const setMode = (newMode: ThemeMode) => {
     setModeState(newMode);

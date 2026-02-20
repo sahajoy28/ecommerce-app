@@ -13,18 +13,25 @@ const BannerContainer = styled.div`
 const BannerSlider = styled.div`
   position: relative;
   width: 100%;
-  border-radius: 12px;
+  border-radius: 24px;
   overflow: hidden;
   background: ${colors.neutral[100]};
-  aspect-ratio: 16 / 6;
+  aspect-ratio: 16 / 5;
   max-width: 100%;
+  min-height: 420px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.10);
 
+  @media (max-width: 1024px) {
+    aspect-ratio: 16 / 7;
+    min-height: 260px;
+  }
   @media (max-width: 768px) {
     aspect-ratio: 4 / 3;
+    min-height: 180px;
   }
-
   @media (max-width: 480px) {
     aspect-ratio: 1 / 1;
+    min-height: 120px;
   }
 `;
 
@@ -170,7 +177,8 @@ interface Banner {
   title: string;
   description: string;
   imageUrl: string;
-  link: string;
+  link?: string;
+  category?: string;
   type: string;
 }
 
@@ -233,6 +241,8 @@ export const BannerDisplay = ({
   const handleClick = () => {
     if (currentBanner.link) {
       window.location.href = currentBanner.link;
+    } else if (currentBanner.category) {
+      window.location.href = `/catalog?category=${encodeURIComponent(currentBanner.category.toLowerCase())}`;
     }
   };
 

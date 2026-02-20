@@ -342,8 +342,9 @@ export const HomePage = () => {
     }).catch(() => {});
   }, []);
 
-  const handleCategoryClick = (categoryId: string) => {
-    navigate(`/catalog?category=${categoryId}`);
+  const handleCategoryClick = (categoryName: string) => {
+    // Use lowercased name for URL
+    navigate(`/catalog?category=${encodeURIComponent(categoryName.toLowerCase())}`);
   };
 
   return (

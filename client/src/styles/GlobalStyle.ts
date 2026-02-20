@@ -45,6 +45,38 @@ export const GlobalStyle = createGlobalStyle`
   }
 
   /* ========================================================================
+     DARK MODE
+     ======================================================================== */
+  body.dark {
+    background-color: var(--color-bg-primary, #181a20);
+    color: var(--color-text-primary, #f3f4f6);
+  }
+  body.dark h1, body.dark h2, body.dark h3, body.dark h4, body.dark h5, body.dark h6 {
+    color: var(--color-text-primary, #f3f4f6);
+  }
+  body.dark a {
+    color: #90cdf4;
+  }
+  body.dark .card, body.dark .panel, body.dark .modal {
+    background: #23272f;
+    color: #f3f4f6;
+    border-color: #23272f;
+  }
+  body.dark input, body.dark textarea, body.dark select {
+    background: #23272f;
+    color: #f3f4f6;
+    border-color: #374151;
+  }
+  body.dark .fluentui-root, body.dark .fluentui-panel {
+    background: #23272f !important;
+    color: #f3f4f6 !important;
+  }
+  body.dark .fluentui-button {
+    background: #374151 !important;
+    color: #f3f4f6 !important;
+  }
+
+  /* ========================================================================
      HEADINGS
      ======================================================================== */
 
