@@ -9,6 +9,7 @@ import {
 } from "../features/products/productsSlice";
 import { RatingInput } from "./RatingDisplay";
 import { productsApi } from "../services/apiClient";
+import { userAPI } from "../services/userAPI";
 import { CustomFilter } from "../types/product";
 import { colors, spacing, typography, shadows, borderRadius, transitions, media } from "../styles/designTokens";
 
@@ -170,6 +171,24 @@ const COLOR_MAP: Record<string, string> = {
   Orange: '#ff9800', Gold: '#ffd700', Silver: '#c0c0c0', Maroon: '#800000',
 };
 
+interface BuiltInFilterConfig {
+  key: string;
+  label: string;
+  icon: string;
+  enabled: boolean;
+  displayOrder: number;
+}
+
+const DEFAULT_FILTER_CONFIG: BuiltInFilterConfig[] = [
+  { key: 'category', label: 'Categories', icon: '📂', enabled: true, displayOrder: 0 },
+  { key: 'material', label: 'Material', icon: '🧱', enabled: true, displayOrder: 1 },
+  { key: 'finish', label: 'Finish', icon: '✨', enabled: true, displayOrder: 2 },
+  { key: 'size', label: 'Size', icon: '📐', enabled: true, displayOrder: 3 },
+  { key: 'color', label: 'Color', icon: '🎨', enabled: true, displayOrder: 4 },
+  { key: 'price', label: 'Price Range', icon: '💰', enabled: true, displayOrder: 5 },
+  { key: 'rating', label: 'Min. Rating', icon: '⭐', enabled: true, displayOrder: 6 },
+];
+
 export const FilterSidebar = () => {
   const dispatch = useAppDispatch();
   const products = useAppSelector(state => state.products.items);
@@ -179,9 +198,20 @@ export const FilterSidebar = () => {
 
   // Fetch custom filters from API
   const [customFilters, setCustomFilters] = useState<CustomFilter[]>([]);
+  // Fetch built-in filter config from site settings
+  const [filterConfig, setFilterConfig] = useState<BuiltInFilterConfig[]>(DEFAULT_FILTER_CONFIG);
+
   useEffect(() => {
+    // Load custom filters
     productsApi.get<any>('/filters').then((res: any) => {
       setCustomFilters((res.filters || []).filter((f: CustomFilter) => f.isActive && f.showInSidebar));
+    }).catch(() => {});
+
+    // Load built-in filter visibility config
+    userAPI.getSiteSettings().then((data: any) => {
+      if (data.catalogFilterConfig && data.catalogFilterConfig.length > 0) {
+        setFilterConfig(data.catalogFilterConfig);
+      }
     }).catch(() => {});
   }, []);
 
@@ -245,95 +275,164 @@ export const FilterSidebar = () => {
     (filters.maxPrice !== null && filters.maxPrice < maxPrice ? 1 : 0) +
     Object.values(filters.custom || {}).filter(Boolean).length;
 
+  // Helper to check if a built-in filter is enabled
+  const isEnabled = (key: string) => {
+    const cfg = filterConfig.find(c => c.key === key);
+    return cfg ? cfg.enabled : true;
+  };
+  const getLabel = (key: string) => {
+    const cfg = filterConfig.find(c => c.key === key);
+    return cfg?.label || key;
+  };
+  const getIcon = (key: string) => {
+    const cfg = filterConfig.find(c => c.key === key);
+    return cfg?.icon || '';
+  };
+
+  // Build ordered list of enabled built-in filter sections
+  const enabledBuiltIns = filterConfig
+    .filter(c => c.enabled)
+    .sort((a, b) => a.displayOrder - b.displayOrder);
+
+  // Render a built-in filter section by key
+  const renderBuiltInFilter = (cfg: BuiltInFilterConfig) => {
+    switch (cfg.key) {
+      case 'category':
+        if (categories.length === 0) return null;
+        return (
+          <FilterSection key={cfg.key}>
+            <SectionTitle>{cfg.icon} {cfg.label}</SectionTitle>
+            {categories.map(cat => (
+              <FilterItem key={cat}>
+                <Checkbox
+                  checked={filters.category === cat}
+                  onChange={(_, data) => handleCategoryChange(cat, data.checked as boolean)}
+                  label={cat.charAt(0).toUpperCase() + cat.slice(1)}
+                />
+              </FilterItem>
+            ))}
+          </FilterSection>
+        );
+
+      case 'material':
+        if (materials.length === 0) return null;
+        return (
+          <FilterSection key={cfg.key}>
+            <SectionTitle>{cfg.icon} {cfg.label}</SectionTitle>
+            {materials.map(mat => (
+              <FilterItem key={mat}>
+                <Checkbox
+                  checked={filters.material === mat}
+                  onChange={(_, data) => handleMaterialChange(mat, data.checked as boolean)}
+                  label={mat}
+                />
+              </FilterItem>
+            ))}
+          </FilterSection>
+        );
+
+      case 'finish':
+        if (finishes.length === 0) return null;
+        return (
+          <FilterSection key={cfg.key}>
+            <SectionTitle>{cfg.icon} {cfg.label}</SectionTitle>
+            {finishes.map(fin => (
+              <FilterItem key={fin}>
+                <Checkbox
+                  checked={filters.finish === fin}
+                  onChange={(_, data) => handleFinishChange(fin, data.checked as boolean)}
+                  label={fin}
+                />
+              </FilterItem>
+            ))}
+          </FilterSection>
+        );
+
+      case 'size':
+        if (allSizes.length === 0) return null;
+        return (
+          <FilterSection key={cfg.key}>
+            <SectionTitle>
+              {cfg.icon} {cfg.label}
+              {filters.size && <FilterCount>{filters.size}</FilterCount>}
+            </SectionTitle>
+            <SizeGrid>
+              {allSizes.map(size => (
+                <SizeChip
+                  key={size}
+                  $active={filters.size === size}
+                  onClick={() => handleSizeClick(size)}
+                >
+                  {size}
+                </SizeChip>
+              ))}
+            </SizeGrid>
+          </FilterSection>
+        );
+
+      case 'color':
+        if (allColors.length === 0) return null;
+        return (
+          <FilterSection key={cfg.key}>
+            <SectionTitle>
+              {cfg.icon} {cfg.label}
+              {filters.color && <FilterCount>{filters.color}</FilterCount>}
+            </SectionTitle>
+            <ColorGrid>
+              {allColors.map(col => (
+                <ColorSwatch
+                  key={col}
+                  $color={COLOR_MAP[col] || col}
+                  $active={filters.color === col}
+                  onClick={() => handleColorClick(col)}
+                  title={col}
+                />
+              ))}
+            </ColorGrid>
+          </FilterSection>
+        );
+
+      case 'price':
+        return (
+          <FilterSection key={cfg.key}>
+            <SectionTitle>
+              {cfg.icon} {cfg.label}
+              {filters.maxPrice !== null && filters.maxPrice < maxPrice && <FilterCount>₹{filters.maxPrice}</FilterCount>}
+            </SectionTitle>
+            <PriceDisplay>
+              <span>₹0</span>
+              <span>₹{priceRange.toLocaleString()}</span>
+            </PriceDisplay>
+            <Slider
+              value={priceRange}
+              onChange={handlePriceChange}
+              min={0}
+              max={maxPrice}
+              step={Math.max(10, Math.floor(maxPrice / 100))}
+            />
+          </FilterSection>
+        );
+
+      case 'rating':
+        return (
+          <FilterSection key={cfg.key}>
+            <SectionTitle>
+              {cfg.icon} {cfg.label}
+              {filters.minRating > 0 && <FilterCount>⭐{filters.minRating.toFixed(1)}</FilterCount>}
+            </SectionTitle>
+            <RatingInput value={filters.minRating} onChange={handleRatingChange} />
+          </FilterSection>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
     <SidebarContainer>
-      {/* Category */}
-      <FilterSection>
-        <SectionTitle>📂 Categories</SectionTitle>
-        {categories.map(cat => (
-          <FilterItem key={cat}>
-            <Checkbox
-              checked={filters.category === cat}
-              onChange={(_, data) => handleCategoryChange(cat, data.checked as boolean)}
-              label={cat.charAt(0).toUpperCase() + cat.slice(1)}
-            />
-          </FilterItem>
-        ))}
-      </FilterSection>
-
-      {/* Material */}
-      {materials.length > 0 && (
-        <FilterSection>
-          <SectionTitle>🧱 Material</SectionTitle>
-          {materials.map(mat => (
-            <FilterItem key={mat}>
-              <Checkbox
-                checked={filters.material === mat}
-                onChange={(_, data) => handleMaterialChange(mat, data.checked as boolean)}
-                label={mat}
-              />
-            </FilterItem>
-          ))}
-        </FilterSection>
-      )}
-
-      {/* Finish */}
-      {finishes.length > 0 && (
-        <FilterSection>
-          <SectionTitle>✨ Finish</SectionTitle>
-          {finishes.map(fin => (
-            <FilterItem key={fin}>
-              <Checkbox
-                checked={filters.finish === fin}
-                onChange={(_, data) => handleFinishChange(fin, data.checked as boolean)}
-                label={fin}
-              />
-            </FilterItem>
-          ))}
-        </FilterSection>
-      )}
-
-      {/* Size */}
-      {allSizes.length > 0 && (
-        <FilterSection>
-          <SectionTitle>
-            📐 Size
-            {filters.size && <FilterCount>{filters.size}</FilterCount>}
-          </SectionTitle>
-          <SizeGrid>
-            {allSizes.map(size => (
-              <SizeChip
-                key={size}
-                $active={filters.size === size}
-                onClick={() => handleSizeClick(size)}
-              >
-                {size}
-              </SizeChip>
-            ))}
-          </SizeGrid>
-        </FilterSection>
-      )}
-
-      {/* Color */}
-      {allColors.length > 0 && (
-        <FilterSection>
-          <SectionTitle>
-            🎨 Color
-            {filters.color && <FilterCount>{filters.color}</FilterCount>}
-          </SectionTitle>
-          <ColorGrid>
-            {allColors.map(col => (
-              <ColorSwatch
-                key={col}
-                $color={COLOR_MAP[col] || col}
-                $active={filters.color === col}
-                onClick={() => handleColorClick(col)}
-                title={col}
-              />
-            ))}
-          </ColorGrid>
-        </FilterSection>
-      )}
+      {/* Built-in filters — rendered in admin-configured order */}
+      {enabledBuiltIns.map(cfg => renderBuiltInFilter(cfg))}
 
       {/* Dynamic Custom Filters */}
       {customFilters.map(cf => {
@@ -371,34 +470,6 @@ export const FilterSidebar = () => {
           </FilterSection>
         );
       })}
-
-      {/* Price */}
-      <FilterSection>
-        <SectionTitle>
-          💰 Price Range
-          {filters.maxPrice !== null && filters.maxPrice < maxPrice && <FilterCount>₹{filters.maxPrice}</FilterCount>}
-        </SectionTitle>
-        <PriceDisplay>
-          <span>₹0</span>
-          <span>₹{priceRange.toLocaleString()}</span>
-        </PriceDisplay>
-        <Slider
-          value={priceRange}
-          onChange={handlePriceChange}
-          min={0}
-          max={maxPrice}
-          step={Math.max(10, Math.floor(maxPrice / 100))}
-        />
-      </FilterSection>
-
-      {/* Rating */}
-      <FilterSection>
-        <SectionTitle>
-          ⭐ Min. Rating
-          {filters.minRating > 0 && <FilterCount>⭐{filters.minRating.toFixed(1)}</FilterCount>}
-        </SectionTitle>
-        <RatingInput value={filters.minRating} onChange={handleRatingChange} />
-      </FilterSection>
 
       {activeFilters > 0 && (
         <ResetButton appearance="secondary" onClick={handleReset}>

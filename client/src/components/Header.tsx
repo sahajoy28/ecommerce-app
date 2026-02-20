@@ -10,7 +10,7 @@ import { UserMenu, GuestMenu } from "./UserMenu";
 
 import { userAPI } from "../services/userAPI";
 
-export const FilterContext = React.createContext<{toggleFilters: () => void} | null>(null);
+export const FilterContext = React.createContext<{showFilters: boolean; toggleFilters: () => void; closeFilters: () => void} | null>(null);
 export const useFilterToggle = () => useContext(FilterContext);
 
 const Wrapper = styled.header`
@@ -146,12 +146,12 @@ const Logo = styled(Link)`
   }
 `;
 
-const FilterToggleButton = styled.button`
-  background: none;
+const FilterToggleButton = styled.button<{ $active?: boolean }>`
+  background: ${props => props.$active ? `var(--color-primary, ${colors.primary.main})` : 'none'};
   border: none;
   cursor: pointer;
   font-size: ${typography.fontSize["2xl"]};
-  color: var(--color-text-primary, ${colors.neutral[700]});
+  color: ${props => props.$active ? `var(--color-neutral-0, ${colors.neutral[0]})` : `var(--color-text-primary, ${colors.neutral[700]})`};
   padding: ${spacing[2]};
   transition: all ${transitions.fast};
   border-radius: ${borderRadius.md};
@@ -162,8 +162,8 @@ const FilterToggleButton = styled.button`
   min-height: 44px;
 
   &:hover {
-    background: var(--color-neutral-100, ${colors.neutral[100]});
-    color: var(--color-primary, ${colors.primary.main});
+    background: ${props => props.$active ? `var(--color-primary-dark, ${colors.primary.dark})` : `var(--color-neutral-100, ${colors.neutral[100]})`};
+    color: ${props => props.$active ? `var(--color-neutral-0, ${colors.neutral[0]})` : `var(--color-primary, ${colors.primary.main})`};
     transform: scale(1.1);
   }
 
@@ -322,17 +322,21 @@ export const Header = () => {
   }, []);
 
   const isHome = location.pathname === "/";
+  const isCatalog = location.pathname === "/catalog";
 
   return (
     <>
       <Wrapper>
         <LeftSection>
-          <FilterToggleButton 
-            onClick={() => filterToggle?.toggleFilters()}
-            title="Toggle filters"
-          >
-            ☰
-          </FilterToggleButton>
+          {isCatalog && (
+            <FilterToggleButton 
+              onClick={() => filterToggle?.toggleFilters()}
+              title={filterToggle?.showFilters ? "Close filters" : "Open filters"}
+              $active={filterToggle?.showFilters}
+            >
+              ☰
+            </FilterToggleButton>
+          )}
           <Logo to="/">
             🛍 {storeName}
           </Logo>

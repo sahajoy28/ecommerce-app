@@ -5,10 +5,11 @@ import { ProductCard } from "../components/ProductCard";
 import { FilterSidebar } from "../components/FilterSidebar";
 import { fetchProducts, filterByCategory, clearError } from "../features/products/productsSlice";
 import { ProductLoader } from "../components/LoadingStates";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { colors, spacing, typography, shadows, borderRadius, transitions, media } from "../styles/designTokens";
 import { Product } from "../types/product";
+import { useFilterToggle } from "../components/Header";
 
 const CatalogContainer = styled.div`
   background: var(--color-bg-primary, ${colors.neutral[50]});
@@ -65,25 +66,13 @@ const HeaderControls = styled.div`
   }
 `;
 
-const MainContainer = styled.div<{ sidebarOpen: boolean }>`
-  display: grid;
-  grid-template-columns: ${props => props.sidebarOpen ? '280px 1fr' : '1fr'};
-  gap: 0;
+const MainContainer = styled.div`
+  display: flex;
   flex: 1;
   width: 100%;
   max-width: 1920px;
   margin: 0 auto;
   position: relative;
-  transition: grid-template-columns ${transitions.base};
-
-  ${media.tablet} {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-
-  ${media.mobile} {
-    grid-template-columns: 1fr;
-  }
 `;
 
 const Overlay = styled.div<{ isOpen: boolean }>`
@@ -93,72 +82,48 @@ const Overlay = styled.div<{ isOpen: boolean }>`
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.3);
   z-index: 98;
-  animation: fadeIn ${transitions.base};
-
-  ${media.tablet} {
-    top: 0;
-  }
+  transition: opacity ${transitions.base};
+  opacity: ${props => props.isOpen ? 1 : 0};
 `;
 
 const SidebarWrapper = styled.div<{ isOpen: boolean }>`
-  display: block;
-  position: relative;
+  position: fixed;
+  left: 0;
+  top: 72px;
+  bottom: 0;
+  width: 20%;
+  max-width: 320px;
+  min-width: 240px;
   background: var(--color-neutral-0, ${colors.neutral[0]});
   border-right: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
+  box-shadow: ${props => props.isOpen ? shadows.lg : 'none'};
+  z-index: 100;
+  overflow-y: auto;
+  transform: translateX(${props => props.isOpen ? '0' : '-100%'});
   transition: transform ${transitions.base};
+  padding: ${spacing[3]};
+
+  > div {
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    position: static;
+    top: auto;
+    background: var(--color-neutral-0, ${colors.neutral[0]});
+  }
 
   ${media.tablet} {
-    display: ${props => props.isOpen ? 'block' : 'none'};
-    position: fixed;
-    left: 0;
-    top: 72px;
-    bottom: 0;
-    width: 100%;
-    max-width: 100%;
-    border-right: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
-    padding: ${spacing[3]};
-    z-index: 100;
-    transform: translateX(${props => props.isOpen ? '0' : '-100%'});
-    transition: transform ${transitions.base};
-    background: var(--color-neutral-0, ${colors.neutral[0]});
-    overflow-y: auto;
-
-    > div {
-      border-radius: 0;
-      border: none;
-      box-shadow: none;
-      position: static;
-      top: auto;
-      background: var(--color-neutral-0, ${colors.neutral[0]});
-    }
+    width: 60%;
+    max-width: 360px;
+    min-width: 0;
   }
 
   ${media.mobile} {
-    display: ${props => props.isOpen ? 'block' : 'none'};
-    position: fixed;
-    left: 0;
-    top: 72px;
-    bottom: 0;
-    width: 100%;
-    max-width: 100%;
-    border-right: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
-    padding: ${spacing[3]};
-    z-index: 100;
-    transform: translateX(${props => props.isOpen ? '0' : '-100%'});
-    transition: transform ${transitions.base};
-    background: var(--color-neutral-0, ${colors.neutral[0]});
-    overflow-y: auto;
-
-    > div {
-      border-radius: 0;
-      border: none;
-      box-shadow: none;
-      position: static;
-      top: auto;
-      background: var(--color-neutral-0, ${colors.neutral[0]});
-    }
+    width: 80%;
+    max-width: none;
+    min-width: 0;
   }
 `;
 
@@ -227,7 +192,8 @@ export const CatalogPage = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [showFilters, setShowFilters] = useState(false);
+  const filterToggle = useFilterToggle();
+  const showFilters = filterToggle?.showFilters ?? false;
 
   const category = searchParams.get('category');
   const categoryAppliedRef = useRef(false);
@@ -286,8 +252,8 @@ export const CatalogPage = () => {
       </Header>
 
       {/* Main Content */}
-      <MainContainer sidebarOpen={showFilters}>
-        <Overlay isOpen={showFilters} onClick={() => setShowFilters(false)} />
+      <MainContainer>
+        <Overlay isOpen={showFilters} onClick={() => filterToggle?.closeFilters()} />
         
         <SidebarWrapper isOpen={showFilters}>
           <FilterSidebar />

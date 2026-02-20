@@ -255,20 +255,20 @@ const ActionButtons = styled.div`
   gap: ${spacing[2]};
 `;
 
-const StatusBadge = styled.span<{ active: boolean }>`
+const StatusBadge = styled.span<{ $active: boolean }>`
   padding: 4px 12px;
   border-radius: 20px;
   font-size: ${typography.fontSize.sm};
-  background: ${p => p.active ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)'};
-  color: ${p => p.active ? colors.success : colors.error};
+  background: ${p => p.$active ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)'};
+  color: ${p => p.$active ? colors.success : colors.error};
 `;
 
-const PublishBadge = styled.span<{ published: boolean }>`
+const PublishBadge = styled.span<{ $published: boolean }>`
   padding: 4px 12px;
   border-radius: 20px;
   font-size: ${typography.fontSize.sm};
-  background: ${p => p.published ? 'rgba(59, 130, 246, 0.15)' : 'rgba(107, 114, 128, 0.15)'};
-  color: ${p => p.published ? '#3b82f6' : '#6b7280'};
+  background: ${p => p.$published ? 'rgba(59, 130, 246, 0.15)' : 'rgba(107, 114, 128, 0.15)'};
+  color: ${p => p.$published ? '#3b82f6' : '#6b7280'};
   font-weight: ${typography.fontWeight.semibold};
 `;
 
@@ -740,12 +740,12 @@ export const ProductManagement = ({ onEdit, onDelete, refreshTrigger = 0 }: Admi
                 </Td>
                 <Td>{product.quantity}</Td>
                 <Td>
-                  <StatusBadge active={product.isActive !== false}>
+                  <StatusBadge $active={product.isActive !== false}>
                     {product.isActive !== false ? 'Active' : 'Inactive'}
                   </StatusBadge>
                 </Td>
                 <Td>
-                  <PublishBadge published={product.published}>
+                  <PublishBadge $published={product.published}>
                     {product.published ? '🌐 Published' : '🔒 Draft'}
                   </PublishBadge>
                 </Td>
@@ -916,7 +916,7 @@ export const ProductManagement = ({ onEdit, onDelete, refreshTrigger = 0 }: Admi
                 <DetailItem>
                   <DetailLabel>Status</DetailLabel>
                   <DetailValue>
-                    <StatusBadge active={selectedProduct.isActive !== false}>
+                    <StatusBadge $active={selectedProduct.isActive !== false}>
                       {selectedProduct.isActive !== false ? 'Active' : 'Inactive'}
                     </StatusBadge>
                   </DetailValue>
@@ -924,7 +924,7 @@ export const ProductManagement = ({ onEdit, onDelete, refreshTrigger = 0 }: Admi
                 <DetailItem>
                   <DetailLabel>Published</DetailLabel>
                   <DetailValue>
-                    <PublishBadge published={selectedProduct.published}>
+                    <PublishBadge $published={selectedProduct.published}>
                       {selectedProduct.published ? '🌐 Published' : '🔒 Draft'}
                     </PublishBadge>
                   </DetailValue>

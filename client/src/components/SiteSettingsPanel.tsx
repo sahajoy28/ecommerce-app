@@ -330,7 +330,7 @@ interface CategoryData {
   isPredefined: boolean;
 }
 
-export type SettingsTabKey = 'general' | 'appearance' | 'hero' | 'categories' | 'filters' | 'stats' | 'testimonials' | 'about' | 'contact';
+export type SettingsTabKey = 'general' | 'appearance' | 'hero' | 'categories' | 'filters' | 'stats' | 'testimonials' | 'about' | 'contact' | 'inquiry';
 
 export const SETTINGS_TABS: { key: SettingsTabKey; label: string; icon: string }[] = [
   { key: 'general', label: 'General', icon: '🏢' },
@@ -342,10 +342,30 @@ export const SETTINGS_TABS: { key: SettingsTabKey; label: string; icon: string }
   { key: 'testimonials', label: 'Testimonials', icon: '💬' },
   { key: 'about', label: 'About', icon: '📄' },
   { key: 'contact', label: 'Contact', icon: '📍' },
+  { key: 'inquiry', label: 'Inquiry Form', icon: '📝' },
 ];
 
 interface SiteSettingsPanelProps {
   activeTab?: SettingsTabKey;
+}
+
+interface InquiryFieldConfig {
+  fieldName: string;
+  label: string;
+  type: 'text' | 'email' | 'tel' | 'number' | 'textarea' | 'select';
+  required: boolean;
+  enabled: boolean;
+  placeholder: string;
+  options: string[];
+  displayOrder: number;
+}
+
+interface CatalogFilterConfig {
+  key: string;
+  label: string;
+  icon: string;
+  enabled: boolean;
+  displayOrder: number;
 }
 
 interface SiteSettingsData {
@@ -381,6 +401,12 @@ interface SiteSettingsData {
   mapZoom: string;
   smtpEmail: string;
   smtpAppPassword: string;
+  inquiryFormFields: InquiryFieldConfig[];
+  inquiryFormTitle: string;
+  showWhatsAppButton: boolean;
+  showCallButton: boolean;
+  showSqftCalculator: boolean;
+  catalogFilterConfig: CatalogFilterConfig[];
 }
 
 const DEFAULT_SETTINGS: SiteSettingsData = {
@@ -416,6 +442,27 @@ const DEFAULT_SETTINGS: SiteSettingsData = {
   mapZoom: '15',
   smtpEmail: '',
   smtpAppPassword: '',
+  inquiryFormFields: [
+    { fieldName: 'name', label: 'Your Name', type: 'text', required: true, enabled: true, placeholder: 'Full name', options: [], displayOrder: 0 },
+    { fieldName: 'email', label: 'Email Address', type: 'email', required: true, enabled: true, placeholder: 'your@email.com', options: [], displayOrder: 1 },
+    { fieldName: 'phone', label: 'Phone Number', type: 'tel', required: true, enabled: true, placeholder: '+91 98765 43210', options: [], displayOrder: 2 },
+    { fieldName: 'quantity', label: 'Quantity Required', type: 'number', required: true, enabled: true, placeholder: 'e.g., 100', options: [], displayOrder: 3 },
+    { fieldName: 'quantityUnit', label: 'Unit', type: 'select', required: false, enabled: true, placeholder: '', options: ['Units', 'Boxes', 'Sq.ft', 'Sq.m'], displayOrder: 4 },
+    { fieldName: 'message', label: 'Additional Message / Requirements', type: 'textarea', required: false, enabled: true, placeholder: 'Tell us more about your project or requirements...', options: [], displayOrder: 5 },
+  ],
+  inquiryFormTitle: 'Request Quote / Inquiry',
+  showWhatsAppButton: true,
+  showCallButton: true,
+  showSqftCalculator: true,
+  catalogFilterConfig: [
+    { key: 'category', label: 'Categories', icon: '📂', enabled: true, displayOrder: 0 },
+    { key: 'material', label: 'Material', icon: '🧱', enabled: true, displayOrder: 1 },
+    { key: 'finish', label: 'Finish', icon: '✨', enabled: true, displayOrder: 2 },
+    { key: 'size', label: 'Size', icon: '📐', enabled: true, displayOrder: 3 },
+    { key: 'color', label: 'Color', icon: '🎨', enabled: true, displayOrder: 4 },
+    { key: 'price', label: 'Price Range', icon: '💰', enabled: true, displayOrder: 5 },
+    { key: 'rating', label: 'Min. Rating', icon: '⭐', enabled: true, displayOrder: 6 },
+  ],
 };
 
 const ACCENT_COLORS: { key: string; color: string }[] = [
@@ -493,6 +540,13 @@ export const SiteSettingsPanel = ({ activeTab = 'general' }: SiteSettingsPanelPr
   const [newOptionLabel, setNewOptionLabel] = useState('');
   const [editOptionLabel, setEditOptionLabel] = useState('');
 
+  // Inquiry form config state
+  const [newFieldForm, setNewFieldForm] = useState<InquiryFieldConfig>({
+    fieldName: '', label: '', type: 'text', required: false, enabled: true, placeholder: '', options: [], displayOrder: 999
+  });
+  const [showAddFieldForm, setShowAddFieldForm] = useState(false);
+  const [newFieldOption, setNewFieldOption] = useState('');
+
   const loadCategories = useCallback(async () => {
     try {
       setCatLoading(true);
@@ -557,6 +611,14 @@ export const SiteSettingsPanel = ({ activeTab = 'general' }: SiteSettingsPanelPr
         mapZoom: data.mapZoom != null ? String(data.mapZoom) : '15',
         smtpEmail: data.smtpEmail || '',
         smtpAppPassword: data.smtpAppPassword || '',
+        inquiryFormFields: Array.isArray(data.inquiryFormFields) && data.inquiryFormFields.length > 0
+          ? data.inquiryFormFields : DEFAULT_SETTINGS.inquiryFormFields,
+        inquiryFormTitle: data.inquiryFormTitle || 'Request Quote / Inquiry',
+        showWhatsAppButton: data.showWhatsAppButton !== false,
+        showCallButton: data.showCallButton !== false,
+        showSqftCalculator: data.showSqftCalculator !== false,
+        catalogFilterConfig: Array.isArray(data.catalogFilterConfig) && data.catalogFilterConfig.length > 0
+          ? data.catalogFilterConfig : DEFAULT_SETTINGS.catalogFilterConfig,
       });
     } catch (err) {
       console.error('Failed to load settings:', err);
@@ -598,6 +660,12 @@ export const SiteSettingsPanel = ({ activeTab = 'general' }: SiteSettingsPanelPr
         mapZoom: parseInt(settings.mapZoom) || 15,
         smtpEmail: settings.smtpEmail,
         smtpAppPassword: settings.smtpAppPassword,
+        inquiryFormFields: settings.inquiryFormFields,
+        inquiryFormTitle: settings.inquiryFormTitle,
+        showWhatsAppButton: settings.showWhatsAppButton,
+        showCallButton: settings.showCallButton,
+        showSqftCalculator: settings.showSqftCalculator,
+        catalogFilterConfig: settings.catalogFilterConfig,
       };
       if (settings.mapLatitude) payload.mapLatitude = parseFloat(settings.mapLatitude);
       if (settings.mapLongitude) payload.mapLongitude = parseFloat(settings.mapLongitude);
@@ -987,6 +1055,98 @@ export const SiteSettingsPanel = ({ activeTab = 'general' }: SiteSettingsPanelPr
 
     return (
       <TabContent>
+        {/* Built-in Filter Configuration */}
+        <SectionHeader>⚙️ Built-in Filters</SectionHeader>
+        <HelpText>Enable, disable, rename, or reorder the built-in product filters that appear in the catalog sidebar. Changes are saved with the Save button below.</HelpText>
+
+        {settings.catalogFilterConfig
+          .sort((a, b) => a.displayOrder - b.displayOrder)
+          .map((cfg, idx) => (
+          <div key={cfg.key} style={{
+            border: `1px solid ${cfg.enabled ? colors.neutral[200] : colors.neutral[300]}`,
+            borderRadius: '8px',
+            padding: spacing[3],
+            background: cfg.enabled ? 'white' : colors.neutral[100],
+            opacity: cfg.enabled ? 1 : 0.6,
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing[3],
+            flexWrap: 'wrap',
+          }}>
+            {/* Reorder */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <button type="button" disabled={idx === 0} onClick={() => {
+                setSettings(prev => {
+                  const arr = [...prev.catalogFilterConfig].sort((a, b) => a.displayOrder - b.displayOrder);
+                  if (idx === 0) return prev;
+                  [arr[idx], arr[idx - 1]] = [arr[idx - 1], arr[idx]];
+                  return { ...prev, catalogFilterConfig: arr.map((c, i) => ({ ...c, displayOrder: i })) };
+                });
+              }} style={{ background: 'none', border: '1px solid #ddd', borderRadius: '3px', padding: '2px 6px', cursor: idx === 0 ? 'not-allowed' : 'pointer', opacity: idx === 0 ? 0.3 : 1, fontSize: '10px' }}>↑</button>
+              <button type="button" disabled={idx === settings.catalogFilterConfig.length - 1} onClick={() => {
+                setSettings(prev => {
+                  const arr = [...prev.catalogFilterConfig].sort((a, b) => a.displayOrder - b.displayOrder);
+                  if (idx === arr.length - 1) return prev;
+                  [arr[idx], arr[idx + 1]] = [arr[idx + 1], arr[idx]];
+                  return { ...prev, catalogFilterConfig: arr.map((c, i) => ({ ...c, displayOrder: i })) };
+                });
+              }} style={{ background: 'none', border: '1px solid #ddd', borderRadius: '3px', padding: '2px 6px', cursor: idx === settings.catalogFilterConfig.length - 1 ? 'not-allowed' : 'pointer', opacity: idx === settings.catalogFilterConfig.length - 1 ? 0.3 : 1, fontSize: '10px' }}>↓</button>
+            </div>
+
+            {/* Icon */}
+            <input
+              type="text"
+              value={cfg.icon}
+              onChange={e => {
+                const val = e.target.value;
+                setSettings(prev => ({
+                  ...prev,
+                  catalogFilterConfig: prev.catalogFilterConfig.map(c => c.key === cfg.key ? { ...c, icon: val } : c)
+                }));
+              }}
+              style={{ width: '40px', textAlign: 'center', border: '1px solid #ddd', borderRadius: '4px', padding: '4px', fontSize: '1.2rem' }}
+            />
+
+            {/* Label */}
+            <input
+              type="text"
+              value={cfg.label}
+              onChange={e => {
+                const val = e.target.value;
+                setSettings(prev => ({
+                  ...prev,
+                  catalogFilterConfig: prev.catalogFilterConfig.map(c => c.key === cfg.key ? { ...c, label: val } : c)
+                }));
+              }}
+              style={{ flex: 1, minWidth: '120px', border: '1px solid #ddd', borderRadius: '4px', padding: '6px 10px', fontSize: typography.fontSize.sm, fontWeight: 600 }}
+            />
+
+            {/* Key badge */}
+            <span style={{ fontSize: typography.fontSize.xs, background: colors.primary.lighter, color: colors.primary.main, padding: '2px 8px', borderRadius: '10px', fontWeight: 600 }}>
+              {cfg.key}
+            </span>
+
+            {/* Enable/Disable */}
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: typography.fontSize.sm, fontWeight: 600, color: cfg.enabled ? colors.success : colors.neutral[500] }}>
+              <input
+                type="checkbox"
+                checked={cfg.enabled}
+                onChange={e => {
+                  const val = e.target.checked;
+                  setSettings(prev => ({
+                    ...prev,
+                    catalogFilterConfig: prev.catalogFilterConfig.map(c => c.key === cfg.key ? { ...c, enabled: val } : c)
+                  }));
+                }}
+              />
+              {cfg.enabled ? 'Visible' : 'Hidden'}
+            </label>
+          </div>
+        ))}
+
+        <div style={{ borderTop: `2px solid ${colors.neutral[200]}`, marginTop: spacing[4], paddingTop: spacing[4] }} />
+
+        {/* Custom Filters */}
         <SectionHeader>🔍 Custom Filters</SectionHeader>
         <HelpText>Create custom filters that appear in the catalog sidebar. Products can have values for these filters set in the product form.</HelpText>
 
@@ -1319,6 +1479,220 @@ export const SiteSettingsPanel = ({ activeTab = 'general' }: SiteSettingsPanelPr
     </TabContent>
   );
 
+  // ===================== INQUIRY FORM TAB =====================
+  const FIELD_TYPES: { value: InquiryFieldConfig['type']; label: string }[] = [
+    { value: 'text', label: 'Text' },
+    { value: 'email', label: 'Email' },
+    { value: 'tel', label: 'Phone' },
+    { value: 'number', label: 'Number' },
+    { value: 'textarea', label: 'Text Area' },
+    { value: 'select', label: 'Dropdown' },
+  ];
+
+  const updateInquiryField = (idx: number, updates: Partial<InquiryFieldConfig>) => {
+    setSettings(prev => {
+      const fields = [...prev.inquiryFormFields];
+      fields[idx] = { ...fields[idx], ...updates };
+      return { ...prev, inquiryFormFields: fields };
+    });
+  };
+
+  const removeInquiryField = (idx: number) => {
+    setSettings(prev => ({
+      ...prev,
+      inquiryFormFields: prev.inquiryFormFields.filter((_, i) => i !== idx)
+    }));
+  };
+
+  const moveInquiryField = (idx: number, dir: -1 | 1) => {
+    setSettings(prev => {
+      const fields = [...prev.inquiryFormFields];
+      const target = idx + dir;
+      if (target < 0 || target >= fields.length) return prev;
+      [fields[idx], fields[target]] = [fields[target], fields[idx]];
+      return { ...prev, inquiryFormFields: fields.map((f, i) => ({ ...f, displayOrder: i })) };
+    });
+  };
+
+  const addInquiryField = () => {
+    if (!newFieldForm.fieldName || !newFieldForm.label) return;
+    const slug = newFieldForm.fieldName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    setSettings(prev => ({
+      ...prev,
+      inquiryFormFields: [
+        ...prev.inquiryFormFields,
+        { ...newFieldForm, fieldName: slug, displayOrder: prev.inquiryFormFields.length }
+      ]
+    }));
+    setNewFieldForm({ fieldName: '', label: '', type: 'text', required: false, enabled: true, placeholder: '', options: [], displayOrder: 999 });
+    setShowAddFieldForm(false);
+    setNewFieldOption('');
+  };
+
+  const renderInquiryTab = () => (
+    <TabContent>
+      <SectionHeader>📝 Inquiry Form Configuration</SectionHeader>
+      <HelpText>Customize the inquiry form that appears on product detail pages. Drag fields to reorder, toggle visibility, or add new custom fields.</HelpText>
+
+      <FieldGroup>
+        <Label>Form Title</Label>
+        <StyledInput value={settings.inquiryFormTitle} onChange={inputChange('inquiryFormTitle')} placeholder="Request Quote / Inquiry" />
+      </FieldGroup>
+
+      <Row>
+        <FieldGroup>
+          <Label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input type="checkbox" checked={settings.showWhatsAppButton} onChange={e => setSettings(prev => ({ ...prev, showWhatsAppButton: e.target.checked }))} />
+            Show WhatsApp Button
+          </Label>
+          <HelpText>Uses WhatsApp number from General tab</HelpText>
+        </FieldGroup>
+        <FieldGroup>
+          <Label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input type="checkbox" checked={settings.showCallButton} onChange={e => setSettings(prev => ({ ...prev, showCallButton: e.target.checked }))} />
+            Show Call Button
+          </Label>
+          <HelpText>Uses Phone number from General tab</HelpText>
+        </FieldGroup>
+      </Row>
+      <FieldGroup>
+        <Label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <input type="checkbox" checked={settings.showSqftCalculator} onChange={e => setSettings(prev => ({ ...prev, showSqftCalculator: e.target.checked }))} />
+          Show Sq.ft Calculator Guide
+        </Label>
+        <HelpText>Shows a helper link when quantity unit is set to Sq.ft</HelpText>
+      </FieldGroup>
+
+      <SectionHeader>📋 Form Fields</SectionHeader>
+      {settings.inquiryFormFields.map((field, idx) => (
+        <div key={idx} style={{
+          border: `1px solid ${field.enabled ? colors.neutral[200] : colors.neutral[300]}`,
+          borderRadius: '8px',
+          padding: spacing[4],
+          background: field.enabled ? 'white' : colors.neutral[100],
+          opacity: field.enabled ? 1 : 0.7,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: spacing[3],
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: spacing[2] }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2] }}>
+              <span style={{ fontWeight: 600, fontSize: '1rem' }}>{field.label}</span>
+              <span style={{ fontSize: '0.75rem', background: colors.primary.lighter, color: colors.primary.main, padding: '2px 8px', borderRadius: '10px' }}>{field.type}</span>
+              {field.required && <span style={{ fontSize: '0.75rem', background: 'rgba(239,68,68,0.1)', color: colors.error, padding: '2px 8px', borderRadius: '10px' }}>Required</span>}
+            </div>
+            <div style={{ display: 'flex', gap: spacing[1] }}>
+              <button type="button" onClick={() => moveInquiryField(idx, -1)} disabled={idx === 0} style={{ background: 'none', border: '1px solid #ddd', borderRadius: '4px', padding: '4px 8px', cursor: idx === 0 ? 'not-allowed' : 'pointer', opacity: idx === 0 ? 0.4 : 1 }}>↑</button>
+              <button type="button" onClick={() => moveInquiryField(idx, 1)} disabled={idx === settings.inquiryFormFields.length - 1} style={{ background: 'none', border: '1px solid #ddd', borderRadius: '4px', padding: '4px 8px', cursor: idx === settings.inquiryFormFields.length - 1 ? 'not-allowed' : 'pointer', opacity: idx === settings.inquiryFormFields.length - 1 ? 0.4 : 1 }}>↓</button>
+            </div>
+          </div>
+
+          <Row>
+            <FieldGroup>
+              <Label>Label</Label>
+              <StyledInput value={field.label} onChange={e => updateInquiryField(idx, { label: (e.target as HTMLInputElement).value })} />
+            </FieldGroup>
+            <FieldGroup>
+              <Label>Field Name (ID)</Label>
+              <StyledInput value={field.fieldName} onChange={e => updateInquiryField(idx, { fieldName: (e.target as HTMLInputElement).value.toLowerCase().replace(/[^a-z0-9_]/g, '') })} />
+            </FieldGroup>
+          </Row>
+          <Row>
+            <FieldGroup>
+              <Label>Type</Label>
+              <StyledInput as="select" value={field.type} onChange={(e: any) => updateInquiryField(idx, { type: e.target.value })}>
+                {FIELD_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </StyledInput>
+            </FieldGroup>
+            <FieldGroup>
+              <Label>Placeholder</Label>
+              <StyledInput value={field.placeholder} onChange={e => updateInquiryField(idx, { placeholder: (e.target as HTMLInputElement).value })} />
+            </FieldGroup>
+          </Row>
+
+          {field.type === 'select' && (
+            <FieldGroup>
+              <Label>Options (comma-separated)</Label>
+              <StyledInput
+                value={field.options.join(', ')}
+                onChange={e => updateInquiryField(idx, { options: (e.target as HTMLInputElement).value.split(',').map(s => s.trim()).filter(Boolean) })}
+                placeholder="Option A, Option B, Option C"
+              />
+            </FieldGroup>
+          )}
+
+          <div style={{ display: 'flex', gap: spacing[4], alignItems: 'center', flexWrap: 'wrap' }}>
+            <Label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+              <input type="checkbox" checked={field.required} onChange={e => updateInquiryField(idx, { required: e.target.checked })} />
+              Required
+            </Label>
+            <Label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+              <input type="checkbox" checked={field.enabled} onChange={e => updateInquiryField(idx, { enabled: e.target.checked })} />
+              Enabled
+            </Label>
+            <RemoveButton type="button" onClick={() => removeInquiryField(idx)}>🗑 Remove</RemoveButton>
+          </div>
+        </div>
+      ))}
+
+      {!showAddFieldForm ? (
+        <Button appearance="outline" type="button" onClick={() => setShowAddFieldForm(true)} style={{ alignSelf: 'flex-start' }}>
+          + Add New Field
+        </Button>
+      ) : (
+        <div style={{ border: `2px dashed ${colors.primary.main}`, borderRadius: '8px', padding: spacing[4], background: colors.primary.lighter, display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
+          <SectionHeader style={{ margin: 0, borderBottom: 'none' }}>➕ New Field</SectionHeader>
+          <Row>
+            <FieldGroup>
+              <Label>Label *</Label>
+              <StyledInput value={newFieldForm.label} onChange={e => setNewFieldForm(prev => ({ ...prev, label: (e.target as HTMLInputElement).value, fieldName: (e.target as HTMLInputElement).value.toLowerCase().replace(/[^a-z0-9]/g, '_') }))} placeholder="e.g., Company Name" />
+            </FieldGroup>
+            <FieldGroup>
+              <Label>Field Name (auto-generated)</Label>
+              <StyledInput value={newFieldForm.fieldName} onChange={e => setNewFieldForm(prev => ({ ...prev, fieldName: (e.target as HTMLInputElement).value }))} />
+            </FieldGroup>
+          </Row>
+          <Row>
+            <FieldGroup>
+              <Label>Type</Label>
+              <StyledInput as="select" value={newFieldForm.type} onChange={(e: any) => setNewFieldForm(prev => ({ ...prev, type: e.target.value }))}>
+                {FIELD_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </StyledInput>
+            </FieldGroup>
+            <FieldGroup>
+              <Label>Placeholder</Label>
+              <StyledInput value={newFieldForm.placeholder} onChange={e => setNewFieldForm(prev => ({ ...prev, placeholder: (e.target as HTMLInputElement).value }))} placeholder="Hint text shown in the field" />
+            </FieldGroup>
+          </Row>
+          {newFieldForm.type === 'select' && (
+            <FieldGroup>
+              <Label>Options (comma-separated)</Label>
+              <StyledInput
+                value={newFieldOption}
+                onChange={e => {
+                  const val = (e.target as HTMLInputElement).value;
+                  setNewFieldOption(val);
+                  setNewFieldForm(prev => ({ ...prev, options: val.split(',').map(s => s.trim()).filter(Boolean) }));
+                }}
+                placeholder="Option A, Option B, Option C"
+              />
+            </FieldGroup>
+          )}
+          <div style={{ display: 'flex', gap: spacing[4], alignItems: 'center' }}>
+            <Label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+              <input type="checkbox" checked={newFieldForm.required} onChange={e => setNewFieldForm(prev => ({ ...prev, required: e.target.checked }))} />
+              Required
+            </Label>
+          </div>
+          <div style={{ display: 'flex', gap: spacing[2] }}>
+            <Button appearance="primary" type="button" onClick={addInquiryField} disabled={!newFieldForm.label || !newFieldForm.fieldName}>Add Field</Button>
+            <Button appearance="outline" type="button" onClick={() => { setShowAddFieldForm(false); setNewFieldOption(''); }}>Cancel</Button>
+          </div>
+        </div>
+      )}
+    </TabContent>
+  );
+
   const TAB_RENDERERS: Record<SettingsTabKey, () => JSX.Element> = {
     general: renderGeneralTab,
     appearance: renderAppearanceTab,
@@ -1329,6 +1703,7 @@ export const SiteSettingsPanel = ({ activeTab = 'general' }: SiteSettingsPanelPr
     testimonials: renderTestimonialsTab,
     about: renderAboutTab,
     contact: renderContactTab,
+    inquiry: renderInquiryTab,
   };
 
   return (

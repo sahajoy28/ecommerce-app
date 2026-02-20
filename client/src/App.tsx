@@ -51,7 +51,11 @@ function App() {
   }, [token, dispatch]);
 
   const toggleFilters = () => {
-    setShowFilters(!showFilters);
+    setShowFilters(prev => !prev);
+  };
+
+  const closeFilters = () => {
+    setShowFilters(false);
   };
 
   return (
@@ -60,7 +64,7 @@ function App() {
         <ErrorBoundary>
           <BrowserRouter>
             <AppWrapper>
-              <FilterContext.Provider value={{ toggleFilters }}>
+              <FilterContext.Provider value={{ showFilters, toggleFilters, closeFilters }}>
                 <Header />
                 <MainContent>
                   <Routes>

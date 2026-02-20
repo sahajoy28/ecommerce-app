@@ -1,7 +1,8 @@
 import styled from "styled-components";
 import { Button, Input, Textarea } from "@fluentui/react-components";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { productsApi } from "../services/apiClient";
+import { userAPI } from "../services/userAPI";
 import { colors, spacing } from "../styles/designTokens";
 
 const FormContainer = styled.form`
@@ -266,31 +267,72 @@ const ModalBody = styled.div`
   }
 `;
 
+interface InquiryFieldConfig {
+  fieldName: string;
+  label: string;
+  type: 'text' | 'email' | 'tel' | 'number' | 'textarea' | 'select';
+  required: boolean;
+  enabled: boolean;
+  placeholder: string;
+  options: string[];
+  displayOrder: number;
+}
+
 interface InquiryFormProps {
   productId: string;
   productName: string;
 }
 
+const DEFAULT_FIELDS: InquiryFieldConfig[] = [
+  { fieldName: 'name', label: 'Your Name', type: 'text', required: true, enabled: true, placeholder: 'Full name', options: [], displayOrder: 0 },
+  { fieldName: 'email', label: 'Email Address', type: 'email', required: true, enabled: true, placeholder: 'your@email.com', options: [], displayOrder: 1 },
+  { fieldName: 'phone', label: 'Phone Number', type: 'tel', required: true, enabled: true, placeholder: '+91 98765 43210', options: [], displayOrder: 2 },
+  { fieldName: 'quantity', label: 'Quantity Required', type: 'number', required: true, enabled: true, placeholder: 'e.g., 100', options: [], displayOrder: 3 },
+  { fieldName: 'quantityUnit', label: 'Unit', type: 'select', required: false, enabled: true, placeholder: '', options: ['Units', 'Boxes', 'Sq.ft', 'Sq.m'], displayOrder: 4 },
+  { fieldName: 'message', label: 'Additional Message / Requirements', type: 'textarea', required: false, enabled: true, placeholder: 'Tell us more about your project or requirements...', options: [], displayOrder: 5 },
+];
+
 export const InquiryForm = ({ productId, productName }: InquiryFormProps) => {
-  const [formData, setFormData] = useState<{
-    name: string;
-    email: string;
-    phone: string;
-    quantity: string;
-    quantityUnit: 'units' | 'boxes' | 'sqft' | 'sqm';
-    message: string;
-  }>({
-    name: '',
-    email: '',
-    phone: '',
-    quantity: '',
-    quantityUnit: 'units',
-    message: ''
-  });
+  const [fields, setFields] = useState<InquiryFieldConfig[]>(DEFAULT_FIELDS);
+  const [formTitle, setFormTitle] = useState('Request Quote / Inquiry');
+  const [showWhatsApp, setShowWhatsApp] = useState(true);
+  const [showCall, setShowCall] = useState(true);
+  const [showSqftCalc, setShowSqftCalc] = useState(true);
+  const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+
+  const [formData, setFormData] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showCalcGuide, setShowCalcGuide] = useState(false);
+  const [configLoaded, setConfigLoaded] = useState(false);
+
+  // Load inquiry form config from site settings
+  useEffect(() => {
+    const loadConfig = async () => {
+      try {
+        const data = await userAPI.getSiteSettings();
+        if (data.inquiryFormFields && data.inquiryFormFields.length > 0) {
+          const enabledFields = data.inquiryFormFields
+            .filter((f: InquiryFieldConfig) => f.enabled)
+            .sort((a: InquiryFieldConfig, b: InquiryFieldConfig) => a.displayOrder - b.displayOrder);
+          setFields(enabledFields);
+        }
+        if (data.inquiryFormTitle) setFormTitle(data.inquiryFormTitle);
+        setShowWhatsApp(data.showWhatsAppButton !== false);
+        setShowCall(data.showCallButton !== false);
+        setShowSqftCalc(data.showSqftCalculator !== false);
+        if (data.whatsappNumber) setWhatsappNumber(data.whatsappNumber);
+        if (data.phone) setPhoneNumber(data.phone);
+      } catch (err) {
+        console.error('Failed to load inquiry form config:', err);
+      } finally {
+        setConfigLoaded(true);
+      }
+    };
+    loadConfig();
+  }, []);
 
   const handleChange = (e: any) => {
     const { name, value } = e.target;
@@ -314,7 +356,7 @@ export const InquiryForm = ({ productId, productName }: InquiryFormProps) => {
 
       if ((response as any).success) {
         setSubmitted(true);
-        setFormData({ name: '', email: '', phone: '', quantity: '', quantityUnit: 'units', message: '' });
+        setFormData({});
         setTimeout(() => setSubmitted(false), 5000);
       }
     } catch (err: any) {
@@ -324,6 +366,24 @@ export const InquiryForm = ({ productId, productName }: InquiryFormProps) => {
     }
   };
 
+  // Check if any visible select field with sq.ft option has it selected
+  const hasSqftSelected = fields.some(f =>
+    f.type === 'select' &&
+    f.options.some(o => o.toLowerCase() === 'sq.ft') &&
+    (formData[f.fieldName] || '').toLowerCase() === 'sq.ft'
+  );
+
+  const formatPhone = (num: string) => {
+    const cleaned = num.replace(/[^0-9+]/g, '');
+    return cleaned.startsWith('+') ? cleaned : `+${cleaned}`;
+  };
+
+  const whatsappLink = whatsappNumber
+    ? `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=Hi%2C%20I'm%20interested%20in%20${encodeURIComponent(productName)}`
+    : '';
+
+  const callLink = phoneNumber ? `tel:${formatPhone(phoneNumber)}` : '';
+
   if (submitted) {
     return (
       <SuccessMessage>
@@ -332,95 +392,75 @@ export const InquiryForm = ({ productId, productName }: InquiryFormProps) => {
     );
   }
 
+  if (!configLoaded) return null;
+
+  const renderField = (field: InquiryFieldConfig) => {
+    switch (field.type) {
+      case 'textarea':
+        return (
+          <FormGroup key={field.fieldName}>
+            <Label htmlFor={field.fieldName}>{field.label}{field.required ? ' *' : ''}</Label>
+            <StyledTextarea
+              id={field.fieldName}
+              name={field.fieldName}
+              value={formData[field.fieldName] || ''}
+              onChange={handleChange}
+              placeholder={field.placeholder}
+              required={field.required}
+              rows={4}
+            />
+          </FormGroup>
+        );
+      case 'select':
+        return (
+          <FormGroup key={field.fieldName}>
+            <Label htmlFor={field.fieldName}>{field.label}{field.required ? ' *' : ''}</Label>
+            <StyledInput
+              as="select"
+              id={field.fieldName}
+              name={field.fieldName}
+              value={formData[field.fieldName] || (field.options[0] || '')}
+              onChange={handleChange}
+              required={field.required}
+            >
+              {field.options.map(opt => (
+                <option key={opt} value={opt.toLowerCase().replace(/\./g, '')}>{opt}</option>
+              ))}
+            </StyledInput>
+          </FormGroup>
+        );
+      default:
+        return (
+          <FormGroup key={field.fieldName}>
+            <Label htmlFor={field.fieldName}>{field.label}{field.required ? ' *' : ''}</Label>
+            <StyledInput
+              id={field.fieldName}
+              name={field.fieldName}
+              type={field.type}
+              value={formData[field.fieldName] || ''}
+              onChange={handleChange}
+              placeholder={field.placeholder}
+              required={field.required}
+            />
+          </FormGroup>
+        );
+    }
+  };
+
   return (
     <>
       {error && <ErrorMessage>❌ {error}</ErrorMessage>}
       
       <FormContainer onSubmit={handleSubmit}>
-        <FormTitle>Request Quote / Inquiry</FormTitle>
+        <FormTitle>{formTitle}</FormTitle>
 
-        <FormGroup>
-          <Label htmlFor="name">Your Name *</Label>
-          <StyledInput
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Full name"
-            required
-          />
-        </FormGroup>
+        {fields.map(renderField)}
 
-        <FormGroup>
-          <Label htmlFor="email">Email Address *</Label>
-          <StyledInput
-            id="email"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="your@email.com"
-            required
-          />
-        </FormGroup>
-
-        <FormGroup>
-          <Label htmlFor="phone">Phone Number *</Label>
-          <StyledInput
-            id="phone"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            placeholder="+91 98765 43210"
-            required
-          />
-        </FormGroup>
-
-        <FormGroup>
-          <Label htmlFor="quantity">Quantity Required *</Label>
-          <StyledInput
-            id="quantity"
-            name="quantity"
-            value={formData.quantity}
-            onChange={handleChange}
-            placeholder="e.g., 100"
-            required
-          />
-        </FormGroup>
-
-        <FormGroup>
-          <Label htmlFor="quantityUnit">Unit</Label>
-          <StyledInput
-            as="select"
-            id="quantityUnit"
-            name="quantityUnit"
-            value={formData.quantityUnit}
-            onChange={handleChange}
-          >
-            <option value="units">Units</option>
-            <option value="boxes">Boxes</option>
-            <option value="sqft">Sq.ft</option>
-            <option value="sqm">Sq.m</option>
-          </StyledInput>
-        </FormGroup>
-
-        {formData.quantityUnit === 'sqft' && (
+        {showSqftCalc && hasSqftSelected && (
           <HelpLink type="button" onClick={() => setShowCalcGuide(true)}>
             📐 How to calculate sq.ft &amp; skirting?
           </HelpLink>
         )}
-
-        <FormGroup>
-          <Label htmlFor="message">Additional Message / Requirements</Label>
-          <StyledTextarea
-            id="message"
-            name="message"
-            value={formData.message}
-            onChange={handleChange}
-            placeholder="Tell us more about your project or requirements..."
-            rows={4}
-          />
-        </FormGroup>
 
         <ButtonGroup>
           <SubmitButton
@@ -431,21 +471,25 @@ export const InquiryForm = ({ productId, productName }: InquiryFormProps) => {
             {loading ? '⏳ Submitting...' : '📤 Send Inquiry'}
           </SubmitButton>
           
-          <WhatsAppButton
-            href={`https://wa.me/919876543210?text=Hi%2C%20I'm%20interested%20in%20${encodeURIComponent(productName)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-          >
-            💬 WhatsApp
-          </WhatsAppButton>
+          {showWhatsApp && whatsappLink && (
+            <WhatsAppButton
+              href={whatsappLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              💬 WhatsApp
+            </WhatsAppButton>
+          )}
           
-          <CallButton
-            href="tel:+919876543210"
-            onClick={(e) => e.stopPropagation()}
-          >
-            📞 Call Now
-          </CallButton>
+          {showCall && callLink && (
+            <CallButton
+              href={callLink}
+              onClick={(e) => e.stopPropagation()}
+            >
+              📞 Call Now
+            </CallButton>
+          )}
         </ButtonGroup>
       </FormContainer>
 

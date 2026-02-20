@@ -38,7 +38,11 @@ router.put('/', verify, async (req, res) => {
       // Contact / Map
       'mapEmbedUrl', 'mapLatitude', 'mapLongitude', 'mapZoom',
       // Email / SMTP
-      'smtpEmail', 'smtpAppPassword'
+      'smtpEmail', 'smtpAppPassword',
+      // Catalog Filter Config
+      'catalogFilterConfig',
+      // Inquiry Form
+      'inquiryFormFields', 'inquiryFormTitle', 'showWhatsAppButton', 'showCallButton', 'showSqftCalculator'
     ];
 
     const updates = {};
