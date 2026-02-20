@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "../app/hooks";
-import { Button, Text, Badge } from "@fluentui/react-components";
+import { Button, Badge } from "@fluentui/react-components";
 import { Toast } from "../components/Toast";
 import { ProductCard } from "../components/ProductCard";
 import { RatingDisplay } from "../components/RatingDisplay";
@@ -49,18 +49,12 @@ const BackButton = styled(Link)`
 const ProductWrapper = styled.div`
   display: grid;
   grid-template-columns: 1fr;
-  gap: ${spacing[4]};
-  background: var(--color-neutral-0, ${colors.neutral[0]});
-  padding: ${spacing[4]};
-  border-radius: ${borderRadius.lg};
-  box-shadow: ${shadows.md};
-  border: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
+  gap: ${spacing[6]};
   margin-bottom: ${spacing[8]};
 
-  ${media.tablet} {
+  @media (min-width: 768px) {
     grid-template-columns: 1fr 1fr;
     gap: ${spacing[8]};
-    padding: ${spacing[8]};
   }
 `;
 
@@ -68,16 +62,18 @@ const ImageContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: ${colors.gradients.cool};
+  background: var(--color-neutral-0, ${colors.neutral[0]});
   border-radius: ${borderRadius.lg};
   padding: ${spacing[4]};
-  height: fit-content;
-  min-height: 200px;
+  border: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
+  box-shadow: ${shadows.sm};
+  min-height: 300px;
 
-  ${media.tablet} {
-    padding: ${spacing[8]};
+  @media (min-width: 768px) {
     position: sticky;
-    top: 120px;
+    top: 100px;
+    padding: ${spacing[6]};
+    min-height: 400px;
   }
 `;
 
@@ -85,17 +81,18 @@ const ProductImage = styled.img`
   max-width: 100%;
   max-height: 500px;
   object-fit: contain;
+  border-radius: ${borderRadius.md};
   transition: transform ${transitions.base};
 
   &:hover {
-    transform: scale(1.05);
+    transform: scale(1.03);
   }
 `;
 
 const DetailsContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${spacing[6]};
+  gap: ${spacing[5]};
 `;
 
 const Category = styled(Badge)`
@@ -106,31 +103,46 @@ const Category = styled(Badge)`
 
 const Title = styled.h1`
   margin: 0;
-  font-size: ${typography.fontSize["5xl"]};
+  font-size: ${typography.fontSize["3xl"]};
   font-weight: ${typography.fontWeight.extrabold};
   color: var(--color-text-primary, ${colors.neutral[900]});
   line-height: ${typography.lineHeight.tight};
 
-  ${media.tablet} {
+  @media (min-width: 768px) {
     font-size: ${typography.fontSize["4xl"]};
-  }
-
-  ${media.mobile} {
-    font-size: ${typography.fontSize["3xl"]};
   }
 `;
 
-const Price = styled.div`
-  font-size: ${typography.fontSize["5xl"]};
-  font-weight: ${typography.fontWeight.extrabold};
-  background: ${colors.gradients.primary};
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+const PriceSection = styled.div`
+  display: flex;
+  align-items: baseline;
+  gap: ${spacing[3]};
+  flex-wrap: wrap;
+`;
 
-  ${media.mobile} {
+const Price = styled.span`
+  font-size: ${typography.fontSize["3xl"]};
+  font-weight: ${typography.fontWeight.extrabold};
+  color: var(--color-primary, ${colors.primary.main});
+
+  @media (min-width: 768px) {
     font-size: ${typography.fontSize["4xl"]};
   }
+`;
+
+const MrpPrice = styled.span`
+  font-size: ${typography.fontSize.lg};
+  color: ${colors.neutral[500]};
+  text-decoration: line-through;
+`;
+
+const DiscountBadge = styled.span`
+  padding: ${spacing[1]} ${spacing[2]};
+  background: #dcfce7;
+  color: #16a34a;
+  font-size: ${typography.fontSize.sm};
+  font-weight: ${typography.fontWeight.bold};
+  border-radius: ${borderRadius.sm};
 `;
 
 const Description = styled.p`
@@ -145,41 +157,69 @@ const Description = styled.p`
 `;
 
 const AvailabilityBox = styled.div<{ $outOfStock?: boolean }>`
-  padding: ${spacing[4]};
-  background: ${(props: any) => props.$outOfStock
-    ? 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)'
-    : `linear-gradient(135deg, var(--color-primary-lighter, ${colors.primary.lighter}) 0%, ${colors.secondary.lighter} 100%)`};
+  display: inline-flex;
+  align-items: center;
+  gap: ${spacing[2]};
+  padding: ${spacing[2]} ${spacing[3]};
+  background: ${(props: any) => props.$outOfStock ? '#fef2f2' : '#f0fdf4'};
   border-radius: ${borderRadius.md};
-  border-left: 4px solid ${(props: any) => props.$outOfStock ? colors.error : colors.success};
+  border: 1px solid ${(props: any) => props.$outOfStock ? '#fecaca' : '#bbf7d0'};
+  font-size: ${typography.fontSize.sm};
+  font-weight: ${typography.fontWeight.semibold};
+  color: ${(props: any) => props.$outOfStock ? '#dc2626' : '#16a34a'};
 `;
 
-const AvailabilityLabel = styled(Text)`
-  display: block;
-  margin-bottom: ${spacing[2]};
+const EnquireButton = styled.button`
+  width: 100%;
+  padding: ${spacing[4]};
+  background: var(--color-primary, ${colors.primary.main});
+  color: white;
+  border: none;
+  border-radius: ${borderRadius.md};
+  font-size: ${typography.fontSize.lg};
+  font-weight: ${typography.fontWeight.bold};
+  cursor: pointer;
+  transition: all ${transitions.fast};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: ${spacing[2]};
+
+  &:hover {
+    background: var(--color-primary-dark, ${colors.primary.dark});
+    transform: translateY(-1px);
+    box-shadow: ${shadows.md};
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
 `;
 
-const AvailabilityStatus = styled(Text)`
+const InquirySection = styled.div<{ $open: boolean }>`
+  max-height: ${(props: any) => props.$open ? '1000px' : '0'};
+  overflow: hidden;
+  transition: max-height 0.4s ease, opacity 0.3s ease;
+  opacity: ${(props: any) => props.$open ? 1 : 0};
+`;
+
+const SpecsSectionWrapper = styled.div`
+  background: var(--color-neutral-0, ${colors.neutral[0]});
+  border-radius: ${borderRadius.lg};
+  border: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
+  box-shadow: ${shadows.sm};
+  padding: ${spacing[6]};
+  margin-bottom: ${spacing[6]};
+`;
+
+const SpecsSectionTitle = styled.h3`
+  margin: 0 0 ${spacing[4]} 0;
+  font-size: ${typography.fontSize.xl};
+  font-weight: ${typography.fontWeight.bold};
+  color: var(--color-text-primary, ${colors.neutral[900]});
   display: flex;
   align-items: center;
   gap: ${spacing[2]};
-  color: ${colors.success};
-  font-weight: ${typography.fontWeight.semibold};
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: ${spacing[3]};
-  margin-top: ${spacing[3]};
-
-  ${media.mobile} {
-    flex-direction: column;
-    gap: ${spacing[2]};
-
-    button {
-      width: 100%;
-      min-height: 44px;
-    }
-  }
 `;
 
 const NotFound = styled.div`
@@ -314,6 +354,7 @@ export const ProductDetails = () => {
   const [error, setError] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
   const [reviewsKey, setReviewsKey] = useState(0);
+  const [showInquiry, setShowInquiry] = useState(false);
   const fetchAbortControllerRef = useRef<AbortController | null>(null);
 
   const dispatch = useAppDispatch();
@@ -402,7 +443,7 @@ export const ProductDetails = () => {
 
   return (
     <Container>
-      <BackButton to="/">
+      <BackButton to="/catalog">
         <ArrowLeft24Filled /> Back to Products
       </BackButton>
 
@@ -423,96 +464,121 @@ export const ProductDetails = () => {
         </ImageContainer>
 
         <DetailsContainer>
-          <div>
-            <Category color="informative" appearance="outline">
-              {product.category.toUpperCase()}
-            </Category>
-          </div>
+          <Category color="informative" appearance="outline">
+            {product.category?.toUpperCase()}
+          </Category>
 
           <Title>{product.title}</Title>
 
-          <Price>₹ {product.price.toFixed(2)}</Price>
+          {product.showPriceInListing !== false && (
+            <PriceSection>
+              <Price>₹ {product.price?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Price>
+              {product.mrp && product.mrp > product.price && (
+                <MrpPrice>₹ {product.mrp.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</MrpPrice>
+              )}
+              {product.discount?.discountValue > 0 && (
+                <DiscountBadge>
+                  {product.discount.discountType === 'percentage'
+                    ? `${product.discount.discountValue}% OFF`
+                    : `₹${product.discount.discountValue} OFF`}
+                </DiscountBadge>
+              )}
+            </PriceSection>
+          )}
 
           <RatingDisplay rating={product.rating} count={product.reviewCount} />
 
           <Description>{product.description}</Description>
 
-          {(product.material || product.finish || (product.sizes && product.sizes.length > 0) || product.color) && (
-            <SpecsGrid>
-              {product.material && (
-                <SpecItem>
-                  <SpecLabel>Material</SpecLabel>
-                  <SpecValue>{product.material}</SpecValue>
-                </SpecItem>
-              )}
-              {product.finish && (
-                <SpecItem>
-                  <SpecLabel>Finish</SpecLabel>
-                  <SpecValue>{product.finish}</SpecValue>
-                </SpecItem>
-              )}
-              {product.color && (
-                <SpecItem>
-                  <SpecLabel>Color</SpecLabel>
-                  <SpecValue>{product.color}</SpecValue>
-                </SpecItem>
-              )}
-              {product.specifications?.thickness && (
-                <SpecItem>
-                  <SpecLabel>Thickness</SpecLabel>
-                  <SpecValue>{product.specifications.thickness}</SpecValue>
-                </SpecItem>
-              )}
-              {product.specifications?.weight && (
-                <SpecItem>
-                  <SpecLabel>Weight</SpecLabel>
-                  <SpecValue>{product.specifications.weight}</SpecValue>
-                </SpecItem>
-              )}
-              {product.specifications?.waterAbsorption && (
-                <SpecItem>
-                  <SpecLabel>Water Absorption</SpecLabel>
-                  <SpecValue>{product.specifications.waterAbsorption}</SpecValue>
-                </SpecItem>
-              )}
-              {product.specifications?.mohs && (
-                <SpecItem>
-                  <SpecLabel>Mohs Hardness</SpecLabel>
-                  <SpecValue>{product.specifications.mohs}</SpecValue>
-                </SpecItem>
-              )}
-              {product.sizes && product.sizes.length > 0 && (
-                <SpecItem style={{ gridColumn: '1 / -1' }}>
-                  <SpecLabel>Available Sizes</SpecLabel>
-                  <SizeBadges>
-                    {product.sizes.map((s: string) => <SizeBadge key={s}>{s}</SizeBadge>)}
-                  </SizeBadges>
-                </SpecItem>
-              )}
-            </SpecsGrid>
-          )}
-
           <AvailabilityBox $outOfStock={product.stock != null && product.stock <= 0}>
-            <AvailabilityLabel weight="bold" size={200}>
-              Availability
-            </AvailabilityLabel>
-            {product.stock != null && product.stock <= 0 ? (
-              <AvailabilityStatus weight="semibold" style={{ color: "#ef4444" }}>
-                ✕ Out of Stock
-              </AvailabilityStatus>
-            ) : (
-              <AvailabilityStatus weight="semibold" style={{ color: "#10b981" }}>
-                ✓ In Stock
-              </AvailabilityStatus>
-            )}
+            {product.stock != null && product.stock <= 0
+              ? '✕ Out of Stock'
+              : '✓ In Stock'}
           </AvailabilityBox>
 
-          <InquiryForm 
-            productId={String(product._id || product.id)}
-            productName={product.title}
-          />
+          <EnquireButton onClick={() => setShowInquiry(prev => !prev)}>
+            {showInquiry ? '✕ Close Inquiry' : '📩 Enquire Now'}
+          </EnquireButton>
+
+          <InquirySection $open={showInquiry}>
+            <InquiryForm 
+              productId={String(product._id || product.id)}
+              productName={product.title}
+            />
+          </InquirySection>
         </DetailsContainer>
       </ProductWrapper>
+
+      {/* Specifications Section */}
+      {(product.material || product.finish || product.color || 
+        (product.sizes && product.sizes.length > 0) ||
+        product.specifications?.thickness || product.specifications?.weight ||
+        product.specifications?.waterAbsorption || product.specifications?.mohs ||
+        (product.customFilters && Object.keys(product.customFilters).length > 0)) && (
+        <SpecsSectionWrapper>
+          <SpecsSectionTitle>📋 Product Specifications</SpecsSectionTitle>
+          <SpecsGrid>
+            {product.material && (
+              <SpecItem>
+                <SpecLabel>Material</SpecLabel>
+                <SpecValue>{product.material}</SpecValue>
+              </SpecItem>
+            )}
+            {product.finish && (
+              <SpecItem>
+                <SpecLabel>Finish</SpecLabel>
+                <SpecValue>{product.finish}</SpecValue>
+              </SpecItem>
+            )}
+            {product.color && (
+              <SpecItem>
+                <SpecLabel>Color</SpecLabel>
+                <SpecValue>{product.color}</SpecValue>
+              </SpecItem>
+            )}
+            {product.specifications?.thickness && (
+              <SpecItem>
+                <SpecLabel>Thickness</SpecLabel>
+                <SpecValue>{product.specifications.thickness}</SpecValue>
+              </SpecItem>
+            )}
+            {product.specifications?.weight && (
+              <SpecItem>
+                <SpecLabel>Weight</SpecLabel>
+                <SpecValue>{product.specifications.weight}</SpecValue>
+              </SpecItem>
+            )}
+            {product.specifications?.waterAbsorption && (
+              <SpecItem>
+                <SpecLabel>Water Absorption</SpecLabel>
+                <SpecValue>{product.specifications.waterAbsorption}</SpecValue>
+              </SpecItem>
+            )}
+            {product.specifications?.mohs && (
+              <SpecItem>
+                <SpecLabel>Mohs Hardness</SpecLabel>
+                <SpecValue>{product.specifications.mohs}</SpecValue>
+              </SpecItem>
+            )}
+            {product.customFilters && Object.entries(product.customFilters).map(([key, val]) => (
+              val ? (
+                <SpecItem key={key}>
+                  <SpecLabel>{key.replace(/-/g, ' ')}</SpecLabel>
+                  <SpecValue>{String(val)}</SpecValue>
+                </SpecItem>
+              ) : null
+            ))}
+            {product.sizes && product.sizes.length > 0 && (
+              <SpecItem style={{ gridColumn: '1 / -1' }}>
+                <SpecLabel>Available Sizes</SpecLabel>
+                <SizeBadges>
+                  {product.sizes.map((s: string) => <SizeBadge key={s}>{s}</SizeBadge>)}
+                </SizeBadges>
+              </SpecItem>
+            )}
+          </SpecsGrid>
+        </SpecsSectionWrapper>
+      )}
 
       {relatedProducts.length > 0 && (
         <RelatedSection>
