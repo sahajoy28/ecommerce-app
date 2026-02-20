@@ -86,7 +86,7 @@ export const fetchProducts = createAsyncThunk(
 const applyFilters = (state: ProductsState) => {
   let result = [...state.items];
   const f = state.filters;
-  if (f.category) result = result.filter(p => p.category === f.category);
+  if (f.category) result = result.filter(p => (p.category || '').toLowerCase() === String(f.category).toLowerCase());
   if (f.maxPrice !== null) result = result.filter(p => p.price <= f.maxPrice!);
   if (f.minRating > 0) result = result.filter(p => p.rating >= f.minRating);
   if (f.search) {
@@ -189,7 +189,8 @@ const slice = createSlice({
     builder.addCase(fetchProducts.fulfilled, (state, action) => {
       state.loading = false;
       state.items = action.payload;
-      state.filtered = action.payload;
+      // Apply any active filters to the newly fetched items
+      applyFilters(state);
       state.error = null;
     });
 

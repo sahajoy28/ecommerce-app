@@ -232,7 +232,7 @@ export const CatalogPage = () => {
 
   // Pagination state and logic
   const [currentPage, setCurrentPage] = useState(1);
-  const PRODUCTS_PER_PAGE = 12;
+  const PRODUCTS_PER_PAGE = 50;
   const totalPages = Math.ceil(filtered.length / PRODUCTS_PER_PAGE);
 
   // Reset to page 1 when filters/search change
@@ -249,24 +249,16 @@ export const CatalogPage = () => {
   const category = searchParams.get('category');
   const categoryAppliedRef = useRef(false);
 
-  // Sync URL category param to Redux filter
+  // Sync URL category param to Redux filter immediately (works with case-insensitive filtering)
   useEffect(() => {
-    if (category && items.length > 0 && !categoryAppliedRef.current) {
-      // Match lowercased category
-      const match = items.find(
-        (p: Product) => p.category?.toLowerCase() === category
-      );
-      if (match) {
-        dispatch(filterByCategory(match.category));
-      } else {
-        dispatch(filterByCategory(category));
-      }
+    if (category && !categoryAppliedRef.current) {
+      dispatch(filterByCategory(category));
       categoryAppliedRef.current = true;
     } else if (!category && categoryAppliedRef.current) {
       dispatch(filterByCategory(null));
       categoryAppliedRef.current = false;
     }
-  }, [category, items.length]);
+  }, [category]);
 
   useEffect(() => {
     if (items.length === 0) {
@@ -280,10 +272,14 @@ export const CatalogPage = () => {
       <Header>
         <div>
           <HeaderTitle>
-            {filters.category ? `${filters.category.charAt(0).toUpperCase() + filters.category.slice(1)} Products` : "All Products"}
+            {/* Show category from URL if present, else from filters, else All Products */}
+            {(category || filters.category)
+              ? `${String(category || filters.category).charAt(0).toUpperCase() + String(category || filters.category).slice(1)} Products`
+              : "All Products"}
           </HeaderTitle>
           <ProductCount>
-            Showing {filtered.length} products
+            {/* Always show count for filtered products, matches visible products */}
+            {`Showing ${filtered.length} products`}
           </ProductCount>
         </div>
         <HeaderControls>

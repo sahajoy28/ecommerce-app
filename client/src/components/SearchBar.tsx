@@ -90,6 +90,7 @@ export const SearchBar = () => {
   const [query, setQuery] = useState("");
   const dispatch = useAppDispatch();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(false);
 
   const performSearch = useCallback((value: string) => {
     if (value.trim()) {
@@ -100,6 +101,12 @@ export const SearchBar = () => {
   }, [dispatch]);
 
   useEffect(() => {
+    if (!mountedRef.current) {
+      // skip the initial effect run to avoid unintentionally clearing URL-driven filters
+      mountedRef.current = true;
+      return;
+    }
+
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }

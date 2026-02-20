@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { colors, spacing, typography, media } from '../styles/designTokens';
 import { convertGoogleDriveUrl } from '../utils/googleDriveUrl';
 
@@ -213,6 +214,7 @@ export const BannerDisplay = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchBanners = async () => {
@@ -265,7 +267,7 @@ export const BannerDisplay = ({
     if (currentBanner.link) {
       window.location.href = currentBanner.link;
     } else if (currentBanner.category) {
-      window.location.href = `/catalog?category=${encodeURIComponent(currentBanner.category.toLowerCase())}`;
+      navigate(`/catalog?category=${encodeURIComponent(currentBanner.category.toLowerCase())}`);
     }
   };
 
