@@ -226,7 +226,7 @@ export const Header = () => {
     <>
       <Wrapper>
         <LeftSection>
-          {isCatalog && (
+          {isCatalog && !isAdmin && (
             <FilterToggleButton 
               onClick={() => filterToggle?.toggleFilters()}
               title={filterToggle?.showFilters ? "Close filters" : "Open filters"}
@@ -235,17 +235,16 @@ export const Header = () => {
               ☰
             </FilterToggleButton>
           )}
-          <Logo to={isAdmin ? "/admin/dashboard" : "/"}>
-            🛍 {storeName}{isAdmin ? <AdminBadge>Admin</AdminBadge> : ''}
+          <Logo to={"/"}>
+            🛍 {storeName}{isAdmin ? <AdminBadge>ADMIN</AdminBadge> : ''}
           </Logo>
         </LeftSection>
-
         {!isAdmin && (
           <SearchSection>
             <SearchBar />
           </SearchSection>
         )}
-
+        <div style={{ flex: 1 }} />
         <RightSection>
           {!isAdmin && (
             <>
