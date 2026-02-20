@@ -37,7 +37,7 @@ const inquirySchema = new mongoose.Schema(
     quantityUnit: {
       type: String,
       default: 'units',
-      enum: ['units', 'boxes', 'sqft', 'sqm']
+      enum: ['units', 'pieces', 'sets', 'kg', 'boxes']
     },
     message: {
       type: String,

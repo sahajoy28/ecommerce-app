@@ -447,16 +447,16 @@ const DEFAULT_SETTINGS: SiteSettingsData = {
     { fieldName: 'email', label: 'Email Address', type: 'email', required: true, enabled: true, placeholder: 'your@email.com', options: [], displayOrder: 1 },
     { fieldName: 'phone', label: 'Phone Number', type: 'tel', required: true, enabled: true, placeholder: '+91 98765 43210', options: [], displayOrder: 2 },
     { fieldName: 'quantity', label: 'Quantity Required', type: 'number', required: true, enabled: true, placeholder: 'e.g., 100', options: [], displayOrder: 3 },
-    { fieldName: 'quantityUnit', label: 'Unit', type: 'select', required: false, enabled: true, placeholder: '', options: ['Units', 'Boxes', 'Sq.ft', 'Sq.m'], displayOrder: 4 },
-    { fieldName: 'message', label: 'Additional Message / Requirements', type: 'textarea', required: false, enabled: true, placeholder: 'Tell us more about your project or requirements...', options: [], displayOrder: 5 },
+    { fieldName: 'quantityUnit', label: 'Unit', type: 'select', required: false, enabled: true, placeholder: '', options: ['Units', 'Pieces', 'Sets', 'Kg', 'Boxes'], displayOrder: 4 },
+    { fieldName: 'message', label: 'Additional Message / Requirements', type: 'textarea', required: false, enabled: true, placeholder: 'Tell us more about your needs...', options: [], displayOrder: 5 },
   ],
   inquiryFormTitle: 'Request Quote / Inquiry',
   showWhatsAppButton: true,
   showCallButton: true,
-  showSqftCalculator: true,
+  showSqftCalculator: false,
   catalogFilterConfig: [
     { key: 'category', label: 'Categories', icon: '📂', enabled: true, displayOrder: 0 },
-    { key: 'material', label: 'Material', icon: '🧱', enabled: true, displayOrder: 1 },
+    { key: 'material', label: 'Material', icon: '🏷️', enabled: true, displayOrder: 1 },
     { key: 'finish', label: 'Finish', icon: '✨', enabled: true, displayOrder: 2 },
     { key: 'size', label: 'Size', icon: '📐', enabled: true, displayOrder: 3 },
     { key: 'color', label: 'Color', icon: '🎨', enabled: true, displayOrder: 4 },
@@ -785,11 +785,11 @@ export const SiteSettingsPanel = ({ activeTab = 'general' }: SiteSettingsPanelPr
       <SectionHeader>🏠 Hero Section</SectionHeader>
       <FieldGroup>
         <Label>Hero Title</Label>
-        <StyledInput placeholder="Premium Building Materials & Tiles Showroom" value={settings.heroTitle} onChange={inputChange('heroTitle')} />
+        <StyledInput placeholder="Discover Premium Products for Every Lifestyle" value={settings.heroTitle} onChange={inputChange('heroTitle')} />
       </FieldGroup>
       <FieldGroup>
         <Label>Hero Subtitle</Label>
-        <TextArea placeholder="Explore our extensive collection of premium tiles, marble, granite..." value={settings.heroSubtitle} onChange={handleChange('heroSubtitle')} />
+        <TextArea placeholder="Shop curated collections of electronics, fashion, home essentials, and more" value={settings.heroSubtitle} onChange={handleChange('heroSubtitle')} />
       </FieldGroup>
     </TabContent>
   );
@@ -936,7 +936,7 @@ export const SiteSettingsPanel = ({ activeTab = 'general' }: SiteSettingsPanelPr
                 <SectionHeader style={{ fontSize: typography.fontSize.base, margin: 0, border: 'none', paddingBottom: 0 }}>➕ New Category</SectionHeader>
                 <FieldGroup>
                   <Label>Name *</Label>
-                  <StyledInput value={newCat.name} onChange={(e: any) => setNewCat(n => ({ ...n, name: e.target.value }))} placeholder="e.g., Porcelain Tiles" />
+                  <StyledInput value={newCat.name} onChange={(e: any) => setNewCat(n => ({ ...n, name: e.target.value }))} placeholder="e.g., Electronics" />
                 </FieldGroup>
                 <CatInlineRow>
                   <FieldGroup>
@@ -1391,7 +1391,7 @@ export const SiteSettingsPanel = ({ activeTab = 'general' }: SiteSettingsPanelPr
       </FieldGroup>
       <FieldGroup>
         <Label>Subtitle</Label>
-        <StyledInput placeholder="Your trusted partner for premium building materials..." value={settings.aboutSubtitle} onChange={inputChange('aboutSubtitle')} />
+        <StyledInput placeholder="Your trusted destination for premium, curated products" value={settings.aboutSubtitle} onChange={inputChange('aboutSubtitle')} />
       </FieldGroup>
       <FieldGroup>
         <Label>Our Story</Label>
@@ -1406,7 +1406,7 @@ export const SiteSettingsPanel = ({ activeTab = 'general' }: SiteSettingsPanelPr
       <FieldGroup>
         <Label>Product Categories</Label>
         <HelpText>Comma-separated list</HelpText>
-        <TextArea placeholder="Floor Tiles, Wall Tiles, Marble, Granite, Bathroom Fittings" value={settings.aboutCategories} onChange={handleChange('aboutCategories')} />
+        <TextArea placeholder="Electronics, Fashion, Home & Living, Sports & Outdoors" value={settings.aboutCategories} onChange={handleChange('aboutCategories')} />
       </FieldGroup>
       <FieldGroup>
         <Label>Featured Brands</Label>
@@ -1558,9 +1558,9 @@ export const SiteSettingsPanel = ({ activeTab = 'general' }: SiteSettingsPanelPr
       <FieldGroup>
         <Label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <input type="checkbox" checked={settings.showSqftCalculator} onChange={e => setSettings(prev => ({ ...prev, showSqftCalculator: e.target.checked }))} />
-          Show Sq.ft Calculator Guide
+          Show Area Calculator Guide
         </Label>
-        <HelpText>Shows a helper link when quantity unit is set to Sq.ft</HelpText>
+        <HelpText>Shows a helper link when quantity unit is set to a measurable unit</HelpText>
       </FieldGroup>
 
       <SectionHeader>📋 Form Fields</SectionHeader>

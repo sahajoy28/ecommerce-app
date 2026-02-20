@@ -288,8 +288,8 @@ const DEFAULT_FIELDS: InquiryFieldConfig[] = [
   { fieldName: 'email', label: 'Email Address', type: 'email', required: true, enabled: true, placeholder: 'your@email.com', options: [], displayOrder: 1 },
   { fieldName: 'phone', label: 'Phone Number', type: 'tel', required: true, enabled: true, placeholder: '+91 98765 43210', options: [], displayOrder: 2 },
   { fieldName: 'quantity', label: 'Quantity Required', type: 'number', required: true, enabled: true, placeholder: 'e.g., 100', options: [], displayOrder: 3 },
-  { fieldName: 'quantityUnit', label: 'Unit', type: 'select', required: false, enabled: true, placeholder: '', options: ['Units', 'Boxes', 'Sq.ft', 'Sq.m'], displayOrder: 4 },
-  { fieldName: 'message', label: 'Additional Message / Requirements', type: 'textarea', required: false, enabled: true, placeholder: 'Tell us more about your project or requirements...', options: [], displayOrder: 5 },
+  { fieldName: 'quantityUnit', label: 'Unit', type: 'select', required: false, enabled: true, placeholder: '', options: ['Units', 'Pieces', 'Sets', 'Kg', 'Boxes'], displayOrder: 4 },
+  { fieldName: 'message', label: 'Additional Message / Requirements', type: 'textarea', required: false, enabled: true, placeholder: 'Tell us more about your needs...', options: [], displayOrder: 5 },
 ];
 
 export const InquiryForm = ({ productId, productName }: InquiryFormProps) => {
@@ -297,7 +297,7 @@ export const InquiryForm = ({ productId, productName }: InquiryFormProps) => {
   const [formTitle, setFormTitle] = useState('Request Quote / Inquiry');
   const [showWhatsApp, setShowWhatsApp] = useState(true);
   const [showCall, setShowCall] = useState(true);
-  const [showSqftCalc, setShowSqftCalc] = useState(true);
+  const [showSqftCalc, setShowSqftCalc] = useState(false);
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
 
@@ -458,7 +458,7 @@ export const InquiryForm = ({ productId, productName }: InquiryFormProps) => {
 
         {showSqftCalc && hasSqftSelected && (
           <HelpLink type="button" onClick={() => setShowCalcGuide(true)}>
-            📐 How to calculate sq.ft &amp; skirting?
+            📐 How to calculate area &amp; quantity?
           </HelpLink>
         )}
 
@@ -497,38 +497,37 @@ export const InquiryForm = ({ productId, productName }: InquiryFormProps) => {
         <ModalOverlay onClick={() => setShowCalcGuide(false)}>
           <ModalContent onClick={(e) => e.stopPropagation()}>
             <ModalHeader>
-              <h3>📐 Sq.ft &amp; Skirting Guide</h3>
+              <h3>📐 Area &amp; Quantity Guide</h3>
               <CloseButton onClick={() => setShowCalcGuide(false)}>&times;</CloseButton>
             </ModalHeader>
             <ModalBody>
               <div className="step">
                 <span className="step-label">Step 1</span>
                 <br />
-                <strong>Measure your area</strong>
+                <strong>Determine what you need</strong>
                 <ul>
-                  <li>Measure the <strong>length</strong> and <strong>width</strong> of the room/area in feet.</li>
-                  <li><code>Area (sq.ft) = Length × Width</code></li>
+                  <li>Identify the <strong>product</strong> and the <strong>unit of measurement</strong> (pieces, sq.ft, kg, etc.).</li>
+                  <li>For area-based products: <code>Area = Length × Width</code></li>
                   <li>Example: 12 ft × 10 ft = <strong>120 sq.ft</strong></li>
                 </ul>
               </div>
               <div className="step">
                 <span className="step-label">Step 2</span>
                 <br />
-                <strong>Add skirting (border tiles along walls)</strong>
+                <strong>Account for extras</strong>
                 <ul>
-                  <li>Measure the <strong>total wall length</strong> (perimeter) where skirting is needed.</li>
-                  <li>Skirting height is typically <strong>3–4 inches</strong> (0.25–0.33 ft).</li>
-                  <li><code>Skirting (sq.ft) = Wall Length × Skirting Height</code></li>
-                  <li>Example: 44 ft × 0.33 ft = <strong>≈ 15 sq.ft</strong></li>
+                  <li>Add <strong>5–10% extra</strong> for waste, cutting, or spares.</li>
+                  <li><code>Total = Required Amount × 1.10</code></li>
+                  <li>Example: 120 × 1.10 = <strong>≈ 132 units</strong></li>
                 </ul>
               </div>
               <div className="step">
                 <span className="step-label">Step 3</span>
                 <br />
-                <strong>Total with wastage</strong>
+                <strong>Submit your inquiry</strong>
                 <ul>
-                  <li><code>Total = (Area + Skirting) + 5–10% extra</code></li>
-                  <li>Example: (120 + 15) × 1.10 = <strong>≈ 149 sq.ft</strong></li>
+                  <li>Enter the total quantity and select the correct unit.</li>
+                  <li>Our team will confirm pricing and availability.</li>
                 </ul>
               </div>
             </ModalBody>

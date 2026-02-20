@@ -156,13 +156,13 @@ const MapPlaceholder = styled.div`
 // Default fallback content
 const DEFAULTS = {
   aboutTitle: 'About Us',
-  aboutSubtitle: 'Your trusted partner for premium building materials and showroom products since 2009',
-  aboutStory: `Founded in 2009, we started as a small tile showroom with a vision to provide the highest quality building materials to architects, contractors, and homeowners across the region. Over the past 15 years, we've grown into one of the most trusted showrooms for premium tiles, marble, granite, and bathroom fittings.\n\nOur success is built on three core principles: Quality, Integrity, and Customer Satisfaction. We believe in offering only the best products from renowned brands worldwide, and providing exceptional service that goes beyond expectations.`,
-  aboutOfferings: `500+ premium products from leading brands worldwide\nExpert design consultation and product recommendations\nCompetitive wholesale and retail pricing\nFast and reliable delivery across the region\nProfessional installation guidance\nDedicated customer support`,
-  aboutCategories: ['Floor Tiles', 'Wall Tiles', 'Marble', 'Granite', 'Bathroom Fittings', 'Outdoor Tiles'],
+  aboutSubtitle: 'Your trusted destination for premium, curated products across lifestyle, tech, and home',
+  aboutStory: `We started with a simple vision: bring together the best products from around the world into one beautifully curated store. What began as a small online shop has grown into a trusted marketplace serving thousands of happy customers.\n\nOur team personally tests and selects every product to ensure it meets our high standards of quality, design, and value. We believe shopping should be joyful — and every purchase you make should bring lasting satisfaction.`,
+  aboutOfferings: `Curated collection of premium products across 8+ categories\nExpert product recommendations and guides\nCompetitive pricing with regular deals and offers\nFast, reliable shipping with tracking\nHassle-free returns and exchanges\nDedicated customer support`,
+  aboutCategories: ['Electronics', 'Fashion', 'Home & Living', 'Sports & Outdoors', 'Beauty & Health', 'Kitchen & Dining'],
   aboutBrands: ['Brand A', 'Brand B', 'Brand C', 'Brand D', 'Brand E', 'Brand F'],
-  aboutShowroom: 'Visit our modern showroom to experience our extensive collection in person. Our expert team is always available to help you find the perfect materials for your project.',
-  aboutWhyChooseUs: `15+ Years Experience - We've been in the industry long enough to know quality\nCertified Products - All our products meet international standards\nExpert Guidance - Our team provides professional consultation for your needs\nBulk Discounts - Special pricing for contractors and large orders\nQuick Delivery - Fast and reliable shipping options available\nExcellent Support - Dedicated after-sales service`,
+  aboutShowroom: 'Browse our complete catalog online, with detailed photos, specifications, and customer reviews for every product.',
+  aboutWhyChooseUs: `Curated Quality — Every product is hand-selected for quality and value\nFast Shipping — Most orders ship within 24 hours\nEasy Returns — 30-day hassle-free return policy\nExpert Support — Our team is here to help you choose\nSecure Checkout — Your data is always protected\nSustainable — We prioritize eco-friendly products and packaging`,
   aboutShowroomImages: [] as string[],
 };
 

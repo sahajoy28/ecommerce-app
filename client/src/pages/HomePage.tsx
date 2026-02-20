@@ -276,9 +276,9 @@ const ProductListContainer = styled.div`
 const DEFAULT_CATEGORIES: { id: string; name: string; icon: string; image: string; gradient: string }[] = [];
 
 const DEFAULT_TESTIMONIALS = [
-  { text: "Excellent quality tiles and outstanding customer service. We've been sourcing from them for over 5 years.", author: "Rajesh Kumar - Contractor" },
-  { text: "The variety of designs and competitive pricing is unmatched. Highly recommended for bulk orders.", author: "Priya Sharma - Interior Designer" },
-  { text: "Professional team, reliable delivery, and premium products. They've become our trusted supplier.", author: "Amit Patel - Project Manager" },
+  { text: "Amazing product quality and super fast delivery. This has become my go-to store!", author: "Sarah Johnson — Repeat Customer" },
+  { text: "The variety is incredible. I found exactly what I needed at a great price.", author: "Michael Chen — Verified Buyer" },
+  { text: "Outstanding customer service. They went above and beyond to help me choose the right product.", author: "Priya Sharma — Interior Designer" },
 ];
 
 export const HomePage = () => {
@@ -287,8 +287,8 @@ export const HomePage = () => {
   const { items, loading } = useAppSelector(state => state.products);
   const featuredProducts = items.slice(0, 6);
   const [mapUrl, setMapUrl] = useState('');
-  const [heroTitle, setHeroTitle] = useState('Premium Building Materials & Tiles Showroom');
-  const [heroSubtitle, setHeroSubtitle] = useState('Explore our extensive collection of high-quality tiles, marble, granite, and bathroom fittings');
+  const [heroTitle, setHeroTitle] = useState('Discover Premium Products for Every Lifestyle');
+  const [heroSubtitle, setHeroSubtitle] = useState('Shop curated collections of electronics, fashion, home essentials, and more — all in one place');
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
   const [stats, setStats] = useState({ products: '500+', years: '15+', clients: '5000+', brands: '50+' });
   const [testimonials, setTestimonials] = useState(DEFAULT_TESTIMONIALS);

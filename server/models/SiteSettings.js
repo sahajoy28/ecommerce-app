@@ -137,7 +137,7 @@ const siteSettingsSchema = new mongoose.Schema({
     }],
     default: [
       { key: 'category', label: 'Categories', icon: '📂', enabled: true, displayOrder: 0 },
-      { key: 'material', label: 'Material', icon: '🧱', enabled: true, displayOrder: 1 },
+      { key: 'material', label: 'Material', icon: '🏷️', enabled: true, displayOrder: 1 },
       { key: 'finish', label: 'Finish', icon: '✨', enabled: true, displayOrder: 2 },
       { key: 'size', label: 'Size', icon: '📐', enabled: true, displayOrder: 3 },
       { key: 'color', label: 'Color', icon: '🎨', enabled: true, displayOrder: 4 },
@@ -163,7 +163,7 @@ const siteSettingsSchema = new mongoose.Schema({
       { fieldName: 'email', label: 'Email Address', type: 'email', required: true, enabled: true, placeholder: 'your@email.com', options: [], displayOrder: 1 },
       { fieldName: 'phone', label: 'Phone Number', type: 'tel', required: true, enabled: true, placeholder: '+91 98765 43210', options: [], displayOrder: 2 },
       { fieldName: 'quantity', label: 'Quantity Required', type: 'number', required: true, enabled: true, placeholder: 'e.g., 100', options: [], displayOrder: 3 },
-      { fieldName: 'quantityUnit', label: 'Unit', type: 'select', required: false, enabled: true, placeholder: '', options: ['Units', 'Boxes', 'Sq.ft', 'Sq.m'], displayOrder: 4 },
+      { fieldName: 'quantityUnit', label: 'Unit', type: 'select', required: false, enabled: true, placeholder: '', options: ['Units', 'Pieces', 'Sets', 'Kg', 'Boxes'], displayOrder: 4 },
       { fieldName: 'message', label: 'Additional Message / Requirements', type: 'textarea', required: false, enabled: true, placeholder: 'Tell us more about your project or requirements...', options: [], displayOrder: 5 }
     ]
   },
@@ -181,7 +181,7 @@ const siteSettingsSchema = new mongoose.Schema({
   },
   showSqftCalculator: {
     type: Boolean,
-    default: true
+    default: false
   },
 
   // ===================== EMAIL / SMTP =====================

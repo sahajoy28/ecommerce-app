@@ -217,13 +217,13 @@ export const FilterSidebar = () => {
 
   // Derive unique values from product data
   const categories = [...new Set(products.map(p => p.category))].filter(Boolean).sort();
-  const materials = [...new Set(products.map(p => p.material).filter(Boolean))].sort();
-  const finishes = [...new Set(products.map(p => p.finish).filter(Boolean))].sort();
+  const materials = [...new Set(products.map(p => p.material).filter((m): m is string => !!m))].sort();
+  const finishes = [...new Set(products.map(p => p.finish).filter((f): f is string => !!f))].sort();
   const allSizes = [...new Set(products.flatMap(p => p.sizes || []))].sort((a, b) => {
     const numA = parseInt(a); const numB = parseInt(b);
     return (isNaN(numA) || isNaN(numB)) ? a.localeCompare(b) : numA - numB;
   });
-  const allColors = [...new Set(products.map(p => p.color).filter(Boolean))].sort();
+  const allColors = [...new Set(products.map(p => p.color).filter((c): c is string => !!c))].sort();
   const maxPrice = Math.max(...products.map(p => p.price), 1000);
 
   const handleCategoryChange = (category: string, checked: boolean) => {
@@ -320,13 +320,13 @@ export const FilterSidebar = () => {
           <FilterSection key={cfg.key}>
             <SectionTitle>{cfg.icon} {cfg.label}</SectionTitle>
             {materials.map(mat => (
-              <FilterItem key={mat}>
+                <FilterItem key={mat}>
                 <Checkbox
                   checked={filters.material === mat}
                   onChange={(_, data) => handleMaterialChange(mat, data.checked as boolean)}
                   label={mat}
                 />
-              </FilterItem>
+                </FilterItem>
             ))}
           </FilterSection>
         );
@@ -340,7 +340,7 @@ export const FilterSidebar = () => {
               <FilterItem key={fin}>
                 <Checkbox
                   checked={filters.finish === fin}
-                  onChange={(_, data) => handleFinishChange(fin, data.checked as boolean)}
+                  onChange={(_, data) => handleFinishChange(fin as string, data.checked as boolean)}
                   label={fin}
                 />
               </FilterItem>

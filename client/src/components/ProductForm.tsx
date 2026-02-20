@@ -288,29 +288,6 @@ const SpecSection = styled.div`
   }
 `;
 
-const SizesGrid = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: ${spacing[2]};
-  margin-top: ${spacing[2]};
-`;
-
-const SizeChip = styled.button<{ $active: boolean }>`
-  padding: ${spacing[1]} ${spacing[3]};
-  border-radius: 20px;
-  border: 1.5px solid ${(p: any) => p.$active ? colors.primary.main : colors.neutral[300]};
-  background: ${(p: any) => p.$active ? colors.primary.main : 'white'};
-  color: ${(p: any) => p.$active ? 'white' : colors.neutral[700]};
-  font-size: ${typography.fontSize.sm};
-  font-weight: ${typography.fontWeight.medium};
-  cursor: pointer;
-  transition: all 0.15s ease;
-
-  &:hover {
-    border-color: ${colors.primary.main};
-  }
-`;
-
 const SelectField = styled.select`
   width: 100%;
   max-width: 100%;
@@ -327,9 +304,7 @@ const SelectField = styled.select`
   }
 `;
 
-const MATERIAL_OPTIONS = ['Tiles', 'Marble', 'Granite', 'Ceramic', 'Porcelain', 'Natural Stone', 'Bathroom Fittings', 'Other'];
-const FINISH_OPTIONS = ['Glossy', 'Matte', 'Polish', 'Textured', 'Honed'];
-const SIZE_OPTIONS = ['1x1', '2x1', '2x2', '2x4', '3x2', '4x2', '4x4', '6x4', '8x4', '12x6', '12x24', '24x24', '24x48', '32x32', '60x60', '60x120', '80x80', '80x120', '100x100', '120x120', '120x180'];
+// Sizes can be entered as freeform text (comma-separated)
 
 const ToggleHeader = styled.div`
   display: flex;
@@ -455,22 +430,17 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
   const [showVideoInput, setShowVideoInput] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  // Tile / showroom fields
-  const [material, setMaterial] = useState(initialData?.material || 'Tiles');
-  const [finish, setFinish] = useState(initialData?.finish || 'Glossy');
+  // Product attribute fields (generic)
+  const [material, setMaterial] = useState(initialData?.material || '');
+  const [finish, setFinish] = useState(initialData?.finish || '');
   const [sizes, setSizes] = useState<string[]>(initialData?.sizes || []);
   const [color, setColor] = useState(initialData?.color || '');
-  const [thickness, setThickness] = useState(initialData?.specifications?.thickness || '');
-  const [weight, setWeight] = useState(initialData?.specifications?.weight || '');
-  const [waterAbsorption, setWaterAbsorption] = useState(initialData?.specifications?.waterAbsorption || '');
-  const [mohs, setMohs] = useState(initialData?.specifications?.mohs || '');
 
   // Dynamic specifications (key-value pairs)
   const [dynamicSpecs, setDynamicSpecs] = useState<{ key: string; value: string }[]>(() => {
-    const reserved = ['thickness', 'weight', 'waterAbsorption', 'mohs'];
     if (initialData?.specifications) {
       return Object.entries(initialData.specifications)
-        .filter(([k]) => !reserved.includes(k) && k !== undefined)
+        .filter(([k]) => k !== undefined)
         .map(([key, value]) => ({ key, value: String(value || '') }))
         .filter(s => s.key && s.value);
     }
@@ -538,19 +508,14 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
     setVideoUrl('');
     setError('');
     setSuccess('');
-    setMaterial(initialData?.material || 'Tiles');
-    setFinish(initialData?.finish || 'Glossy');
+    setMaterial(initialData?.material || '');
+    setFinish(initialData?.finish || '');
     setSizes(initialData?.sizes || []);
     setColor(initialData?.color || '');
-    setThickness(initialData?.specifications?.thickness || '');
-    setWeight(initialData?.specifications?.weight || '');
-    setWaterAbsorption(initialData?.specifications?.waterAbsorption || '');
-    setMohs(initialData?.specifications?.mohs || '');
-    const reserved = ['thickness', 'weight', 'waterAbsorption', 'mohs'];
     setDynamicSpecs(
       initialData?.specifications
         ? Object.entries(initialData.specifications)
-            .filter(([k]) => !reserved.includes(k) && k !== undefined)
+            .filter(([k]) => k !== undefined)
             .map(([key, value]) => ({ key, value: String(value || '') }))
             .filter(s => s.key && s.value)
         : []
@@ -599,12 +564,8 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
       return;
     }
 
-    // Build specifications with dynamic entries
+    // Build specifications from dynamic entries
     const allSpecs: Record<string, string> = {};
-    if (thickness) allSpecs.thickness = thickness;
-    if (weight) allSpecs.weight = weight;
-    if (waterAbsorption) allSpecs.waterAbsorption = waterAbsorption;
-    if (mohs) allSpecs.mohs = mohs;
     dynamicSpecs.forEach(s => {
       if (s.key.trim() && s.value.trim()) {
         allSpecs[s.key.trim()] = s.value.trim();
@@ -648,14 +609,10 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
         setQuantity('');
         setImages([]);
         setVideos([]);
-        setMaterial('Tiles');
-        setFinish('Glossy');
+        setMaterial('');
+        setFinish('');
         setSizes([]);
         setColor('');
-        setThickness('');
-        setWeight('');
-        setWaterAbsorption('');
-        setMohs('');
         setDynamicSpecs([]);
         setNewSpecKey('');
         setNewSpecValue('');
@@ -741,20 +698,26 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
       </FormGroup>
 
       <FormGroup>
-        <Label>🧱 Tile / Material Specifications</Label>
+        <Label>🏷️ Product Attributes</Label>
         <SpecSection>
           <FormGroup>
-            <Label>Material Type</Label>
-            <SelectField value={material} onChange={(e) => setMaterial(e.target.value)} disabled={isLoading}>
-              {MATERIAL_OPTIONS.map(m => <option key={m} value={m}>{m}</option>)}
-            </SelectField>
+            <Label>Material</Label>
+            <Input
+              value={material}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setMaterial(event.target.value)}
+              placeholder="e.g., Stainless Steel, Cotton, Leather"
+              disabled={isLoading}
+            />
           </FormGroup>
 
           <FormGroup>
             <Label>Finish</Label>
-            <SelectField value={finish} onChange={(e) => setFinish(e.target.value)} disabled={isLoading}>
-              {FINISH_OPTIONS.map(f => <option key={f} value={f}>{f}</option>)}
-            </SelectField>
+            <Input
+              value={finish}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setFinish(event.target.value)}
+              placeholder="e.g., Matte, Glossy, Brushed"
+              disabled={isLoading}
+            />
           </FormGroup>
 
           <FormGroup>
@@ -762,47 +725,7 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
             <Input
               value={color}
               onChange={(event: React.ChangeEvent<HTMLInputElement>) => setColor(event.target.value)}
-              placeholder="e.g., White, Beige, Grey"
-              disabled={isLoading}
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <Label>Thickness</Label>
-            <Input
-              value={thickness}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setThickness(event.target.value)}
-              placeholder="e.g., 8mm, 10mm"
-              disabled={isLoading}
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <Label>Weight (per box/sqft)</Label>
-            <Input
-              value={weight}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setWeight(event.target.value)}
-              placeholder="e.g., 18 kg/box"
-              disabled={isLoading}
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <Label>Water Absorption</Label>
-            <Input
-              value={waterAbsorption}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setWaterAbsorption(event.target.value)}
-              placeholder="e.g., &lt;0.5%"
-              disabled={isLoading}
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <Label>Mohs Hardness</Label>
-            <Input
-              value={mohs}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setMohs(event.target.value)}
-              placeholder="e.g., 5-6"
+              placeholder="e.g., White, Black, Red"
               disabled={isLoading}
             />
           </FormGroup>
@@ -811,28 +734,14 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
 
       <FormGroup>
         <Label>📐 Available Sizes</Label>
-        <SizesGrid>
-          {SIZE_OPTIONS.map(s => (
-            <SizeChip
-              key={s}
-              type="button"
-              $active={sizes.includes(s)}
-              onClick={() => setSizes(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])}
-              disabled={isLoading}
-            >
-              {s}
-            </SizeChip>
-          ))}
-        </SizesGrid>
         <Input
-          value={sizes.filter(s => !SIZE_OPTIONS.includes(s)).join(', ')}
+          value={sizes.join(', ')}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-            const custom = event.target.value.split(',').map(s => s.trim()).filter(Boolean);
-            setSizes([...sizes.filter(s => SIZE_OPTIONS.includes(s)), ...custom]);
+            const parsed = event.target.value.split(',').map(s => s.trim()).filter(Boolean);
+            setSizes(parsed);
           }}
-          placeholder="Add custom sizes (comma separated)"
+          placeholder="Enter sizes (comma separated), e.g., S, M, L, XL"
           disabled={isLoading}
-          style={{ marginTop: spacing[2] }}
         />
       </FormGroup>
 
@@ -872,7 +781,7 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
 
       {/* Dynamic Product Specifications */}
       <FormGroup>
-        <Label>📋 Additional Specifications</Label>
+        <Label>📋 Product Specifications</Label>
         <SpecSection>
           {dynamicSpecs.map((spec, idx) => (
             <SpecRow key={idx}>

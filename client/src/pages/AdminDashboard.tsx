@@ -139,8 +139,8 @@ const SECTION_INFO: Record<NavKey, { title: string; tips: string[] }> = {
   hero: {
     title: 'The large banner section at the top of your homepage.',
     tips: [
-      'Title: the main headline visitors see first (e.g., "Premium Tiles & Marble").',
-      'Subtitle: supporting text below the title (e.g., "500+ designs to explore").',
+      'Title: the main headline visitors see first (e.g., "Discover Premium Products").',
+      'Subtitle: supporting text below the title (e.g., "Shop curated collections").',
     ]
   },
   categories: {
@@ -197,7 +197,7 @@ const SECTION_INFO: Record<NavKey, { title: string; tips: string[] }> = {
     tips: [
       'Add, remove, or reorder form fields (name, email, phone, message, etc.).',
       'Toggle WhatsApp/Call buttons to appear alongside the inquiry form.',
-      'Enable the Sq.ft Calculator for tile/marble area calculations.',
+      'Enable the area calculator for product quantity calculations.',
     ]
   },
   users: {

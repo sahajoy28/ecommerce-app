@@ -61,14 +61,14 @@ categorySchema.statics.seedDefaults = async function () {
   const count = await this.countDocuments();
   if (count === 0) {
     const defaults = [
-      { name: 'Floor Tiles', icon: '🏠', displayOrder: 1, isPredefined: true },
-      { name: 'Wall Tiles', icon: '🧱', displayOrder: 2, isPredefined: true },
-      { name: 'Marble', icon: '💎', displayOrder: 3, isPredefined: true },
-      { name: 'Granite', icon: '🪨', displayOrder: 4, isPredefined: true },
-      { name: 'Bathroom Fittings', icon: '🚿', displayOrder: 5, isPredefined: true },
-      { name: 'Outdoor Tiles', icon: '🌳', displayOrder: 6, isPredefined: true },
-      { name: 'Kitchen Tiles', icon: '🍳', displayOrder: 7, isPredefined: true },
-      { name: 'Mosaic', icon: '🎨', displayOrder: 8, isPredefined: true },
+      { name: 'Electronics', icon: '📱', displayOrder: 1, isPredefined: true },
+      { name: 'Fashion', icon: '👗', displayOrder: 2, isPredefined: true },
+      { name: 'Home & Living', icon: '🏠', displayOrder: 3, isPredefined: true },
+      { name: 'Sports & Outdoors', icon: '⚽', displayOrder: 4, isPredefined: true },
+      { name: 'Beauty & Health', icon: '💄', displayOrder: 5, isPredefined: true },
+      { name: 'Books & Stationery', icon: '📚', displayOrder: 6, isPredefined: true },
+      { name: 'Kitchen & Dining', icon: '🍳', displayOrder: 7, isPredefined: true },
+      { name: 'Toys & Games', icon: '🎮', displayOrder: 8, isPredefined: true },
     ];
     await this.insertMany(defaults);
     console.log('✅ Default categories seeded');

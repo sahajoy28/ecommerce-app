@@ -33,16 +33,12 @@ export interface Product {
   quantity?: number;
   isAdminProduct?: boolean;
   createdBy?: string;
-  // Tile / showroom fields
+  // Product attribute fields
   material?: string;
   finish?: string;
   sizes?: string[];
   color?: string;
   specifications?: {
-    thickness?: string;
-    weight?: string;
-    waterAbsorption?: string;
-    mohs?: string;
     [key: string]: string | undefined;
   };
   customFilters?: Record<string, any>;

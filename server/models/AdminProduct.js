@@ -110,17 +110,16 @@ const adminProductSchema = new mongoose.Schema(
       default: false,
       index: true
     },
-    // B2B Showroom fields
+    // Product attribute fields (generic)
     material: {
       type: String,
       trim: true,
-      enum: ['Tiles', 'Marble', 'Granite', 'Ceramic', 'Porcelain', 'Natural Stone', 'Bathroom Fittings', 'Other'],
-      default: 'Tiles'
+      default: ''
     },
     finish: {
       type: String,
-      enum: ['Glossy', 'Matte', 'Polish', 'Textured', 'Honed'],
-      default: 'Glossy'
+      trim: true,
+      default: ''
     },
     sizes: {
       type: [String],

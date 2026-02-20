@@ -614,14 +614,9 @@ export const ProductDetails = () => {
     if (product.material) specEntries.push({ label: 'Material', value: product.material });
     if (product.finish) specEntries.push({ label: 'Finish', value: product.finish });
     if (product.color) specEntries.push({ label: 'Color', value: product.color });
-    if (product.specifications?.thickness) specEntries.push({ label: 'Thickness', value: product.specifications.thickness });
-    if (product.specifications?.weight) specEntries.push({ label: 'Weight', value: product.specifications.weight });
-    if (product.specifications?.waterAbsorption) specEntries.push({ label: 'Water Absorption', value: product.specifications.waterAbsorption });
-    if (product.specifications?.mohs) specEntries.push({ label: 'Mohs Hardness', value: product.specifications.mohs });
     if (product.specifications) {
-      const reserved = ['thickness', 'weight', 'waterAbsorption', 'mohs'];
       Object.entries(product.specifications).forEach(([k, v]) => {
-        if (!reserved.includes(k) && v) {
+        if (v) {
           specEntries.push({ label: k.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()), value: String(v) });
         }
       });
