@@ -50,7 +50,8 @@ const ProductWrapper = styled.div`
   display: grid;
   grid-template-columns: 1fr;
   gap: ${spacing[6]};
-  margin-bottom: ${spacing[8]};
+  margin-bottom: ${spacing[6]};
+  align-items: start;
 
   @media (min-width: 768px) {
     grid-template-columns: 1fr 1fr;
@@ -58,34 +59,149 @@ const ProductWrapper = styled.div`
   }
 `;
 
-const ImageContainer = styled.div`
+/* ── Carousel ── */
+const CarouselContainer = styled.div`
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-neutral-0, ${colors.neutral[0]});
-  border-radius: ${borderRadius.lg};
-  padding: ${spacing[4]};
-  border: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
-  box-shadow: ${shadows.sm};
-  min-height: 300px;
+  flex-direction: column;
+  gap: ${spacing[3]};
 
   @media (min-width: 768px) {
     position: sticky;
-    top: 100px;
-    padding: ${spacing[6]};
-    min-height: 400px;
+    top: 90px;
   }
 `;
 
-const ProductImage = styled.img`
-  max-width: 100%;
-  max-height: 500px;
-  object-fit: contain;
-  border-radius: ${borderRadius.md};
-  transition: transform ${transitions.base};
+const MainMediaBox = styled.div`
+  position: relative;
+  background: var(--color-neutral-0, ${colors.neutral[0]});
+  border-radius: ${borderRadius.lg};
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+
+  @media (min-width: 768px) {
+    min-height: 420px;
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    min-height: 320px;
+    object-fit: cover;
+
+    @media (min-width: 768px) {
+      min-height: 420px;
+    }
+  }
+
+  video {
+    width: 100%;
+    max-height: 500px;
+    object-fit: contain;
+  }
+`;
+
+const CarouselNav = styled.button<{ $dir: 'left' | 'right' }>`
+  position: absolute;
+  top: 50%;
+  ${(p: any) => p.$dir === 'left' ? 'left: 8px;' : 'right: 8px;'}
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.85);
+  box-shadow: ${shadows.md};
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: ${colors.neutral[700]};
+  z-index: 2;
+  transition: all ${transitions.fast};
 
   &:hover {
-    transform: scale(1.03);
+    background: white;
+    box-shadow: ${shadows.lg};
+  }
+`;
+
+const ThumbnailStrip = styled.div`
+  display: flex;
+  gap: ${spacing[2]};
+  overflow-x: auto;
+  padding: ${spacing[1]} 0;
+
+  &::-webkit-scrollbar {
+    height: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: ${colors.neutral[300]};
+    border-radius: 2px;
+  }
+`;
+
+const Thumbnail = styled.button<{ $active?: boolean; $isVideo?: boolean }>`
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: ${borderRadius.md};
+  border: 2px solid ${(p: any) => p.$active ? colors.primary.main : colors.neutral[200]};
+  background: ${colors.neutral[50]};
+  overflow: hidden;
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  transition: border-color ${transitions.fast};
+
+  &:hover {
+    border-color: ${colors.primary.main};
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  ${(p: any) => p.$isVideo && `
+    &::after {
+      content: '▶';
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.3);
+      color: white;
+      font-size: 20px;
+    }
+  `}
+`;
+
+const VideoPlayer = styled.div`
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  video {
+    max-width: 100%;
+    max-height: 480px;
+  }
+
+  iframe {
+    width: 100%;
+    height: 380px;
+    border: none;
+
+    @media (min-width: 768px) {
+      height: 420px;
+    }
   }
 `;
 
@@ -208,18 +324,83 @@ const SpecsSectionWrapper = styled.div`
   border-radius: ${borderRadius.lg};
   border: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
   box-shadow: ${shadows.sm};
-  padding: ${spacing[6]};
+  overflow: hidden;
   margin-bottom: ${spacing[6]};
 `;
 
 const SpecsSectionTitle = styled.h3`
-  margin: 0 0 ${spacing[4]} 0;
+  margin: 0;
+  padding: ${spacing[5]} ${spacing[6]};
   font-size: ${typography.fontSize.xl};
   font-weight: ${typography.fontWeight.bold};
   color: var(--color-text-primary, ${colors.neutral[900]});
   display: flex;
   align-items: center;
   gap: ${spacing[2]};
+  border-bottom: 2px solid var(--color-neutral-200, ${colors.neutral[200]});
+  background: var(--color-neutral-50, ${colors.neutral[50]});
+`;
+
+const SpecsTable = styled.div`
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+`;
+
+const SpecRow = styled.div<{ $even?: boolean }>`
+  display: table-row;
+  background: ${(p: any) => p.$even
+    ? 'var(--color-neutral-50, ' + colors.neutral[50] + ')'
+    : 'var(--color-neutral-0, ' + colors.neutral[0] + ')'};
+
+  &:hover {
+    background: var(--color-primary-50, ${colors.primary.light}12);
+  }
+
+  ${media.mobile} {
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
+    padding: ${spacing[3]} ${spacing[4]};
+  }
+`;
+
+const SpecCellLabel = styled.div`
+  display: table-cell;
+  width: 35%;
+  padding: ${spacing[3]} ${spacing[5]};
+  font-size: ${typography.fontSize.sm};
+  font-weight: ${typography.fontWeight.semibold};
+  color: var(--color-text-secondary, ${colors.neutral[600]});
+  border-bottom: 1px solid var(--color-neutral-100, ${colors.neutral[100]});
+  border-right: 1px solid var(--color-neutral-100, ${colors.neutral[100]});
+  vertical-align: middle;
+
+  ${media.mobile} {
+    display: block;
+    width: 100%;
+    padding: 0 0 ${spacing[1]} 0;
+    font-size: ${typography.fontSize.xs};
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+  }
+`;
+
+const SpecCellValue = styled.div`
+  display: table-cell;
+  padding: ${spacing[3]} ${spacing[5]};
+  font-size: ${typography.fontSize.sm};
+  font-weight: ${typography.fontWeight.medium};
+  color: var(--color-text-primary, ${colors.neutral[900]});
+  border-bottom: 1px solid var(--color-neutral-100, ${colors.neutral[100]});
+  vertical-align: middle;
+
+  ${media.mobile} {
+    display: block;
+    padding: 0;
+    border: none;
+  }
 `;
 
 const NotFound = styled.div`
@@ -255,41 +436,6 @@ const RelatedSection = styled.div`
   ${media.mobile} {
     margin-top: ${spacing[6]};
   }
-`;
-
-const SpecsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: ${spacing[2]};
-  padding: ${spacing[4]};
-  background: var(--color-neutral-50, ${colors.neutral[50]});
-  border-radius: ${borderRadius.md};
-  border: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
-
-  ${media.mobile} {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const SpecItem = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: ${spacing[2]};
-`;
-
-const SpecLabel = styled.span`
-  font-size: ${typography.fontSize.xs};
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--color-text-tertiary, ${colors.neutral[500]});
-  font-weight: ${typography.fontWeight.semibold};
-`;
-
-const SpecValue = styled.span`
-  font-size: ${typography.fontSize.sm};
-  color: var(--color-text-primary, ${colors.neutral[900]});
-  font-weight: ${typography.fontWeight.medium};
 `;
 
 const SizeBadges = styled.div`
@@ -352,9 +498,9 @@ export const ProductDetails = () => {
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [imageError, setImageError] = useState(false);
   const [reviewsKey, setReviewsKey] = useState(0);
   const [showInquiry, setShowInquiry] = useState(false);
+  const [activeMedia, setActiveMedia] = useState(0);
   const fetchAbortControllerRef = useRef<AbortController | null>(null);
 
   const dispatch = useAppDispatch();
@@ -441,27 +587,128 @@ export const ProductDetails = () => {
     );
   }
 
+  // Build media items array (images + videos)
+  const mediaItems: { type: 'image' | 'video'; src: string }[] = [];
+  const productImages = product?.images?.length ? product.images : (product?.image ? [product.image] : []);
+  productImages.forEach((img: string) => mediaItems.push({ type: 'image', src: convertGoogleDriveUrl(img) }));
+  (product?.videos || []).forEach((v: string) => mediaItems.push({ type: 'video', src: v }));
+
+  const getYouTubeId = (url: string) => {
+    const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/);
+    return match ? match[1] : null;
+  };
+
+  const getYouTubeThumbnail = (url: string) => {
+    const id = getYouTubeId(url);
+    return id ? `https://img.youtube.com/vi/${id}/mqdefault.jpg` : null;
+  };
+
+  const goMedia = (dir: number) => {
+    if (mediaItems.length <= 1) return;
+    setActiveMedia((prev) => (prev + dir + mediaItems.length) % mediaItems.length);
+  };
+
+  // Build spec entries
+  const specEntries: { label: string; value: React.ReactNode }[] = [];
+  if (product) {
+    if (product.material) specEntries.push({ label: 'Material', value: product.material });
+    if (product.finish) specEntries.push({ label: 'Finish', value: product.finish });
+    if (product.color) specEntries.push({ label: 'Color', value: product.color });
+    if (product.specifications?.thickness) specEntries.push({ label: 'Thickness', value: product.specifications.thickness });
+    if (product.specifications?.weight) specEntries.push({ label: 'Weight', value: product.specifications.weight });
+    if (product.specifications?.waterAbsorption) specEntries.push({ label: 'Water Absorption', value: product.specifications.waterAbsorption });
+    if (product.specifications?.mohs) specEntries.push({ label: 'Mohs Hardness', value: product.specifications.mohs });
+    if (product.specifications) {
+      const reserved = ['thickness', 'weight', 'waterAbsorption', 'mohs'];
+      Object.entries(product.specifications).forEach(([k, v]) => {
+        if (!reserved.includes(k) && v) {
+          specEntries.push({ label: k.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()), value: String(v) });
+        }
+      });
+    }
+    if (product.customFilters) {
+      Object.entries(product.customFilters).forEach(([key, val]) => {
+        if (val) specEntries.push({ label: key.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), value: String(val) });
+      });
+    }
+    if (product.sizes && product.sizes.length > 0) {
+      specEntries.push({
+        label: 'Available Sizes',
+        value: (
+          <SizeBadges>
+            {product.sizes.map((s: string) => <SizeBadge key={s}>{s}</SizeBadge>)}
+          </SizeBadges>
+        )
+      });
+    }
+  }
+
+  const noImageSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect fill='%23f0f0f0' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999' font-size='16'%3ENo Image%3C/text%3E%3C/svg%3E";
+  const videoThumbSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect fill='%23333' width='64' height='64'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23fff' font-size='24'%3E▶%3C/text%3E%3C/svg%3E";
+
   return (
     <Container>
       <BackButton to="/catalog">
         <ArrowLeft24Filled /> Back to Products
       </BackButton>
 
+      {/* Row 1: Image/Video Carousel + Product Details */}
       <ProductWrapper>
-        <ImageContainer>
-          {!imageError && product.image ? (
-            <ProductImage 
-              src={convertGoogleDriveUrl(product.image)} 
-              alt={product.title}
-              onError={() => setImageError(true)}
-            />
-          ) : (
-            <ProductImage 
-              src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect fill='%23f0f0f0' width='200' height='200'/%3E%3Ctext x='50%' y='50%' text-anchor='middle' dy='.3em' fill='%23999' font-size='16'%3ENo Image%3C/text%3E%3C/svg%3E"
-              alt="No image available"
-            />
+        <CarouselContainer>
+          <MainMediaBox>
+            {mediaItems.length > 1 && (
+              <CarouselNav $dir="left" onClick={() => goMedia(-1)}>‹</CarouselNav>
+            )}
+
+            {mediaItems.length === 0 ? (
+              <img src={noImageSvg} alt="No image available" />
+            ) : mediaItems[activeMedia]?.type === 'image' ? (
+              <img
+                src={mediaItems[activeMedia].src}
+                alt={`${product.title} - ${activeMedia + 1}`}
+                onError={(e) => { (e.target as HTMLImageElement).src = noImageSvg; }}
+              />
+            ) : (
+              <VideoPlayer>
+                {getYouTubeId(mediaItems[activeMedia].src) ? (
+                  <iframe
+                    src={`https://www.youtube.com/embed/${getYouTubeId(mediaItems[activeMedia].src)}`}
+                    title="Product video"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <video controls src={mediaItems[activeMedia].src}>
+                    Your browser does not support video playback.
+                  </video>
+                )}
+              </VideoPlayer>
+            )}
+
+            {mediaItems.length > 1 && (
+              <CarouselNav $dir="right" onClick={() => goMedia(1)}>›</CarouselNav>
+            )}
+          </MainMediaBox>
+
+          {mediaItems.length > 1 && (
+            <ThumbnailStrip>
+              {mediaItems.map((item, idx) => (
+                <Thumbnail
+                  key={idx}
+                  $active={idx === activeMedia}
+                  $isVideo={item.type === 'video'}
+                  onClick={() => setActiveMedia(idx)}
+                >
+                  {item.type === 'image' ? (
+                    <img src={item.src} alt={`Thumb ${idx + 1}`} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  ) : (
+                    <img src={getYouTubeThumbnail(item.src) || videoThumbSvg} alt="Video" />
+                  )}
+                </Thumbnail>
+              ))}
+            </ThumbnailStrip>
           )}
-        </ImageContainer>
+        </CarouselContainer>
 
         <DetailsContainer>
           <Category color="informative" appearance="outline">
@@ -470,7 +717,7 @@ export const ProductDetails = () => {
 
           <Title>{product.title}</Title>
 
-          {product.showPriceInListing !== false && (
+          {product.showPriceInListing !== false && product.price > 0 && (
             <PriceSection>
               <Price>₹ {product.price?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Price>
               {product.mrp && product.mrp > product.price && (
@@ -509,74 +756,18 @@ export const ProductDetails = () => {
         </DetailsContainer>
       </ProductWrapper>
 
-      {/* Specifications Section */}
-      {(product.material || product.finish || product.color || 
-        (product.sizes && product.sizes.length > 0) ||
-        product.specifications?.thickness || product.specifications?.weight ||
-        product.specifications?.waterAbsorption || product.specifications?.mohs ||
-        (product.customFilters && Object.keys(product.customFilters).length > 0)) && (
+      {/* Row 2: Full-width Specifications Table */}
+      {specEntries.length > 0 && (
         <SpecsSectionWrapper>
           <SpecsSectionTitle>📋 Product Specifications</SpecsSectionTitle>
-          <SpecsGrid>
-            {product.material && (
-              <SpecItem>
-                <SpecLabel>Material</SpecLabel>
-                <SpecValue>{product.material}</SpecValue>
-              </SpecItem>
-            )}
-            {product.finish && (
-              <SpecItem>
-                <SpecLabel>Finish</SpecLabel>
-                <SpecValue>{product.finish}</SpecValue>
-              </SpecItem>
-            )}
-            {product.color && (
-              <SpecItem>
-                <SpecLabel>Color</SpecLabel>
-                <SpecValue>{product.color}</SpecValue>
-              </SpecItem>
-            )}
-            {product.specifications?.thickness && (
-              <SpecItem>
-                <SpecLabel>Thickness</SpecLabel>
-                <SpecValue>{product.specifications.thickness}</SpecValue>
-              </SpecItem>
-            )}
-            {product.specifications?.weight && (
-              <SpecItem>
-                <SpecLabel>Weight</SpecLabel>
-                <SpecValue>{product.specifications.weight}</SpecValue>
-              </SpecItem>
-            )}
-            {product.specifications?.waterAbsorption && (
-              <SpecItem>
-                <SpecLabel>Water Absorption</SpecLabel>
-                <SpecValue>{product.specifications.waterAbsorption}</SpecValue>
-              </SpecItem>
-            )}
-            {product.specifications?.mohs && (
-              <SpecItem>
-                <SpecLabel>Mohs Hardness</SpecLabel>
-                <SpecValue>{product.specifications.mohs}</SpecValue>
-              </SpecItem>
-            )}
-            {product.customFilters && Object.entries(product.customFilters).map(([key, val]) => (
-              val ? (
-                <SpecItem key={key}>
-                  <SpecLabel>{key.replace(/-/g, ' ')}</SpecLabel>
-                  <SpecValue>{String(val)}</SpecValue>
-                </SpecItem>
-              ) : null
+          <SpecsTable>
+            {specEntries.map((entry, idx) => (
+              <SpecRow key={entry.label} $even={idx % 2 === 0}>
+                <SpecCellLabel>{entry.label}</SpecCellLabel>
+                <SpecCellValue>{entry.value}</SpecCellValue>
+              </SpecRow>
             ))}
-            {product.sizes && product.sizes.length > 0 && (
-              <SpecItem style={{ gridColumn: '1 / -1' }}>
-                <SpecLabel>Available Sizes</SpecLabel>
-                <SizeBadges>
-                  {product.sizes.map((s: string) => <SizeBadge key={s}>{s}</SizeBadge>)}
-                </SizeBadges>
-              </SpecItem>
-            )}
-          </SpecsGrid>
+          </SpecsTable>
         </SpecsSectionWrapper>
       )}
 

@@ -15,7 +15,7 @@ const adminProductSchema = new mongoose.Schema(
     },
     price: {
       type: Number,
-      required: [true, 'Please add a product price'],
+      default: 0,
       min: [0, 'Price cannot be negative']
     },
     mrp: {
@@ -58,6 +58,10 @@ const adminProductSchema = new mongoose.Schema(
       min: [0, 'Quantity cannot be negative']
     },
     images: {
+      type: [String],
+      default: []
+    },
+    videos: {
       type: [String],
       default: []
     },
@@ -129,13 +133,8 @@ const adminProductSchema = new mongoose.Schema(
       default: ''
     },
     specifications: {
-      type: {
-        thickness: String,
-        weight: String,
-        waterAbsorption: String,
-        mohs: String,
-        // Add common tile specs here
-      },
+      type: Map,
+      of: String,
       default: {}
     },
     customFilters: {

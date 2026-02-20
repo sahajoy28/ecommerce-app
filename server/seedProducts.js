@@ -18,6 +18,117 @@ const pickN = (arr, n) => {
   return shuffled.slice(0, n);
 };
 
+// Category-specific dynamic specifications
+const buildSpecs = (category, material) => {
+  const base = {
+    thickness: `${rand(6, 20)}mm`,
+    weight: `${rand(12, 30)} kg/box`,
+    waterAbsorption: `<${(Math.random() * 3).toFixed(1)}%`,
+    mohs: `${rand(3, 7)}-${rand(7, 9)}`
+  };
+
+  const tileSpecs = {
+    ...base,
+    'Surface Finish': pick(['Polished', 'Lappato', 'Matt', 'Sugar Finish', 'Carving']),
+    'Edge Type': pick(['Rectified', 'Non-Rectified', 'Beveled', 'Cushion Edge']),
+    'Coverage Area': `${rand(8, 20)} sqft/box`,
+    'Pieces Per Box': `${rand(3, 10)}`,
+    'Frost Resistant': pick(['Yes', 'No']),
+    'Slip Rating': pick(['R9', 'R10', 'R11', 'R12', 'R13']),
+    'Country of Origin': pick(['India', 'Italy', 'Spain', 'China', 'Turkey']),
+    'Usage': pick(['Floor', 'Wall', 'Floor & Wall', 'Exterior', 'Interior & Exterior']),
+    'PEI Rating': `Class ${rand(1, 5)}`
+  };
+
+  const marbleSpecs = {
+    ...base,
+    'Slab Size': pick(['2400x1200mm', '2700x1600mm', '3000x1500mm', '3200x1600mm']),
+    'Surface Finish': pick(['Polished', 'Honed', 'Brushed', 'Leather Finish']),
+    'Vein Pattern': pick(['Linear', 'Bookmatched', 'Random', 'Flowing']),
+    'Country of Origin': pick(['Italy', 'Turkey', 'Greece', 'India', 'Spain']),
+    'Porosity': pick(['Low', 'Medium', 'High']),
+    'Application': pick(['Countertops', 'Flooring', 'Wall Cladding', 'Countertops & Flooring']),
+    'Sealing Required': pick(['Yes', 'Recommended', 'No']),
+    'Luminosity': pick(['High', 'Medium', 'Low'])
+  };
+
+  const graniteSpecs = {
+    ...base,
+    'Slab Thickness': pick(['18mm', '20mm', '30mm', '40mm']),
+    'Surface Finish': pick(['Polished', 'Flamed', 'Honed', 'Leathered', 'Brushed']),
+    'Compressive Strength': `${rand(150, 300)} MPa`,
+    'Flexural Strength': `${rand(10, 25)} MPa`,
+    'Density': `${(2.5 + Math.random() * 0.4).toFixed(2)} g/cm³`,
+    'Country of Origin': pick(['India', 'Brazil', 'South Africa', 'Norway', 'China']),
+    'Application': pick(['Kitchen Countertops', 'Flooring', 'Staircase', 'Exterior Cladding']),
+    'Acid Resistant': pick(['Yes', 'Partially', 'No']),
+    'Heat Resistant': 'Yes'
+  };
+
+  const ceramicSpecs = {
+    ...base,
+    'Surface Finish': pick(['Glossy', 'Matte', 'Satin', 'Textured']),
+    'Coverage Area': `${rand(10, 25)} sqft/box`,
+    'Pieces Per Box': `${rand(5, 15)}`,
+    'Firing Type': pick(['Single Fired', 'Double Fired']),
+    'Body Type': pick(['Red Body', 'White Body']),
+    'Slip Rating': pick(['R9', 'R10', 'R11']),
+    'Country of Origin': pick(['India', 'Spain', 'China', 'Italy']),
+    'Usage': pick(['Wall Only', 'Floor & Wall', 'Backsplash']),
+    'Shade Variation': pick(['V1 - Uniform', 'V2 - Slight', 'V3 - Moderate', 'V4 - Substantial'])
+  };
+
+  const porcelainSpecs = {
+    ...base,
+    'Surface Finish': pick(['Polished', 'Matte', 'Lappato', 'Structured', 'Sugar Finish']),
+    'Edge Type': pick(['Rectified', 'Non-Rectified']),
+    'Coverage Area': `${rand(8, 18)} sqft/box`,
+    'Pieces Per Box': `${rand(2, 8)}`,
+    'Frost Resistant': 'Yes',
+    'Slip Rating': pick(['R9', 'R10', 'R11', 'R12']),
+    'Breaking Strength': `>${rand(1200, 2500)} N`,
+    'Country of Origin': pick(['India', 'Italy', 'Spain', 'Germany']),
+    'Usage': pick(['Floor & Wall', 'Heavy Traffic Floors', 'Exterior', 'Countertops']),
+    'Digital Print': pick(['Yes - HD', 'Yes - Full Body', 'No']),
+    'Shade Variation': pick(['V2 - Slight', 'V3 - Moderate', 'V4 - Substantial'])
+  };
+
+  const naturalStoneSpecs = {
+    ...base,
+    'Stone Type': material === 'Natural Stone' ? pick(['Sandstone', 'Slate', 'Limestone', 'Quartzite', 'Travertine', 'Basalt']) : material,
+    'Surface Finish': pick(['Natural Cleft', 'Honed', 'Tumbled', 'Brushed', 'Polished']),
+    'Density': `${(2.2 + Math.random() * 0.6).toFixed(2)} g/cm³`,
+    'Frost Resistant': pick(['Yes', 'No']),
+    'Country of Origin': pick(['India', 'Turkey', 'Brazil', 'Italy', 'China']),
+    'Application': pick(['Paving', 'Wall Cladding', 'Flooring', 'Landscaping']),
+    'Sealing Required': pick(['Yes', 'Recommended']),
+    'UV Stable': pick(['Yes', 'Moderate'])
+  };
+
+  const bathroomSpecs = {
+    'Material': pick(['Brass', 'Stainless Steel 304', 'Stainless Steel 316', 'Zinc Alloy', 'Ceramic', 'ABS Plastic']),
+    'Finish': pick(['Chrome', 'Brushed Nickel', 'Matte Black', 'Brushed Gold', 'Polished Brass', 'Gun Metal']),
+    'Installation Type': pick(['Wall Mounted', 'Deck Mounted', 'Floor Standing', 'Concealed', 'Counter Top']),
+    'Warranty': pick(['2 Years', '5 Years', '7 Years', '10 Years', 'Lifetime']),
+    'Certification': pick(['ISO 9001', 'CE Certified', 'WaterMark', '?"NSF/ANSI 61']),
+    'Water Saving': pick(['Yes', 'No']),
+    'Flow Rate': `${rand(4, 15)} L/min`,
+    'Pressure Rating': `${rand(1, 5)}-${rand(5, 10)} bar`,
+    'Country of Origin': pick(['India', 'Germany', 'Italy', 'China', 'Japan'])
+  };
+
+  switch (category) {
+    case 'Tiles': return tileSpecs;
+    case 'Marble': return marbleSpecs;
+    case 'Granite': return graniteSpecs;
+    case 'Ceramic': return ceramicSpecs;
+    case 'Porcelain': return porcelainSpecs;
+    case 'Natural Stone': return naturalStoneSpecs;
+    case 'Bathroom Fittings': return bathroomSpecs;
+    default: return base;
+  }
+};
+
 const PRODUCTS = [
   // Tiles
   { title: 'Carrara White Floor Tile', desc: 'Premium Carrara-inspired white floor tile with subtle grey veining. Perfect for living rooms and hallways.', cat: 'Tiles', mat: 'Tiles', imgs: ['https://images.unsplash.com/photo-1615971677499-5467cbab01c0?w=600&h=600&fit=crop', 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&h=600&fit=crop'] },
@@ -96,22 +207,27 @@ async function seed() {
     }
     console.log(`👤 Using admin: ${admin.name || admin.email}`);
 
+    // Clear existing products
+    await AdminProduct.deleteMany({});
+    console.log('🗑️  Cleared existing products');
+
     const products = PRODUCTS.map((p, i) => {
-      const basePrice = rand(150, 8000);
-      const mrp = basePrice + rand(50, 500);
+      const hasPricing = Math.random() > 0.25; // 75% products have pricing
+      const basePrice = hasPricing ? rand(150, 8000) : 0;
+      const mrp = hasPricing ? basePrice + rand(50, 500) : 0;
       const finish = pick(FINISHES);
       const color = pick(COLORS);
-      const sizes = pickN(SIZES_POOL, rand(2, 5));
+      const sizes = p.cat === 'Bathroom Fittings' ? [] : pickN(SIZES_POOL, rand(2, 5));
       const quantity = rand(10, 500);
 
       return {
         title: p.title,
         description: p.desc,
         price: basePrice,
-        mrp,
-        retailPrice: basePrice + rand(0, 200),
-        discount: Math.random() > 0.5 ? { discountType: 'percentage', discountValue: rand(5, 20) } : {},
-        showPriceInListing: Math.random() > 0.2,
+        mrp: hasPricing ? mrp : null,
+        retailPrice: hasPricing ? basePrice + rand(0, 200) : null,
+        discount: hasPricing && Math.random() > 0.5 ? { discountType: 'percentage', discountValue: rand(5, 20) } : {},
+        showPriceInListing: hasPricing ? Math.random() > 0.2 : false,
         category: p.cat,
         quantity,
         images: p.imgs || [],
@@ -119,12 +235,7 @@ async function seed() {
         finish,
         sizes,
         color,
-        specifications: {
-          thickness: `${rand(6, 20)}mm`,
-          weight: `${rand(12, 30)} kg/box`,
-          waterAbsorption: `<${(Math.random() * 3).toFixed(1)}%`,
-          mohs: `${rand(3, 7)}-${rand(7, 9)}`
-        },
+        specifications: buildSpecs(p.cat, p.mat),
         createdBy: admin._id,
         isActive: true,
         published: true,

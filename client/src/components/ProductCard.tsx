@@ -276,7 +276,7 @@ export const ProductCard = ({ product }: { product: Product }) => {
 
           <PriceAndRating>
             <PriceSection>
-              {product.showPriceInListing === false ? (
+              {product.showPriceInListing === false || !product.price ? (
                 <ContactForPrice>Contact for Price</ContactForPrice>
               ) : (
                 <>

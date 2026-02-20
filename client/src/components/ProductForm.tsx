@@ -331,6 +331,102 @@ const MATERIAL_OPTIONS = ['Tiles', 'Marble', 'Granite', 'Ceramic', 'Porcelain', 
 const FINISH_OPTIONS = ['Glossy', 'Matte', 'Polish', 'Textured', 'Honed'];
 const SIZE_OPTIONS = ['1x1', '2x1', '2x2', '2x4', '3x2', '4x2', '4x4', '6x4', '8x4', '12x6', '12x24', '24x24', '24x48', '32x32', '60x60', '60x120', '80x80', '80x120', '100x100', '120x120', '120x180'];
 
+const ToggleHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: ${spacing[3]} ${spacing[4]};
+  background: ${colors.neutral[50]};
+  border: 1px solid ${colors.neutral[200]};
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: ${colors.neutral[100]};
+  }
+`;
+
+const ToggleLabel = styled.span`
+  font-size: ${typography.fontSize.base};
+  font-weight: ${typography.fontWeight.semibold};
+  color: var(--color-text-primary, ${colors.neutral[900]});
+`;
+
+const ToggleSwitch = styled.div<{ $active: boolean }>`
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  background: ${(p: any) => p.$active ? colors.primary.main : colors.neutral[300]};
+  position: relative;
+  transition: background 0.2s ease;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: ${(p: any) => p.$active ? '22px' : '2px'};
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    transition: left 0.2s ease;
+  }
+`;
+
+const CollapsibleSection = styled.div<{ $open: boolean }>`
+  max-height: ${(p: any) => p.$open ? '2000px' : '0'};
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+`;
+
+const SpecRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: ${spacing[2]};
+  align-items: center;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+    gap: ${spacing[1]};
+  }
+`;
+
+const SpecRemoveBtn = styled.button`
+  padding: ${spacing[1]} ${spacing[2]};
+  border: none;
+  background: ${colors.error};
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: ${typography.fontSize.sm};
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: #dc2626;
+  }
+
+  @media (max-width: 600px) {
+    align-self: flex-end;
+  }
+`;
+
+const AddSpecRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: ${spacing[2]};
+  align-items: end;
+  padding-top: ${spacing[3]};
+  border-top: 1px dashed ${colors.neutral[300]};
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+    gap: ${spacing[1]};
+  }
+`;
+
 interface ProductFormProps {
   onSubmit: (data: any) => Promise<void>;
   initialData?: any;
@@ -346,11 +442,17 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
   const [discountType, setDiscountType] = useState(initialData?.discount?.discountType || 'percentage');
   const [discountValue, setDiscountValue] = useState(initialData?.discount?.discountValue || '');
   const [showPriceInListing, setShowPriceInListing] = useState(initialData?.showPriceInListing !== false);
+  const [showPricingSection, setShowPricingSection] = useState(
+    initialData ? (initialData.price > 0 || initialData.mrp > 0 || initialData.retailPrice > 0) : false
+  );
   const [category, setCategory] = useState(initialData?.category || '');
   const [quantity, setQuantity] = useState(initialData?.quantity || '');
   const [images, setImages] = useState<string[]>(initialData?.images || []);
   const [imageUrl, setImageUrl] = useState('');
   const [showImageInput, setShowImageInput] = useState(false);
+  const [videos, setVideos] = useState<string[]>(initialData?.videos || []);
+  const [videoUrl, setVideoUrl] = useState('');
+  const [showVideoInput, setShowVideoInput] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   // Tile / showroom fields
@@ -362,6 +464,20 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
   const [weight, setWeight] = useState(initialData?.specifications?.weight || '');
   const [waterAbsorption, setWaterAbsorption] = useState(initialData?.specifications?.waterAbsorption || '');
   const [mohs, setMohs] = useState(initialData?.specifications?.mohs || '');
+
+  // Dynamic specifications (key-value pairs)
+  const [dynamicSpecs, setDynamicSpecs] = useState<{ key: string; value: string }[]>(() => {
+    const reserved = ['thickness', 'weight', 'waterAbsorption', 'mohs'];
+    if (initialData?.specifications) {
+      return Object.entries(initialData.specifications)
+        .filter(([k]) => !reserved.includes(k) && k !== undefined)
+        .map(([key, value]) => ({ key, value: String(value || '') }))
+        .filter(s => s.key && s.value);
+    }
+    return [];
+  });
+  const [newSpecKey, setNewSpecKey] = useState('');
+  const [newSpecValue, setNewSpecValue] = useState('');
 
   // Category list from API
   const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
@@ -413,10 +529,13 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
     setDiscountType(initialData?.discount?.discountType || 'percentage');
     setDiscountValue(initialData?.discount?.discountValue || '');
     setShowPriceInListing(initialData?.showPriceInListing !== false);
+    setShowPricingSection(initialData ? (initialData.price > 0 || initialData.mrp > 0 || initialData.retailPrice > 0) : false);
     setCategory(initialData?.category || '');
     setQuantity(initialData?.quantity || '');
     setImages(initialData?.images || []);
     setImageUrl('');
+    setVideos(initialData?.videos || []);
+    setVideoUrl('');
     setError('');
     setSuccess('');
     setMaterial(initialData?.material || 'Tiles');
@@ -427,6 +546,17 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
     setWeight(initialData?.specifications?.weight || '');
     setWaterAbsorption(initialData?.specifications?.waterAbsorption || '');
     setMohs(initialData?.specifications?.mohs || '');
+    const reserved = ['thickness', 'weight', 'waterAbsorption', 'mohs'];
+    setDynamicSpecs(
+      initialData?.specifications
+        ? Object.entries(initialData.specifications)
+            .filter(([k]) => !reserved.includes(k) && k !== undefined)
+            .map(([key, value]) => ({ key, value: String(value || '') }))
+            .filter(s => s.key && s.value)
+        : []
+    );
+    setNewSpecKey('');
+    setNewSpecValue('');
     setCustomFilterValues(initialData?.customFilters || {});
   }, [initialData]);
 
@@ -464,36 +594,44 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
     setError('');
     setSuccess('');
 
-    if (!title.trim() || !description.trim() || !price || !category.trim() || !quantity) {
+    if (!title.trim() || !description.trim() || !category.trim() || !quantity) {
       setError('Please fill in all required fields');
       return;
     }
+
+    // Build specifications with dynamic entries
+    const allSpecs: Record<string, string> = {};
+    if (thickness) allSpecs.thickness = thickness;
+    if (weight) allSpecs.weight = weight;
+    if (waterAbsorption) allSpecs.waterAbsorption = waterAbsorption;
+    if (mohs) allSpecs.mohs = mohs;
+    dynamicSpecs.forEach(s => {
+      if (s.key.trim() && s.value.trim()) {
+        allSpecs[s.key.trim()] = s.value.trim();
+      }
+    });
 
     try {
       await onSubmit({
         title,
         description,
-        price: parseFloat(price),
-        mrp: mrp ? parseFloat(mrp) : null,
-        retailPrice: retailPrice ? parseFloat(retailPrice) : null,
-        discount: discountValue ? {
+        price: showPricingSection && price ? parseFloat(price) : 0,
+        mrp: showPricingSection && mrp ? parseFloat(mrp) : null,
+        retailPrice: showPricingSection && retailPrice ? parseFloat(retailPrice) : null,
+        discount: showPricingSection && discountValue ? {
           discountType,
           discountValue: parseFloat(discountValue)
         } : {},
-        showPriceInListing,
+        showPriceInListing: showPricingSection ? showPriceInListing : false,
         category,
         quantity: parseInt(quantity),
         images,
+        videos,
         material,
         finish,
         sizes,
         color,
-        specifications: {
-          ...(thickness && { thickness }),
-          ...(weight && { weight }),
-          ...(waterAbsorption && { waterAbsorption }),
-          ...(mohs && { mohs }),
-        },
+        specifications: allSpecs,
         customFilters: customFilterValues,
       });
       setSuccess(isEditing ? 'Product updated successfully!' : 'Product added successfully!');
@@ -509,6 +647,7 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
         setCategory('');
         setQuantity('');
         setImages([]);
+        setVideos([]);
         setMaterial('Tiles');
         setFinish('Glossy');
         setSizes([]);
@@ -517,6 +656,9 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
         setWeight('');
         setWaterAbsorption('');
         setMohs('');
+        setDynamicSpecs([]);
+        setNewSpecKey('');
+        setNewSpecValue('');
         setCustomFilterValues({});
       }
       setTimeout(() => setSuccess(''), 3000);
@@ -728,93 +870,180 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
         </FormGroup>
       )}
 
+      {/* Dynamic Product Specifications */}
       <FormGroup>
-        <Label>💰 Pricing</Label>
-        <PricingSection>
-          <FormGroup>
-            <Label>Base Price ($) *</Label>
-            <Input
-              type="number"
-              value={price}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setPrice(event.target.value)}
-              placeholder="0.00"
-              disabled={isLoading}
-              inputMode="numeric"
-              step="0.01"
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <Label>MRP (Optional)</Label>
-            <Input
-              type="number"
-              value={mrp}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setMrp(event.target.value)}
-              placeholder="Maximum retail price"
-              disabled={isLoading}
-              inputMode="numeric"
-              step="0.01"
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <Label>Retail Price (Optional)</Label>
-            <Input
-              type="number"
-              value={retailPrice}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setRetailPrice(event.target.value)}
-              placeholder="Your selling price"
-              disabled={isLoading}
-              inputMode="numeric"
-              step="0.01"
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <Label>Discount Type</Label>
-            <select value={discountType} onChange={(e) => setDiscountType(e.target.value)} style={{
-              width: '100%',
-              maxWidth: '100%',
-              padding: spacing[2],
-              border: `1px solid ${colors.neutral[300]}`,
-              borderRadius: '4px',
-              fontSize: typography.fontSize.sm,
-              boxSizing: 'border-box' as const
-            }}>
-              <option value="percentage">Percentage (%)</option>
-              <option value="fixed">Fixed Amount ($)</option>
-            </select>
-          </FormGroup>
-
-          <FormGroup>
-            <Label>Discount Value</Label>
-            <Input
-              type="number"
-              value={discountValue}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setDiscountValue(event.target.value)}
-              placeholder={discountType === 'percentage' ? '0' : '0.00'}
-              disabled={isLoading}
-              inputMode="numeric"
-              step="0.01"
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <CheckboxWrapper>
-              <Checkbox
-                checked={showPriceInListing}
-                onChange={(e: any) => setShowPriceInListing(e.target.checked)}
-                label="Show price in product listing"
+        <Label>📋 Additional Specifications</Label>
+        <SpecSection>
+          {dynamicSpecs.map((spec, idx) => (
+            <SpecRow key={idx}>
+              <Input
+                value={spec.key}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                  const updated = [...dynamicSpecs];
+                  updated[idx] = { ...updated[idx], key: event.target.value };
+                  setDynamicSpecs(updated);
+                }}
+                placeholder="Specification name"
+                disabled={isLoading}
               />
-            </CheckboxWrapper>
-          </FormGroup>
+              <Input
+                value={spec.value}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                  const updated = [...dynamicSpecs];
+                  updated[idx] = { ...updated[idx], value: event.target.value };
+                  setDynamicSpecs(updated);
+                }}
+                placeholder="Value"
+                disabled={isLoading}
+              />
+              <SpecRemoveBtn type="button" onClick={() => setDynamicSpecs(prev => prev.filter((_, i) => i !== idx))} disabled={isLoading}>
+                ✕
+              </SpecRemoveBtn>
+            </SpecRow>
+          ))}
 
-          {discountValue && calculateFinalPrice() !== parseFloat(retailPrice || price) && (
-            <DiscountPreview>
-              💚 Final Price: ${calculateFinalPrice().toFixed(2)}
-            </DiscountPreview>
-          )}
-        </PricingSection>
+          <AddSpecRow>
+            <FormGroup style={{ marginBottom: 0 }}>
+              <Label style={{ fontSize: typography.fontSize.xs }}>Name</Label>
+              <Input
+                value={newSpecKey}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => setNewSpecKey(event.target.value)}
+                placeholder="e.g., Coverage Area"
+                disabled={isLoading}
+              />
+            </FormGroup>
+            <FormGroup style={{ marginBottom: 0 }}>
+              <Label style={{ fontSize: typography.fontSize.xs }}>Value</Label>
+              <Input
+                value={newSpecValue}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => setNewSpecValue(event.target.value)}
+                placeholder="e.g., 15 sqft/box"
+                disabled={isLoading}
+              />
+            </FormGroup>
+            <button
+              type="button"
+              onClick={() => {
+                if (newSpecKey.trim() && newSpecValue.trim()) {
+                  setDynamicSpecs(prev => [...prev, { key: newSpecKey.trim(), value: newSpecValue.trim() }]);
+                  setNewSpecKey('');
+                  setNewSpecValue('');
+                }
+              }}
+              disabled={isLoading || !newSpecKey.trim() || !newSpecValue.trim()}
+              style={{
+                padding: `${spacing[2]} ${spacing[4]}`,
+                background: colors.primary.main,
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: typography.fontWeight.semibold,
+                fontSize: typography.fontSize.sm,
+                whiteSpace: 'nowrap' as const,
+                opacity: (!newSpecKey.trim() || !newSpecValue.trim()) ? 0.5 : 1,
+                alignSelf: 'end',
+                marginBottom: '2px'
+              }}
+            >
+              + Add
+            </button>
+          </AddSpecRow>
+        </SpecSection>
+      </FormGroup>
+
+      <FormGroup>
+        <ToggleHeader onClick={() => setShowPricingSection(!showPricingSection)}>
+          <ToggleLabel>💰 Pricing</ToggleLabel>
+          <ToggleSwitch $active={showPricingSection} />
+        </ToggleHeader>
+        <CollapsibleSection $open={showPricingSection}>
+          <PricingSection style={{ marginTop: spacing[3] }}>
+            <FormGroup>
+              <Label>Base Price ($)</Label>
+              <Input
+                type="number"
+                value={price}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => setPrice(event.target.value)}
+                placeholder="0.00"
+                disabled={isLoading}
+                inputMode="numeric"
+                step="0.01"
+              />
+            </FormGroup>
+
+            <FormGroup>
+              <Label>MRP (Optional)</Label>
+              <Input
+                type="number"
+                value={mrp}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => setMrp(event.target.value)}
+                placeholder="Maximum retail price"
+                disabled={isLoading}
+                inputMode="numeric"
+                step="0.01"
+              />
+            </FormGroup>
+
+            <FormGroup>
+              <Label>Retail Price (Optional)</Label>
+              <Input
+                type="number"
+                value={retailPrice}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => setRetailPrice(event.target.value)}
+                placeholder="Your selling price"
+                disabled={isLoading}
+                inputMode="numeric"
+                step="0.01"
+              />
+            </FormGroup>
+
+            <FormGroup>
+              <Label>Discount Type</Label>
+              <select value={discountType} onChange={(e) => setDiscountType(e.target.value)} style={{
+                width: '100%',
+                maxWidth: '100%',
+                padding: spacing[2],
+                border: `1px solid ${colors.neutral[300]}`,
+                borderRadius: '4px',
+                fontSize: typography.fontSize.sm,
+                boxSizing: 'border-box' as const
+              }}>
+                <option value="percentage">Percentage (%)</option>
+                <option value="fixed">Fixed Amount ($)</option>
+              </select>
+            </FormGroup>
+
+            <FormGroup>
+              <Label>Discount Value</Label>
+              <Input
+                type="number"
+                value={discountValue}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => setDiscountValue(event.target.value)}
+                placeholder={discountType === 'percentage' ? '0' : '0.00'}
+                disabled={isLoading}
+                inputMode="numeric"
+                step="0.01"
+              />
+            </FormGroup>
+
+            <FormGroup>
+              <CheckboxWrapper>
+                <Checkbox
+                  checked={showPriceInListing}
+                  onChange={(e: any) => setShowPriceInListing(e.target.checked)}
+                  label="Show price in product listing"
+                />
+              </CheckboxWrapper>
+            </FormGroup>
+
+            {discountValue && calculateFinalPrice() !== parseFloat(retailPrice || price) && (
+              <DiscountPreview>
+                💚 Final Price: ${calculateFinalPrice().toFixed(2)}
+              </DiscountPreview>
+            )}
+          </PricingSection>
+        </CollapsibleSection>
       </FormGroup>
 
       <FormGroup>
@@ -881,6 +1110,70 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
                 ))}
               </ImagePreview>
             </>
+          )}
+        </ImageSection>
+      </FormGroup>
+
+      <FormGroup>
+        <Label>🎬 Product Videos (YouTube / direct links)</Label>
+        <ImageHint>
+          <HintTitle>💡 Supported video links:</HintTitle>
+          YouTube links (e.g. youtube.com/watch?v=...)<br/>
+          Direct video URLs (.mp4, .webm)<br/>
+          Google Drive video links
+        </ImageHint>
+        <ImageSection>
+          {!showVideoInput ? (
+            <Button
+              appearance="primary"
+              onClick={() => setShowVideoInput(true)}
+              disabled={isLoading}
+            >
+              + Add Video
+            </Button>
+          ) : (
+            <ImageButtonContainer>
+              <ImageUrlInput
+                type="url"
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder="Paste video URL (YouTube, .mp4, etc.)"
+                disabled={isLoading}
+              />
+              <Button
+                appearance="primary"
+                onClick={() => {
+                  if (videoUrl.trim()) {
+                    setVideos([...videos, videoUrl.trim()]);
+                    setVideoUrl('');
+                  }
+                }}
+                disabled={isLoading || !videoUrl}
+              >
+                Add
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowVideoInput(false);
+                  setVideoUrl('');
+                }}
+                disabled={isLoading}
+              >
+                Done
+              </Button>
+            </ImageButtonContainer>
+          )}
+
+          {videos.length > 0 && (
+            <PriceInfo>
+              🎬 {videos.length} video(s) added
+              {videos.map((v, idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', fontSize: '12px' }}>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '300px' }}>{v}</span>
+                  <button type="button" onClick={() => setVideos(videos.filter((_, i) => i !== idx))} style={{ color: '#dc2626', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 'bold' }}>✕</button>
+                </div>
+              ))}
+            </PriceInfo>
           )}
         </ImageSection>
       </FormGroup>

@@ -24,6 +24,7 @@ const transformProduct = (p) => ({
   thumbnail: p.images?.[0] || '',
   image: p.images?.[0] || '',
   images: p.images || [],
+  videos: p.videos || [],
   reviewCount: p.reviewCount || 0,
   reviews: p.reviews || [],
   isAdminProduct: true,
@@ -32,7 +33,7 @@ const transformProduct = (p) => ({
   finish: p.finish || '',
   sizes: p.sizes || [],
   color: p.color || '',
-  specifications: p.specifications || {},
+  specifications: p.specifications instanceof Map ? Object.fromEntries(p.specifications) : (p.specifications || {}),
   customFilters: p.customFilters instanceof Map ? Object.fromEntries(p.customFilters) : (p.customFilters || {})
 });
 
@@ -95,11 +96,11 @@ router.post('/admin/create', verify, async (req, res, next) => {
 
     const {
       title, description, price, mrp, retailPrice, discount,
-      showPriceInListing, category, quantity, images,
+      showPriceInListing, category, quantity, images, videos,
       material, finish, sizes, color, specifications, customFilters
     } = req.body;
 
-    if (!title || !description || !price || !category || !quantity) {
+    if (!title || !description || !category || !quantity) {
       return res.status(400).json({
         success: false,
         message: 'Please provide all required fields: title, description, price, category, quantity'
@@ -117,6 +118,7 @@ router.post('/admin/create', verify, async (req, res, next) => {
       category,
       quantity,
       images: images && images.length > 0 ? images.map(img => convertGoogleDriveUrl(img)) : [],
+      videos: videos || [],
       createdBy: user.id,
       isActive: true,
       published: false,
@@ -194,7 +196,7 @@ router.put('/admin/:id', verify, async (req, res, next) => {
 
     const {
       title, description, price, mrp, retailPrice, discount,
-      showPriceInListing, category, quantity, images, isActive,
+      showPriceInListing, category, quantity, images, videos, isActive,
       material, finish, sizes, color, specifications, customFilters
     } = req.body;
 
@@ -210,6 +212,7 @@ router.put('/admin/:id', verify, async (req, res, next) => {
     if (images && images.length > 0) {
       product.images = images.map(img => convertGoogleDriveUrl(img));
     }
+    if (videos !== undefined) product.videos = videos;
     if (isActive !== undefined) product.isActive = isActive;
     if (material !== undefined) product.material = material;
     if (finish !== undefined) product.finish = finish;
