@@ -3,9 +3,9 @@ import { Spinner, Button } from "@fluentui/react-components";
 import { useAppSelector, useAppDispatch } from "../app/hooks";
 import { ProductCard } from "../components/ProductCard";
 import { FilterSidebar } from "../components/FilterSidebar";
-import { fetchProducts, clearError } from "../features/products/productsSlice";
+import { fetchProducts, filterByCategory, clearError } from "../features/products/productsSlice";
 import { ProductLoader } from "../components/LoadingStates";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { colors, spacing, typography, shadows, borderRadius, transitions, media } from "../styles/designTokens";
 import { Product } from "../types/product";
@@ -223,15 +223,33 @@ const ProductCount = styled.div`
 
 export const CatalogPage = () => {
   const { items, filtered, loading, error } = useAppSelector((state) => state.products);
+  const filters = useAppSelector((state) => state.products.filters);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [showFilters, setShowFilters] = useState(false);
 
   const category = searchParams.get('category');
-  const filteredProducts = category
-    ? items.filter((p: Product) => p.category?.toLowerCase().includes(category.toLowerCase()))
-    : filtered;
+  const categoryAppliedRef = useRef(false);
+
+  // Sync URL category param to Redux filter
+  useEffect(() => {
+    if (category && items.length > 0 && !categoryAppliedRef.current) {
+      // Find exact category match (case-insensitive)
+      const match = items.find(
+        (p: Product) => p.category?.toLowerCase() === category.toLowerCase()
+      );
+      if (match) {
+        dispatch(filterByCategory(match.category));
+      } else {
+        dispatch(filterByCategory(category));
+      }
+      categoryAppliedRef.current = true;
+    } else if (!category && categoryAppliedRef.current) {
+      dispatch(filterByCategory(null));
+      categoryAppliedRef.current = false;
+    }
+  }, [category, items.length]);
 
   useEffect(() => {
     if (items.length === 0) {
@@ -245,17 +263,21 @@ export const CatalogPage = () => {
       <Header>
         <div>
           <HeaderTitle>
-            {category ? `${category.charAt(0).toUpperCase() + category.slice(1)} Products` : "All Products"}
+            {filters.category ? `${filters.category.charAt(0).toUpperCase() + filters.category.slice(1)} Products` : "All Products"}
           </HeaderTitle>
           <ProductCount>
-            Showing {filteredProducts.length} products
+            Showing {filtered.length} products
           </ProductCount>
         </div>
         <HeaderControls>
-          {category && (
+          {(category || filters.category) && (
             <Button 
               appearance="secondary"
-              onClick={() => navigate("/catalog")}
+              onClick={() => {
+                dispatch(filterByCategory(null));
+                categoryAppliedRef.current = false;
+                navigate("/catalog");
+              }}
             >
               Clear Filter
             </Button>
@@ -302,20 +324,24 @@ export const CatalogPage = () => {
               </div>
             )}
 
-            {!loading && filteredProducts.length === 0 ? (
+            {!loading && filtered.length === 0 ? (
               <NoResults>
                 <h3>No Products Found</h3>
                 <p>We couldn't find any products matching your criteria.</p>
                 <Button 
                   appearance="primary"
-                  onClick={() => navigate("/catalog")}
+                  onClick={() => {
+                    dispatch(filterByCategory(null));
+                    categoryAppliedRef.current = false;
+                    navigate("/catalog");
+                  }}
                 >
                   View All Products
                 </Button>
               </NoResults>
             ) : (
               <ProductsGrid>
-                {filteredProducts.map((product: Product) => (
+                {filtered.map((product: Product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </ProductsGrid>

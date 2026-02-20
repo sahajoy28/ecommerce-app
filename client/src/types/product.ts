@@ -44,4 +44,20 @@ export interface Product {
     mohs?: string;
     [key: string]: string | undefined;
   };
+  customFilters?: Record<string, any>;
+}
+
+export interface CustomFilter {
+  _id: string;
+  name: string;
+  slug: string;
+  type: 'checkbox' | 'select' | 'range';
+  options: { label: string; value: string }[];
+  rangeMin?: number;
+  rangeMax?: number;
+  rangeUnit?: string;
+  icon?: string;
+  displayOrder: number;
+  isActive: boolean;
+  showInSidebar: boolean;
 }

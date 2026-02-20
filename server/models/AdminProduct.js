@@ -59,13 +59,7 @@ const adminProductSchema = new mongoose.Schema(
     },
     images: {
       type: [String],
-      required: [true, 'Please add at least one image URL'],
-      validate: {
-        validator: function(v) {
-          return v && v.length > 0;
-        },
-        message: 'At least one image URL is required'
-      }
+      default: []
     },
     rating: {
       type: Number,
@@ -142,6 +136,11 @@ const adminProductSchema = new mongoose.Schema(
         mohs: String,
         // Add common tile specs here
       },
+      default: {}
+    },
+    customFilters: {
+      type: Map,
+      of: mongoose.Schema.Types.Mixed,
       default: {}
     }
   },

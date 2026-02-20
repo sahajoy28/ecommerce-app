@@ -17,6 +17,7 @@ interface ProductsState {
     finish: string | null;
     size: string | null;
     color: string | null;
+    custom: Record<string, string | null>;
   };
 }
 
@@ -35,6 +36,7 @@ const initialState: ProductsState = {
     finish: null,
     size: null,
     color: null,
+    custom: {},
   }
 };
 
@@ -69,6 +71,7 @@ export const fetchProducts = createAsyncThunk(
               sizes: product.sizes || [],
               color: product.color || '',
               specifications: product.specifications || {},
+              customFilters: product.customFilters || {},
               stock: product.stock,
               quantity: product.quantity,
             }))
@@ -98,6 +101,16 @@ const applyFilters = (state: ProductsState) => {
   if (f.finish) result = result.filter(p => p.finish === f.finish);
   if (f.size) result = result.filter(p => p.sizes?.includes(f.size!));
   if (f.color) result = result.filter(p => p.color?.toLowerCase() === f.color!.toLowerCase());
+  // Custom filters
+  Object.entries(f.custom).forEach(([key, value]) => {
+    if (value) {
+      result = result.filter(p => {
+        const cfVal = p.customFilters?.[key];
+        if (Array.isArray(cfVal)) return cfVal.includes(value);
+        return String(cfVal || '').toLowerCase() === value.toLowerCase();
+      });
+    }
+  });
   state.filtered = result;
 };
 
@@ -137,8 +150,13 @@ const slice = createSlice({
       state.filters.color = action.payload || null;
       applyFilters(state);
     },
+    filterByCustom: (state, action) => {
+      const { key, value } = action.payload;
+      state.filters.custom[key] = value || null;
+      applyFilters(state);
+    },
     resetFilters: (state) => {
-      state.filters = { ...initialState.filters };
+      state.filters = { ...initialState.filters, custom: {} };
       state.filtered = state.items;
     },
     clearError: (state) => {
@@ -184,5 +202,5 @@ const slice = createSlice({
   }
 });
 
-export const { filterByCategory, filterByPrice, filterByRating, searchProducts, filterByMaterial, filterByFinish, filterBySize, filterByColor, resetFilters, clearError, setRetrying, updateProductReviews } = slice.actions;
+export const { filterByCategory, filterByPrice, filterByRating, searchProducts, filterByMaterial, filterByFinish, filterBySize, filterByColor, filterByCustom, resetFilters, clearError, setRetrying, updateProductReviews } = slice.actions;
 export default slice.reducer;

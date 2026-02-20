@@ -32,7 +32,8 @@ const transformProduct = (p) => ({
   finish: p.finish || '',
   sizes: p.sizes || [],
   color: p.color || '',
-  specifications: p.specifications || {}
+  specifications: p.specifications || {},
+  customFilters: p.customFilters instanceof Map ? Object.fromEntries(p.customFilters) : (p.customFilters || {})
 });
 
 /**
@@ -95,13 +96,13 @@ router.post('/admin/create', verify, async (req, res, next) => {
     const {
       title, description, price, mrp, retailPrice, discount,
       showPriceInListing, category, quantity, images,
-      material, finish, sizes, color, specifications
+      material, finish, sizes, color, specifications, customFilters
     } = req.body;
 
-    if (!title || !description || !price || !category || !quantity || !images || images.length === 0) {
+    if (!title || !description || !price || !category || !quantity) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide all required fields: title, description, price, category, quantity, images'
+        message: 'Please provide all required fields: title, description, price, category, quantity'
       });
     }
 
@@ -115,7 +116,7 @@ router.post('/admin/create', verify, async (req, res, next) => {
       showPriceInListing: showPriceInListing !== undefined ? showPriceInListing : true,
       category,
       quantity,
-      images: images.map(img => convertGoogleDriveUrl(img)),
+      images: images && images.length > 0 ? images.map(img => convertGoogleDriveUrl(img)) : [],
       createdBy: user.id,
       isActive: true,
       published: false,
@@ -123,7 +124,8 @@ router.post('/admin/create', verify, async (req, res, next) => {
       finish: finish || 'Glossy',
       sizes: sizes || [],
       color: color || '',
-      specifications: specifications || {}
+      specifications: specifications || {},
+      customFilters: customFilters || {}
     });
 
     console.log(`✅ Admin product created: ${product._id}`);
@@ -193,7 +195,7 @@ router.put('/admin/:id', verify, async (req, res, next) => {
     const {
       title, description, price, mrp, retailPrice, discount,
       showPriceInListing, category, quantity, images, isActive,
-      material, finish, sizes, color, specifications
+      material, finish, sizes, color, specifications, customFilters
     } = req.body;
 
     if (title) product.title = title;
@@ -214,6 +216,7 @@ router.put('/admin/:id', verify, async (req, res, next) => {
     if (sizes !== undefined) product.sizes = sizes;
     if (color !== undefined) product.color = color;
     if (specifications !== undefined) product.specifications = specifications;
+    if (customFilters !== undefined) product.customFilters = customFilters;
     product.updatedAt = new Date();
 
     await product.save();

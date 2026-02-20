@@ -9,6 +9,7 @@ import inquiryRoutes from './routes/inquiries.js';
 import bannerRoutes from './routes/banners.js';
 import settingsRoutes from './routes/settings.js';
 import categoryRoutes from './routes/categories.js';
+import filterRoutes from './routes/filters.js';
 import Category from './models/Category.js';
 
 dotenv.config();
@@ -67,6 +68,7 @@ app.use('/api/inquiries', inquiryRoutes);
 app.use('/api/banners', bannerRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/filters', filterRoutes);
 
 // Health Check
 app.get('/', (req, res) => {

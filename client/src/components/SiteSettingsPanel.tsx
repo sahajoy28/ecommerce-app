@@ -330,13 +330,14 @@ interface CategoryData {
   isPredefined: boolean;
 }
 
-export type SettingsTabKey = 'general' | 'appearance' | 'hero' | 'categories' | 'stats' | 'testimonials' | 'about' | 'contact';
+export type SettingsTabKey = 'general' | 'appearance' | 'hero' | 'categories' | 'filters' | 'stats' | 'testimonials' | 'about' | 'contact';
 
 export const SETTINGS_TABS: { key: SettingsTabKey; label: string; icon: string }[] = [
   { key: 'general', label: 'General', icon: '🏢' },
   { key: 'appearance', label: 'Appearance', icon: '🎨' },
   { key: 'hero', label: 'Hero', icon: '🏠' },
   { key: 'categories', label: 'Categories', icon: '📂' },
+  { key: 'filters', label: 'Filters', icon: '🔍' },
   { key: 'stats', label: 'Stats', icon: '📊' },
   { key: 'testimonials', label: 'Testimonials', icon: '💬' },
   { key: 'about', label: 'About', icon: '📄' },
@@ -467,6 +468,31 @@ export const SiteSettingsPanel = ({ activeTab = 'general' }: SiteSettingsPanelPr
   const [newCat, setNewCat] = useState({ name: '', icon: '📦', image: '', gradient: '', showOnHome: true });
   const [showAddForm, setShowAddForm] = useState(false);
 
+  // Custom filters state
+  interface FilterData {
+    _id: string;
+    name: string;
+    slug: string;
+    type: 'checkbox' | 'select' | 'range';
+    options: { label: string; value: string }[];
+    rangeMin?: number;
+    rangeMax?: number;
+    rangeUnit?: string;
+    icon: string;
+    displayOrder: number;
+    isActive: boolean;
+    showInSidebar: boolean;
+  }
+  const [filterList, setFilterList] = useState<FilterData[]>([]);
+  const [filterLoading, setFilterLoading] = useState(false);
+  const [filterMsg, setFilterMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [editingFilter, setEditingFilter] = useState<string | null>(null);
+  const [filterEditForm, setFilterEditForm] = useState<Partial<FilterData>>({});
+  const [newFilter, setNewFilter] = useState<Partial<FilterData>>({ name: '', type: 'checkbox', options: [], icon: '🏷️', isActive: true, showInSidebar: true });
+  const [showAddFilterForm, setShowAddFilterForm] = useState(false);
+  const [newOptionLabel, setNewOptionLabel] = useState('');
+  const [editOptionLabel, setEditOptionLabel] = useState('');
+
   const loadCategories = useCallback(async () => {
     try {
       setCatLoading(true);
@@ -479,7 +505,19 @@ export const SiteSettingsPanel = ({ activeTab = 'general' }: SiteSettingsPanelPr
     }
   }, []);
 
-  useEffect(() => { loadSettings(); loadCategories(); }, []);
+  const loadFilters = useCallback(async () => {
+    try {
+      setFilterLoading(true);
+      const res = await authApi.get<any>('/filters');
+      setFilterList(res.filters || []);
+    } catch (err) {
+      console.error('Failed to load filters:', err);
+    } finally {
+      setFilterLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadSettings(); loadCategories(); loadFilters(); }, []);
 
   const loadSettings = async () => {
     try {
@@ -868,6 +906,275 @@ export const SiteSettingsPanel = ({ activeTab = 'general' }: SiteSettingsPanelPr
     );
   };
 
+  const renderFiltersTab = () => {
+    const handleAddFilter = async () => {
+      if (!newFilter.name?.trim()) return;
+      try {
+        setFilterMsg(null);
+        await authApi.post('/filters', {
+          ...newFilter,
+          options: newFilter.options || [],
+        });
+        setFilterMsg({ type: 'success', text: `Filter "${newFilter.name}" created!` });
+        setNewFilter({ name: '', type: 'checkbox', options: [], icon: '🏷️', isActive: true, showInSidebar: true });
+        setShowAddFilterForm(false);
+        setNewOptionLabel('');
+        await loadFilters();
+        setTimeout(() => setFilterMsg(null), 3000);
+      } catch (err: any) {
+        setFilterMsg({ type: 'error', text: err?.details?.message || err?.message || 'Failed to create filter' });
+      }
+    };
+
+    const handleUpdateFilter = async (id: string) => {
+      try {
+        setFilterMsg(null);
+        await authApi.put(`/filters/${id}`, filterEditForm);
+        setFilterMsg({ type: 'success', text: 'Filter updated!' });
+        setEditingFilter(null);
+        setFilterEditForm({});
+        setEditOptionLabel('');
+        await loadFilters();
+        setTimeout(() => setFilterMsg(null), 3000);
+      } catch (err: any) {
+        setFilterMsg({ type: 'error', text: err?.details?.message || err?.message || 'Failed to update' });
+      }
+    };
+
+    const handleDeleteFilter = async (filter: FilterData) => {
+      if (!window.confirm(`Delete filter "${filter.name}"? Product filter values will remain but won't be shown.`)) return;
+      try {
+        setFilterMsg(null);
+        await authApi.delete(`/filters/${filter._id}`);
+        setFilterMsg({ type: 'success', text: `Filter "${filter.name}" deleted.` });
+        await loadFilters();
+        setTimeout(() => setFilterMsg(null), 3000);
+      } catch (err: any) {
+        setFilterMsg({ type: 'error', text: err?.details?.message || err?.message || 'Failed to delete' });
+      }
+    };
+
+    const handleToggleFilter = async (filter: FilterData, field: 'isActive' | 'showInSidebar') => {
+      try {
+        await authApi.put(`/filters/${filter._id}`, { [field]: !filter[field] });
+        await loadFilters();
+      } catch (err) {
+        console.error('Toggle failed:', err);
+      }
+    };
+
+    const addOptionToNew = () => {
+      if (!newOptionLabel.trim()) return;
+      const val = newOptionLabel.trim().toLowerCase().replace(/\s+/g, '-');
+      setNewFilter(f => ({ ...f, options: [...(f.options || []), { label: newOptionLabel.trim(), value: val }] }));
+      setNewOptionLabel('');
+    };
+
+    const removeOptionFromNew = (idx: number) => {
+      setNewFilter(f => ({ ...f, options: (f.options || []).filter((_, i) => i !== idx) }));
+    };
+
+    const addOptionToEdit = () => {
+      if (!editOptionLabel.trim()) return;
+      const val = editOptionLabel.trim().toLowerCase().replace(/\s+/g, '-');
+      setFilterEditForm(f => ({ ...f, options: [...(f.options || []), { label: editOptionLabel.trim(), value: val }] }));
+      setEditOptionLabel('');
+    };
+
+    const removeOptionFromEdit = (idx: number) => {
+      setFilterEditForm(f => ({ ...f, options: (f.options || []).filter((_, i) => i !== idx) }));
+    };
+
+    return (
+      <TabContent>
+        <SectionHeader>🔍 Custom Filters</SectionHeader>
+        <HelpText>Create custom filters that appear in the catalog sidebar. Products can have values for these filters set in the product form.</HelpText>
+
+        {filterMsg && (
+          filterMsg.type === 'success'
+            ? <SuccessMessage>{filterMsg.text}</SuccessMessage>
+            : <ErrorMessage>{filterMsg.text}</ErrorMessage>
+        )}
+
+        {filterLoading ? <Spinner label="Loading filters..." /> : (
+          <CatGrid>
+            {filterList.map(filter => (
+              <CatCard key={filter._id} $inactive={!filter.isActive}>
+                <CatPreview $bg={`linear-gradient(135deg, ${colors.primary.lighter}, ${colors.primary.main})`}>
+                  <span>{filter.icon || '🔍'}</span>
+                </CatPreview>
+
+                {editingFilter === filter._id ? (
+                  <>
+                    <FieldGroup>
+                      <Label>Name</Label>
+                      <StyledInput value={filterEditForm.name || ''} onChange={(e: any) => setFilterEditForm(f => ({ ...f, name: e.target.value }))} />
+                    </FieldGroup>
+                    <CatInlineRow>
+                      <FieldGroup>
+                        <Label>Icon (emoji)</Label>
+                        <StyledInput value={filterEditForm.icon || ''} onChange={(e: any) => setFilterEditForm(f => ({ ...f, icon: e.target.value }))} />
+                      </FieldGroup>
+                      <FieldGroup>
+                        <Label>Type</Label>
+                        <select
+                          value={filterEditForm.type || 'checkbox'}
+                          onChange={(e) => setFilterEditForm(f => ({ ...f, type: e.target.value as any }))}
+                          style={{ width: '100%', padding: spacing[2], border: `1px solid ${colors.neutral[300]}`, borderRadius: '4px', fontSize: typography.fontSize.sm }}
+                        >
+                          <option value="checkbox">Checkbox (multi-select)</option>
+                          <option value="select">Dropdown (single-select)</option>
+                          <option value="range">Range (min-max)</option>
+                        </select>
+                      </FieldGroup>
+                    </CatInlineRow>
+
+                    {filterEditForm.type !== 'range' && (
+                      <FieldGroup>
+                        <Label>Options</Label>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: spacing[2] }}>
+                          {(filterEditForm.options || []).map((opt, i) => (
+                            <span key={i} style={{ padding: '2px 8px', background: colors.neutral[100], borderRadius: '12px', fontSize: typography.fontSize.xs, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              {opt.label}
+                              <button type="button" onClick={() => removeOptionFromEdit(i)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 0, fontSize: '10px', color: colors.error }}>✕</button>
+                            </span>
+                          ))}
+                        </div>
+                        <div style={{ display: 'flex', gap: spacing[2] }}>
+                          <StyledInput placeholder="Option label" value={editOptionLabel} onChange={(e: any) => setEditOptionLabel(e.target.value)} onKeyDown={(e: any) => { if (e.key === 'Enter') { e.preventDefault(); addOptionToEdit(); } }} />
+                          <Button type="button" appearance="outline" onClick={addOptionToEdit} style={{ flexShrink: 0 }}>+ Add</Button>
+                        </div>
+                      </FieldGroup>
+                    )}
+
+                    {filterEditForm.type === 'range' && (
+                      <CatInlineRow>
+                        <FieldGroup>
+                          <Label>Min</Label>
+                          <input type="number" value={filterEditForm.rangeMin ?? ''} onChange={(e) => setFilterEditForm(f => ({ ...f, rangeMin: Number(e.target.value) }))} style={{ width: '100%', padding: spacing[2], border: `1px solid ${colors.neutral[300]}`, borderRadius: '6px', fontSize: typography.fontSize.sm }} />
+                        </FieldGroup>
+                        <FieldGroup>
+                          <Label>Max</Label>
+                          <input type="number" value={filterEditForm.rangeMax ?? ''} onChange={(e) => setFilterEditForm(f => ({ ...f, rangeMax: Number(e.target.value) }))} style={{ width: '100%', padding: spacing[2], border: `1px solid ${colors.neutral[300]}`, borderRadius: '6px', fontSize: typography.fontSize.sm }} />
+                        </FieldGroup>
+                      </CatInlineRow>
+                    )}
+
+                    <CatActions>
+                      <SmallBtn $variant="toggle" onClick={() => handleUpdateFilter(filter._id)}>Save</SmallBtn>
+                      <SmallBtn onClick={() => { setEditingFilter(null); setFilterEditForm({}); setEditOptionLabel(''); }}>Cancel</SmallBtn>
+                    </CatActions>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2], flexWrap: 'wrap' }}>
+                      <strong style={{ fontSize: typography.fontSize.base }}>{filter.name}</strong>
+                      <CatBadge $type="custom">{filter.type}</CatBadge>
+                      {!filter.isActive && <CatBadge $type="hidden">Inactive</CatBadge>}
+                      {!filter.showInSidebar && filter.isActive && <CatBadge $type="hidden">Hidden</CatBadge>}
+                    </div>
+                    {filter.type !== 'range' && filter.options.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: spacing[1] }}>
+                        {filter.options.map((opt, i) => (
+                          <span key={i} style={{ padding: '1px 6px', background: colors.neutral[100], borderRadius: '10px', fontSize: typography.fontSize.xs, color: colors.neutral[600] }}>{opt.label}</span>
+                        ))}
+                      </div>
+                    )}
+                    {filter.type === 'range' && (
+                      <div style={{ fontSize: typography.fontSize.sm, color: colors.neutral[600], marginTop: spacing[1] }}>
+                        Range: {filter.rangeMin ?? 0} – {filter.rangeMax ?? 100} {filter.rangeUnit || ''}
+                      </div>
+                    )}
+                    <CatActions>
+                      <SmallBtn onClick={() => { setEditingFilter(filter._id); setFilterEditForm({ name: filter.name, type: filter.type, options: [...filter.options], icon: filter.icon, rangeMin: filter.rangeMin, rangeMax: filter.rangeMax, rangeUnit: filter.rangeUnit }); }}>✏️ Edit</SmallBtn>
+                      <SmallBtn $variant="toggle" onClick={() => handleToggleFilter(filter, 'isActive')}>
+                        {filter.isActive ? '👁 Active' : '👁‍🗨 Inactive'}
+                      </SmallBtn>
+                      <SmallBtn $variant="toggle" onClick={() => handleToggleFilter(filter, 'showInSidebar')}>
+                        {filter.showInSidebar ? '📌 In Sidebar' : '📌 Hidden'}
+                      </SmallBtn>
+                      <SmallBtn $variant="danger" onClick={() => handleDeleteFilter(filter)}>🗑</SmallBtn>
+                    </CatActions>
+                  </>
+                )}
+              </CatCard>
+            ))}
+
+            {/* Add new filter card */}
+            {showAddFilterForm ? (
+              <AddCatForm>
+                <SectionHeader style={{ fontSize: typography.fontSize.base, margin: 0, border: 'none', paddingBottom: 0 }}>➕ New Filter</SectionHeader>
+                <FieldGroup>
+                  <Label>Filter Name *</Label>
+                  <StyledInput value={newFilter.name || ''} onChange={(e: any) => setNewFilter(n => ({ ...n, name: e.target.value }))} placeholder="e.g., Brand, Warranty, Application" />
+                </FieldGroup>
+                <CatInlineRow>
+                  <FieldGroup>
+                    <Label>Icon (emoji)</Label>
+                    <StyledInput value={newFilter.icon || ''} onChange={(e: any) => setNewFilter(n => ({ ...n, icon: e.target.value }))} />
+                  </FieldGroup>
+                  <FieldGroup>
+                    <Label>Type</Label>
+                    <select
+                      value={newFilter.type || 'checkbox'}
+                      onChange={(e) => setNewFilter(n => ({ ...n, type: e.target.value as any }))}
+                      style={{ width: '100%', padding: spacing[2], border: `1px solid ${colors.neutral[300]}`, borderRadius: '4px', fontSize: typography.fontSize.sm }}
+                    >
+                      <option value="checkbox">Checkbox (multi-select)</option>
+                      <option value="select">Dropdown (single-select)</option>
+                      <option value="range">Range (min-max)</option>
+                    </select>
+                  </FieldGroup>
+                </CatInlineRow>
+
+                {newFilter.type !== 'range' && (
+                  <FieldGroup>
+                    <Label>Options</Label>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: spacing[2] }}>
+                      {(newFilter.options || []).map((opt, i) => (
+                        <span key={i} style={{ padding: '2px 8px', background: colors.neutral[100], borderRadius: '12px', fontSize: typography.fontSize.xs, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          {opt.label}
+                          <button type="button" onClick={() => removeOptionFromNew(i)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 0, fontSize: '10px', color: colors.error }}>✕</button>
+                        </span>
+                      ))}
+                    </div>
+                    <div style={{ display: 'flex', gap: spacing[2] }}>
+                      <StyledInput placeholder="Option label" value={newOptionLabel} onChange={(e: any) => setNewOptionLabel(e.target.value)} onKeyDown={(e: any) => { if (e.key === 'Enter') { e.preventDefault(); addOptionToNew(); } }} />
+                      <Button type="button" appearance="outline" onClick={addOptionToNew} style={{ flexShrink: 0 }}>+ Add</Button>
+                    </div>
+                  </FieldGroup>
+                )}
+
+                {newFilter.type === 'range' && (
+                  <CatInlineRow>
+                    <FieldGroup>
+                      <Label>Min</Label>
+                      <input type="number" value={newFilter.rangeMin ?? ''} onChange={(e) => setNewFilter(n => ({ ...n, rangeMin: Number(e.target.value) }))} style={{ width: '100%', padding: spacing[2], border: `1px solid ${colors.neutral[300]}`, borderRadius: '6px', fontSize: typography.fontSize.sm }} />
+                    </FieldGroup>
+                    <FieldGroup>
+                      <Label>Max</Label>
+                      <input type="number" value={newFilter.rangeMax ?? ''} onChange={(e) => setNewFilter(n => ({ ...n, rangeMax: Number(e.target.value) }))} style={{ width: '100%', padding: spacing[2], border: `1px solid ${colors.neutral[300]}`, borderRadius: '6px', fontSize: typography.fontSize.sm }} />
+                    </FieldGroup>
+                  </CatInlineRow>
+                )}
+
+                <CatActions>
+                  <SmallBtn $variant="toggle" onClick={handleAddFilter}>Create Filter</SmallBtn>
+                  <SmallBtn onClick={() => { setShowAddFilterForm(false); setNewOptionLabel(''); }}>Cancel</SmallBtn>
+                </CatActions>
+              </AddCatForm>
+            ) : (
+              <AddCatForm style={{ alignItems: 'center', justifyContent: 'center', minHeight: 150, cursor: 'pointer' }} onClick={() => setShowAddFilterForm(true)}>
+                <span style={{ fontSize: '2rem' }}>➕</span>
+                <span style={{ color: colors.neutral[500], fontWeight: 600 }}>Add Filter</span>
+              </AddCatForm>
+            )}
+          </CatGrid>
+        )}
+      </TabContent>
+    );
+  };
+
   const renderStatsTab = () => (
     <TabContent>
       <SectionHeader>📊 Stats Section</SectionHeader>
@@ -1017,6 +1324,7 @@ export const SiteSettingsPanel = ({ activeTab = 'general' }: SiteSettingsPanelPr
     appearance: renderAppearanceTab,
     hero: renderHeroTab,
     categories: renderCategoriesTab,
+    filters: renderFiltersTab,
     stats: renderStatsTab,
     testimonials: renderTestimonialsTab,
     about: renderAboutTab,

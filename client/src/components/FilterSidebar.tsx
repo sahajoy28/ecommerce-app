@@ -1,13 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styled from "styled-components";
 import { Checkbox, Slider, Button } from "@fluentui/react-components";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import {
   filterByCategory, filterByPrice, filterByRating,
   filterByMaterial, filterByFinish, filterBySize, filterByColor,
-  resetFilters
+  filterByCustom, resetFilters
 } from "../features/products/productsSlice";
 import { RatingInput } from "./RatingDisplay";
+import { productsApi } from "../services/apiClient";
+import { CustomFilter } from "../types/product";
 import { colors, spacing, typography, shadows, borderRadius, transitions, media } from "../styles/designTokens";
 
 const SidebarContainer = styled.div`
@@ -175,6 +177,14 @@ export const FilterSidebar = () => {
 
   const [priceRange, setPriceRange] = useState(filters.maxPrice || 100000);
 
+  // Fetch custom filters from API
+  const [customFilters, setCustomFilters] = useState<CustomFilter[]>([]);
+  useEffect(() => {
+    productsApi.get<any>('/filters').then((res: any) => {
+      setCustomFilters((res.filters || []).filter((f: CustomFilter) => f.isActive && f.showInSidebar));
+    }).catch(() => {});
+  }, []);
+
   // Derive unique values from product data
   const categories = [...new Set(products.map(p => p.category))].filter(Boolean).sort();
   const materials = [...new Set(products.map(p => p.material).filter(Boolean))].sort();
@@ -216,6 +226,10 @@ export const FilterSidebar = () => {
     dispatch(filterByRating(rating));
   };
 
+  const handleCustomFilterChange = (slug: string, value: string, checked: boolean) => {
+    dispatch(filterByCustom({ key: slug, value: checked ? value : null }));
+  };
+
   const handleReset = () => {
     setPriceRange(maxPrice);
     dispatch(resetFilters());
@@ -228,7 +242,8 @@ export const FilterSidebar = () => {
     (filters.size ? 1 : 0) +
     (filters.color ? 1 : 0) +
     (filters.minRating > 0 ? 1 : 0) +
-    (filters.maxPrice !== null && filters.maxPrice < maxPrice ? 1 : 0);
+    (filters.maxPrice !== null && filters.maxPrice < maxPrice ? 1 : 0) +
+    Object.values(filters.custom || {}).filter(Boolean).length;
 
   return (
     <SidebarContainer>
@@ -319,6 +334,43 @@ export const FilterSidebar = () => {
           </ColorGrid>
         </FilterSection>
       )}
+
+      {/* Dynamic Custom Filters */}
+      {customFilters.map(cf => {
+        const activeVal = filters.custom?.[cf.slug] || null;
+        // Derive available values from products
+        const productValues = [...new Set(
+          products
+            .map(p => p.customFilters?.[cf.slug])
+            .filter(Boolean)
+            .map(v => String(v))
+        )].sort();
+
+        // Combine filter options with product values
+        const displayOptions = cf.options.length > 0
+          ? cf.options.filter(opt => productValues.includes(opt.value))
+          : productValues.map(v => ({ label: v.charAt(0).toUpperCase() + v.slice(1).replace(/-/g, ' '), value: v }));
+
+        if (displayOptions.length === 0) return null;
+
+        return (
+          <FilterSection key={cf._id}>
+            <SectionTitle>
+              {cf.icon || '🏷️'} {cf.name}
+              {activeVal && <FilterCount>{activeVal}</FilterCount>}
+            </SectionTitle>
+            {displayOptions.map(opt => (
+              <FilterItem key={opt.value}>
+                <Checkbox
+                  checked={activeVal === opt.value}
+                  onChange={(_, data) => handleCustomFilterChange(cf.slug, opt.value, data.checked as boolean)}
+                  label={opt.label}
+                />
+              </FilterItem>
+            ))}
+          </FilterSection>
+        );
+      })}
 
       {/* Price */}
       <FilterSection>
