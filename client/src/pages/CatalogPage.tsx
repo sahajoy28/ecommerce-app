@@ -20,15 +20,21 @@ const CatalogContainer = styled.div`
   display: flex;
   flex-direction: column;
   transition: background-color 0.3s ease;
+  overflow-x: hidden;
+  /* ensure children padding doesn't increase layout width */
+  &, & * {
+    box-sizing: border-box;
+    max-width: 100%;
+  }
 `;
 
 const Header = styled.div`
   background: var(--color-neutral-0, ${colors.neutral[0]});
   border-bottom: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
   padding: ${spacing[6]} ${spacing[8]};
-  display: flex;
   justify-content: space-between;
   align-items: center;
+  text-align: center;
 
   ${media.tablet} {
     padding: ${spacing[4]} ${spacing[6]};
@@ -123,9 +129,11 @@ const SidebarWrapper = styled.div<{ isOpen: boolean }>`
   }
 
   ${media.mobile} {
-    width: 80%;
+    width: 100%;
     max-width: none;
     min-width: 0;
+    /* On mobile, when sidebar is not open hide it completely to avoid layout shift */
+    display: ${props => props.isOpen ? 'block' : 'none'};
   }
 `;
 
@@ -142,7 +150,15 @@ const ContentArea = styled.div`
   }
 
   ${media.mobile} {
-    padding: ${spacing[3]};
+    /* Reduce horizontal padding on very small screens to avoid overflow */
+    padding: ${spacing[2]};
+    gap: ${spacing[3]};
+    overflow: visible;
+  }
+
+  /* Add bottom padding to ensure fixed pagination doesn't overlap content */
+  @media (max-width: 480px) {
+    padding-bottom: 72px; /* enough room for pagination */
   }
 `;
 
@@ -157,9 +173,24 @@ const ProductsGrid = styled.div`
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: ${spacing[5]};
 
+  ${media.tablet} {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: ${spacing[4]};
+  }
+
   ${media.mobile} {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: ${spacing[3]};
+  }
+  /* On narrow viewports show one product per row in the content area */
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: ${spacing[4]};
+  }
+  /* Ensure grid children can shrink and don't cause horizontal overflow */
+  & > * {
+    min-width: 0;
+    width: 100%;
   }
 `;
 
@@ -256,7 +287,6 @@ export const CatalogPage = () => {
           </ProductCount>
         </div>
         <HeaderControls>
-          <SearchBar />
           {(category || filters.category) && (
             <Button 
               appearance="secondary"
@@ -281,6 +311,13 @@ export const CatalogPage = () => {
         </SidebarWrapper>
 
         <ContentArea>
+          {/* Catalog search (prominent) */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: spacing[5] }}>
+            <div style={{ width: '100%', maxWidth: 900 }}>
+              <SearchBar />
+            </div>
+          </div>
+
           <ProductsSection>
             {error && (
               <div style={{

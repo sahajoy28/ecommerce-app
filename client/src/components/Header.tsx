@@ -239,11 +239,6 @@ export const Header = () => {
             🛍 {storeName}{isAdmin ? <AdminBadge>ADMIN</AdminBadge> : ''}
           </Logo>
         </LeftSection>
-        {!isAdmin && (
-          <SearchSection>
-            <SearchBar />
-          </SearchSection>
-        )}
         <div style={{ flex: 1 }} />
         <RightSection>
           {!isAdmin && (

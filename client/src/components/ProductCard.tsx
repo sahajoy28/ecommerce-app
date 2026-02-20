@@ -30,6 +30,9 @@ const StyledCard = styled(Card)`
   &:active {
     box-shadow: ${shadows.md};
   }
+  /* allow the card to shrink inside grid/flex containers on small screens */
+  min-width: 0;
+  box-sizing: border-box;
 `;
 
 const ImageContainer = styled.div`
@@ -66,6 +69,11 @@ const Image = styled.img`
   ${StyledCard}:hover & {
     transform: scale(1.08);
   }
+  box-sizing: border-box;
+
+  ${media.mobile} {
+    padding: ${spacing[1]};
+  }
 `;
 
 const ContentContainer = styled.div`
@@ -74,6 +82,11 @@ const ContentContainer = styled.div`
   gap: ${spacing[2]};
   flex: 1;
   padding: ${spacing[4]} ${spacing[3]};
+  box-sizing: border-box;
+
+  ${media.mobile} {
+    padding: ${spacing[2]} ${spacing[2]};
+  }
 `;
 
 const Title = styled.h3`
