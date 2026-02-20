@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { useState, useEffect } from 'react';
-import { colors, spacing, typography } from '../styles/designTokens';
+import { colors, spacing, typography, media } from '../styles/designTokens';
 import { convertGoogleDriveUrl } from '../utils/googleDriveUrl';
 
 const API_BASE = import.meta.env.MODE === 'production' ? '/api' : 'http://localhost:5000/api';
@@ -119,6 +119,15 @@ const NavigationDots = styled.div`
   display: flex;
   gap: ${spacing[2]};
   z-index: 10;
+
+  ${media.mobile} {
+    gap: ${spacing[1]};
+    bottom: ${spacing[4]};
+    /* ensure limited width on mobile */
+    padding: 0 ${spacing[2]};
+    max-width: 240px;
+    overflow: hidden;
+  }
 `;
 
 const Dot = styled.button<{ $isActive: boolean }>`
@@ -134,6 +143,11 @@ const Dot = styled.button<{ $isActive: boolean }>`
   &:hover {
     background: white;
     transform: scale(1.2);
+  }
+
+  ${media.mobile} {
+    width: 12px;
+    height: 12px;
   }
 `;
 
@@ -198,6 +212,7 @@ export const BannerDisplay = ({
   const [banners, setBanners] = useState<Banner[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
 
   useEffect(() => {
     const fetchBanners = async () => {
@@ -230,6 +245,14 @@ export const BannerDisplay = ({
 
     return () => clearInterval(interval);
   }, [autoRotate, banners.length, rotationInterval]);
+
+  // Track small screens to show fewer dots
+  useEffect(() => {
+    const check = () => setIsSmallScreen(typeof window !== 'undefined' && window.innerWidth <= 480);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   if (loading || banners.length === 0) {
     return null;
@@ -283,17 +306,57 @@ export const BannerDisplay = ({
               →
             </NavigationButton>
             <NavigationDots>
-              {banners.map((_, index) => (
-                <Dot
-                  key={index}
-                  $isActive={index === currentIndex}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentIndex(index);
-                  }}
-                  title={`Banner ${index + 1}`}
-                />
-              ))}
+              {(() => {
+                // On small screens show a limited window of dots (max 5)
+                if (!isSmallScreen) {
+                  return banners.map((_, index) => (
+                    <Dot
+                      key={index}
+                      $isActive={index === currentIndex}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentIndex(index);
+                      }}
+                      title={`Banner ${index + 1}`}
+                    />
+                  ));
+                }
+
+                const maxDots = 5;
+                if (banners.length <= maxDots) {
+                  return banners.map((_, index) => (
+                    <Dot
+                      key={index}
+                      $isActive={index === currentIndex}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentIndex(index);
+                      }}
+                      title={`Banner ${index + 1}`}
+                    />
+                  ));
+                }
+
+                // Center window around currentIndex
+                let start = currentIndex - Math.floor(maxDots / 2);
+                if (start < 0) start = 0;
+                if (start + maxDots > banners.length) start = banners.length - maxDots;
+
+                return banners.slice(start, start + maxDots).map((_, idx) => {
+                  const index = start + idx;
+                  return (
+                    <Dot
+                      key={index}
+                      $isActive={index === currentIndex}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentIndex(index);
+                      }}
+                      title={`Banner ${index + 1}`}
+                    />
+                  );
+                });
+              })()}
             </NavigationDots>
           </>
         )}

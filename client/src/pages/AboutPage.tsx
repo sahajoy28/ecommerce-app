@@ -49,6 +49,9 @@ const SectionTitle = styled.h2`
   font-weight: bold;
   margin-bottom: ${spacing[6]};
   color: ${colors.neutral[900]};
+  ${media.mobile} {
+    text-align: center;
+  }
 `;
 
 const Content = styled.p`
