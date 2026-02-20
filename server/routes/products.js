@@ -667,5 +667,80 @@ router.patch('/:id/reviews/:reviewId/helpful', async (req, res, next) => {
   }
 });
 
+/**
+ * POST /api/products/admin/bulk-import
+ * Bulk import products from CSV data (Admin only)
+ * Expects: { products: [{ title, description, category, price, mrp, quantity, material, finish, sizes, color }] }
+ */
+router.post('/admin/bulk-import', verify, async (req, res, next) => {
+  try {
+    const { user } = req;
+
+    if (user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Only admins can bulk import products' });
+    }
+
+    const { products } = req.body;
+
+    if (!Array.isArray(products) || products.length === 0) {
+      return res.status(400).json({ success: false, message: 'Please provide an array of products' });
+    }
+
+    if (products.length > 500) {
+      return res.status(400).json({ success: false, message: 'Maximum 500 products can be imported at once' });
+    }
+
+    const results = { created: 0, errors: [] };
+
+    for (let i = 0; i < products.length; i++) {
+      const p = products[i];
+      try {
+        if (!p.title || !p.description || !p.category) {
+          results.errors.push({ row: i + 1, error: 'Missing required fields (title, description, category)' });
+          continue;
+        }
+
+        await AdminProduct.create({
+          title: p.title,
+          description: p.description || '',
+          price: parseFloat(p.price) || 0,
+          mrp: p.mrp ? parseFloat(p.mrp) : null,
+          retailPrice: p.retailPrice ? parseFloat(p.retailPrice) : null,
+          discount: p.discount || {},
+          showPriceInListing: p.showPriceInListing !== undefined ? p.showPriceInListing : true,
+          category: p.category,
+          quantity: parseInt(p.quantity) || 0,
+          images: Array.isArray(p.images) ? p.images.map(img => convertGoogleDriveUrl(img)) : [],
+          videos: p.videos || [],
+          createdBy: user.id,
+          isActive: true,
+          published: false,
+          material: p.material || 'Tiles',
+          finish: p.finish || 'Glossy',
+          sizes: Array.isArray(p.sizes) ? p.sizes : [],
+          color: p.color || '',
+          specifications: p.specifications || {},
+          customFilters: p.customFilters || {}
+        });
+        results.created++;
+      } catch (err) {
+        results.errors.push({ row: i + 1, error: err.message });
+      }
+    }
+
+    console.log(`✅ Bulk import: ${results.created} created, ${results.errors.length} errors`);
+
+    res.status(201).json({
+      success: true,
+      message: `Successfully imported ${results.created} products${results.errors.length > 0 ? ` (${results.errors.length} errors)` : ''}`,
+      created: results.created,
+      errors: results.errors
+    });
+  } catch (error) {
+    console.error('❌ Error bulk importing products:', error.message);
+    next({ status: 500, message: 'Failed to bulk import products', details: error.message });
+  }
+});
+
 export default router;
 

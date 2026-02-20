@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Person24Filled } from '@fluentui/react-icons';
+import { Settings24Filled } from '@fluentui/react-icons';
 import { useTheme } from '../app/themeContext';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { logout } from '../features/auth/authSlice';
@@ -193,9 +193,9 @@ export const UserMenu = ({ userName }: UserMenuProps) => {
     <UserMenuWrapper ref={menuRef}>
       <UserButton 
         onClick={() => setIsOpen(!isOpen)}
-        title="Account menu"
+        title="Settings"
       >
-        <Person24Filled />
+        <Settings24Filled />
       </UserButton>
 
       <Dropdown $isOpen={isOpen}>
@@ -249,9 +249,9 @@ export const GuestMenu = () => {
     <UserMenuWrapper ref={menuRef}>
       <UserButton 
         onClick={() => setIsOpen(!isOpen)}
-        title="Menu"
+        title="Settings"
       >
-        <Person24Filled />
+        <Settings24Filled />
       </UserButton>
 
       <Dropdown $isOpen={isOpen}>

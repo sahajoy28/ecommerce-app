@@ -270,6 +270,7 @@ const PublishBadge = styled.span<{ $published: boolean }>`
   background: ${p => p.$published ? 'rgba(59, 130, 246, 0.15)' : 'rgba(107, 114, 128, 0.15)'};
   color: ${p => p.$published ? '#3b82f6' : '#6b7280'};
   font-weight: ${typography.fontWeight.semibold};
+  white-space: nowrap;
 `;
 
 const NoProducts = styled.div`

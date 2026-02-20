@@ -72,6 +72,9 @@ export const userAPI = {
   bulkDeleteProducts: async (ids: string[]) => {
     return await authApi.post<{ success: boolean; message: string; deletedCount: number }>("/products/admin/bulk-delete", { ids });
   },
+  bulkImportProducts: async (products: any[]) => {
+    return await authApi.post<{ success: boolean; message: string; created: number; errors: any[] }>("/products/admin/bulk-import", { products });
+  },
   // User management endpoints (admin only)
   getAllUsers: async () => {
     const response = await authApi.get<{ success: boolean; users: any[] }>("/auth/users");

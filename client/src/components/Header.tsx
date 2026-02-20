@@ -1,9 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import React, { useContext, useState, useEffect } from "react";
 import styled from "styled-components";
-import { Button } from "@fluentui/react-components";
 import { useAppSelector } from "../app/hooks";
-import { useStrings } from "../utils/strings";
 import { colors, spacing, typography, shadows, borderRadius, transitions, media } from "../styles/designTokens";
 import { SearchBar } from "./SearchBar";
 import { UserMenu, GuestMenu } from "./UserMenu";
@@ -146,6 +144,28 @@ const Logo = styled(Link)`
   }
 `;
 
+const AdminBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  background: var(--color-primary, ${colors.primary.main});
+  color: white;
+  font-size: ${typography.fontSize.xs};
+  font-weight: ${typography.fontWeight.bold};
+  padding: 2px 8px;
+  border-radius: ${borderRadius.full};
+  margin-left: ${spacing[2]};
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+  line-height: 1.4;
+
+  ${media.mobile} {
+    font-size: 9px;
+    padding: 1px 6px;
+    margin-left: ${spacing[1]};
+  }
+`;
+
 const FilterToggleButton = styled.button<{ $active?: boolean }>`
   background: ${props => props.$active ? `var(--color-primary, ${colors.primary.main})` : 'none'};
   border: none;
@@ -172,103 +192,6 @@ const FilterToggleButton = styled.button<{ $active?: boolean }>`
   }
 `;
 
-const IconButton = styled.button`
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: ${typography.fontSize.xl};
-  color: var(--color-text-primary, ${colors.neutral[700]});
-  padding: ${spacing[2]};
-  transition: all ${transitions.fast};
-  border-radius: ${borderRadius.md};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  &:hover {
-    background: var(--color-neutral-100, ${colors.neutral[100]});
-    color: var(--color-primary, ${colors.primary.main});
-    transform: scale(1.1);
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
-`;
-
-const NavSection = styled.div`
-  display: flex;
-  gap: ${spacing[2]};
-  align-items: center;
-  flex-wrap: nowrap;
-
-  ${media.mobile} {
-    gap: ${spacing[1]};
-  }
-`;
-
-const NavLinkWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  gap: ${spacing[1]};
-  position: relative;
-`;
-
-const NavLink = styled(Button)<{ $isActive?: boolean }>`
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--color-text-primary, ${colors.neutral[700]});
-  font-weight: ${typography.fontWeight.medium};
-  padding: ${spacing[2]} ${spacing[2]};
-  transition: all ${transitions.fast};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: ${spacing[1]};
-  border-radius: ${borderRadius.md};
-  font-size: ${typography.fontSize.sm};
-
-  &:hover {
-    background: var(--color-neutral-100, ${colors.neutral[100]});
-  }
-
-  ${media.mobile} {
-    padding: ${spacing[1]} ${spacing[1]};
-    font-size: ${typography.fontSize.xs};
-  }
-`;
-
-const IconBadgeWrapper = styled.div`
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: ${spacing[1]};
-`;
-
-const BadgeCount = styled.span`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  background: var(--color-primary, ${colors.primary.main});
-  color: var(--color-neutral-0, ${colors.neutral[0]});
-  border-radius: ${borderRadius.full};
-  font-size: ${typography.fontSize.xs};
-  font-weight: ${typography.fontWeight.bold};
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  box-shadow: ${shadows.md};
-
-  ${media.mobile} {
-    min-width: 16px;
-    height: 16px;
-    font-size: 9px;
-  }
-`;
-
 const Divider = styled.div`
   width: 1px;
   height: 20px;
@@ -278,32 +201,6 @@ const Divider = styled.div`
 
   ${media.mobile} {
     display: none;
-  }
-`;
-
-const AuthButton = styled(Button)`
-  font-weight: ${typography.fontWeight.semibold};
-  transition: all ${transitions.fast};
-  background: var(--color-primary, ${colors.primary.main});
-  color: var(--color-neutral-0, ${colors.neutral[0]});
-  border: none;
-  padding: ${spacing[2]} ${spacing[3]};
-  border-radius: ${borderRadius.md};
-  cursor: pointer;
-  font-size: ${typography.fontSize.sm};
-
-  &:hover {
-    background: var(--color-primary-dark, ${colors.primary.dark});
-    transform: translateY(-1px);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-
-  ${media.mobile} {
-    padding: ${spacing[1]} ${spacing[2]};
-    font-size: ${typography.fontSize.xs};
   }
 `;
 
@@ -323,6 +220,7 @@ export const Header = () => {
 
   const isHome = location.pathname === "/";
   const isCatalog = location.pathname === "/catalog";
+  const isAdmin = location.pathname.startsWith("/admin");
 
   return (
     <>
@@ -337,36 +235,44 @@ export const Header = () => {
               ☰
             </FilterToggleButton>
           )}
-          <Logo to="/">
-            🛍 {storeName}
+          <Logo to={isAdmin ? "/admin/dashboard" : "/"}>
+            🛍 {storeName}{isAdmin ? <AdminBadge>Admin</AdminBadge> : ''}
           </Logo>
         </LeftSection>
 
-        <SearchSection>
-          <SearchBar />
-        </SearchSection>
+        {!isAdmin && (
+          <SearchSection>
+            <SearchBar />
+          </SearchSection>
+        )}
 
         <RightSection>
-          <NavLinksSection>
-            <NavMenuItem to="/about" $isActive={location.pathname === "/about"}>
-              About
-            </NavMenuItem>
-            <NavMenuItem to="/contact" $isActive={location.pathname === "/contact"}>
-              Contact
-            </NavMenuItem>
-          </NavLinksSection>
-
-          <Divider />
-
-          <NavSection>
-            {authUser ? (
-              <UserMenu 
-                userName={authUser.name || authUser.email?.split('@')[0]}
-              />
-            ) : (
-              <GuestMenu />
-            )}
-          </NavSection>
+          {!isAdmin && (
+            <>
+              <NavLinksSection>
+                <NavMenuItem to="/" $isActive={isHome}>
+                  Home
+                </NavMenuItem>
+                <NavMenuItem to="/catalog" $isActive={isCatalog}>
+                  Catalog
+                </NavMenuItem>
+                <NavMenuItem to="/about" $isActive={location.pathname === "/about"}>
+                  About
+                </NavMenuItem>
+                <NavMenuItem to="/contact" $isActive={location.pathname === "/contact"}>
+                  Contact
+                </NavMenuItem>
+              </NavLinksSection>
+              <Divider />
+            </>
+          )}
+          {authUser ? (
+            <UserMenu 
+              userName={authUser.name || authUser.email?.split('@')[0]}
+            />
+          ) : (
+            <GuestMenu />
+          )}
         </RightSection>
       </Wrapper>
     </>
