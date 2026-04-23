@@ -172,8 +172,8 @@ class ApiClient {
 }
 
 // Create API client instances for different services
-// Pointing to the local Node.js backend
-const BASE_URL = import.meta.env.MODE === 'production' ? '/api' : 'http://localhost:5000/api';
+// Use environment variable for API URL, fallback to localhost in development
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export const productsApi = new ApiClient(BASE_URL);
 export const authApi = new ApiClient(BASE_URL);

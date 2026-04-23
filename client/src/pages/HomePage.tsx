@@ -284,7 +284,7 @@ const DEFAULT_TESTIMONIALS = [
 export const HomePage = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { items, loading } = useAppSelector(state => state.products);
+  const { items, loading } = useAppSelector(state => state.products as { items: any[]; loading: boolean });
   const featuredProducts = items.slice(0, 6);
   const [mapUrl, setMapUrl] = useState('');
   const [heroTitle, setHeroTitle] = useState('Discover Premium Products for Every Lifestyle');

@@ -278,8 +278,10 @@ export const CatalogPage = () => {
               : "All Products"}
           </HeaderTitle>
           <ProductCount>
-            {/* Always show count for filtered products, matches visible products */}
-            {`Showing ${filtered.length} products`}
+            {/* Show filtered count and total if filters are active */}
+            {filtered.length === items.length
+              ? `Showing ${items.length} products`
+              : `Showing ${filtered.length} of ${items.length} products`}
           </ProductCount>
         </div>
         <HeaderControls>
