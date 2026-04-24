@@ -79,7 +79,7 @@ router.post('/', verify, async (req, res, next) => {
 router.put('/:id', verify, async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, icon, image, gradient, displayOrder, isActive, showOnHome } = req.body;
+    const { name, icon, image, gradient, displayOrder, isActive, showOnHome, description, appliedFilters } = req.body;
 
     const category = await Category.findById(id);
     if (!category) {
@@ -104,6 +104,8 @@ router.put('/:id', verify, async (req, res, next) => {
     if (displayOrder !== undefined) category.displayOrder = displayOrder;
     if (isActive !== undefined) category.isActive = isActive;
     if (showOnHome !== undefined) category.showOnHome = showOnHome;
+    if (description !== undefined) category.description = description;
+    if (appliedFilters !== undefined) category.appliedFilters = appliedFilters;
 
     await category.save();
 
@@ -150,6 +152,76 @@ router.post('/seed', verify, async (req, res, next) => {
   } catch (error) {
     console.error('❌ Error seeding categories:', error.message);
     next({ status: 500, message: 'Failed to seed categories', details: error.message });
+  }
+});
+
+/**
+ * GET /api/categories/:slug/details
+ * Public: get category with its applied filters
+ */
+router.get('/:slug/details', async (req, res, next) => {
+  try {
+    const { slug } = req.params;
+    
+    const category = await Category.findOne({
+      $or: [
+        { slug: slug },
+        { _id: slug }
+      ]
+    }).populate({
+      path: 'appliedFilters',
+      select: 'name slug type options rangeMin rangeMax rangeUnit icon displayOrder',
+      match: { isActive: true },
+      options: { sort: { displayOrder: 1 } }
+    });
+
+    if (!category) {
+      return res.status(404).json({ success: false, message: 'Category not found' });
+    }
+
+    res.json({ success: true, category });
+  } catch (error) {
+    console.error('❌ Error fetching category details:', error.message);
+    next({ status: 500, message: 'Failed to fetch category details', details: error.message });
+  }
+});
+
+/**
+ * PUT /api/categories/:id/filters
+ * Admin: set category-specific filters
+ */
+router.put('/:id/filters', verify, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { appliedFilters } = req.body;
+
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Only admins can manage category filters' });
+    }
+
+    const category = await Category.findById(id);
+    if (!category) {
+      return res.status(404).json({ success: false, message: 'Category not found' });
+    }
+
+    // Validate filter IDs
+    if (Array.isArray(appliedFilters)) {
+      category.appliedFilters = appliedFilters;
+    } else {
+      return res.status(400).json({ success: false, message: 'appliedFilters must be an array of filter IDs' });
+    }
+
+    await category.save();
+    await category.populate({
+      path: 'appliedFilters',
+      select: 'name slug type options rangeMin rangeMax rangeUnit icon displayOrder'
+    });
+
+    console.log(`✅ Category filters updated: ${category.name}`);
+    res.json({ success: true, category });
+  } catch (error) {
+    console.error('❌ Error updating category filters:', error.message);
+    next({ status: 500, message: 'Failed to update category filters', details: error.message });
   }
 });
 

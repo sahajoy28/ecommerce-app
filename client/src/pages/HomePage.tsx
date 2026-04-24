@@ -343,8 +343,8 @@ export const HomePage = () => {
   }, []);
 
   const handleCategoryClick = (categoryName: string) => {
-    // Use lowercased name for URL
-    navigate(`/catalog?category=${encodeURIComponent(categoryName.toLowerCase())}`);
+    // Use proper case name for URL - CategorySelector will handle it
+    navigate(`/catalog?category=${encodeURIComponent(categoryName)}`);
   };
 
   return (

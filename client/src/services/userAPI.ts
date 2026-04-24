@@ -83,6 +83,24 @@ export const userAPI = {
   promotUserToAdmin: async (email: string) => {
     return await authApi.post<{ success: boolean; message: string; user: any }>("/auth/promote-to-admin", { email });
   },
+  demoteUserFromAdmin: async (email: string) => {
+    return await authApi.post<{ success: boolean; message: string; user: any }>("/auth/demote-from-admin", { email });
+  },
+  deleteUser: async (userId: string) => {
+    return await authApi.delete<{ success: boolean; message: string; deletedUser: any }>(`/auth/users/${userId}`);
+  },
+  // Category endpoints
+  getCategories: async () => {
+    const response = await productsApi.get<{ success: boolean; categories: any[] }>("/categories");
+    return response.categories || [];
+  },
+  getCategoryDetails: async (slug: string) => {
+    const response = await productsApi.get<{ success: boolean; category: any }>(`/categories/${slug}/details`);
+    return response.category || null;
+  },
+  updateCategoryFilters: async (categoryId: string, filterIds: string[]) => {
+    return await authApi.put<{ success: boolean; message: string; category: any }>(`/categories/${categoryId}/filters`, { appliedFilters: filterIds });
+  },
   // Site settings endpoints (public read, admin write)
   getSiteSettings: async () => {
     const response = await productsApi.get<{ success: boolean; data: any }>("/settings");

@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import { useEffect, useState } from 'react';
 import { Button, Spinner } from '@fluentui/react-components';
-import { PersonAdd24Filled, Shield24Filled } from '@fluentui/react-icons';
+import { PersonAdd24Filled, Shield24Filled, ShieldDismiss24Filled, Delete24Filled } from '@fluentui/react-icons';
 import { userAPI } from '../services/userAPI';
 import { useAppSelector } from '../app/hooks';
 import { colors, spacing, typography } from '../styles/designTokens';
@@ -73,6 +73,12 @@ const ActionButton = styled(Button)`
   white-space: nowrap;
 `;
 
+const ActionButtonGroup = styled.div`
+  display: flex;
+  gap: ${spacing[2]};
+  flex-wrap: wrap;
+`;
+
 const LoadingContainer = styled.div`
   display: flex;
   justify-content: center;
@@ -101,7 +107,7 @@ const ErrorMessage = styled.div`
 export const AdminUsers = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [promoting, setPromoting] = useState<string | null>(null);
+  const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [message, setMessage] = useState({ type: '', text: '' });
   const { user: currentUser, token } = useAppSelector((state) => state.auth);
 
@@ -125,16 +131,47 @@ export const AdminUsers = () => {
   };
 
   const handlePromoteAdmin = async (email: string) => {
-    setPromoting(email);
+    const actionId = `promote-${email}`;
+    setLoadingAction(actionId);
     try {
       await userAPI.promotUserToAdmin(email);
       setMessage({ type: 'success', text: `✅ ${email} has been promoted to admin!` });
-      fetchUsers(); // Refresh list
+      fetchUsers();
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Failed to promote user' });
     } finally {
-      setPromoting(null);
+      setLoadingAction(null);
+    }
+  };
+
+  const handleDemoteAdmin = async (email: string) => {
+    const actionId = `demote-${email}`;
+    setLoadingAction(actionId);
+    try {
+      await userAPI.demoteUserFromAdmin(email);
+      setMessage({ type: 'success', text: `✅ ${email} has been demoted to regular user!` });
+      fetchUsers();
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'Failed to demote user' });
+    } finally {
+      setLoadingAction(null);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string, name: string, email: string) => {
+    const actionId = `delete-${userId}`;
+    setLoadingAction(actionId);
+    try {
+      await userAPI.deleteUser(userId);
+      setMessage({ type: 'success', text: `✅ ${email} has been deleted!` });
+      fetchUsers();
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'Failed to delete user' });
+    } finally {
+      setLoadingAction(null);
     }
   };
 
@@ -145,6 +182,8 @@ export const AdminUsers = () => {
       day: 'numeric' 
     });
   };
+
+  const isCurrentUserAction = (userId: string) => userId === currentUser?.id;
 
   const nonAdminUsers = users.filter(u => u.role !== 'admin');
   const adminUsers = users.filter(u => u.role === 'admin');
@@ -184,34 +223,75 @@ export const AdminUsers = () => {
             <Th>Email</Th>
             <Th>Role</Th>
             <Th>Joined</Th>
+            <Th>Actions</Th>
           </Tr>
         </thead>
         <tbody>
-          {adminUsers.map(user => (
-            <Tr key={user._id}>
-              <Td>
-                <strong>{user.name}</strong>
-                {user._id === currentUser?.id && <span style={{ marginLeft: spacing[2], fontSize: typography.fontSize.sm, color: colors.neutral[600] }}>(You)</span>}
-              </Td>
-              <Td>{user.email}</Td>
-              <Td>
-                <RoleBadge $isAdmin={true}>
-                  <Shield24Filled /> Admin
-                </RoleBadge>
-              </Td>
-              <Td>{formatDate(user.createdAt)}</Td>
-            </Tr>
-          ))}
+          {adminUsers.map(user => {
+            const isCurrentUser = isCurrentUserAction(user._id);
+            const isPromoting = loadingAction === `promote-${user.email}`;
+            const isDemoting = loadingAction === `demote-${user.email}`;
+            const isDeleting = loadingAction === `delete-${user._id}`;
+            const isProcessing = isPromoting || isDemoting || isDeleting;
+
+            return (
+              <Tr key={user._id}>
+                <Td>
+                  <strong>{user.name}</strong>
+                  {isCurrentUser && <span style={{ marginLeft: spacing[2], fontSize: typography.fontSize.sm, color: colors.neutral[600] }}>(You)</span>}
+                </Td>
+                <Td>{user.email}</Td>
+                <Td>
+                  <RoleBadge $isAdmin={true}>
+                    <Shield24Filled /> Admin
+                  </RoleBadge>
+                </Td>
+                <Td>{formatDate(user.createdAt)}</Td>
+                <Td>
+                  {isCurrentUser ? (
+                    <span style={{ color: colors.neutral[600], fontSize: typography.fontSize.sm }}>Cannot modify your own account</span>
+                  ) : (
+                    <ActionButtonGroup>
+                      <ActionButton
+                        appearance="outline"
+                        icon={<ShieldDismiss24Filled />}
+                        onClick={() => {
+                          if (window.confirm(`Demote ${user.name} (${user.email}) from admin?`)) {
+                            handleDemoteAdmin(user.email);
+                          }
+                        }}
+                        disabled={isProcessing}
+                      >
+                        {isDemoting ? 'Demoting...' : 'Demote'}
+                      </ActionButton>
+                      <ActionButton
+                        appearance="outline"
+                        icon={<Delete24Filled />}
+                        onClick={() => {
+                          if (window.confirm(`Delete ${user.name} (${user.email})? This action cannot be undone.`)) {
+                            handleDeleteUser(user._id, user.name, user.email);
+                          }
+                        }}
+                        disabled={isProcessing}
+                      >
+                        {isDeleting ? 'Deleting...' : 'Delete'}
+                      </ActionButton>
+                    </ActionButtonGroup>
+                  )}
+                </Td>
+              </Tr>
+            );
+          })}
         </tbody>
       </Table>
       </TableWrapper>
 
       <h3 style={{ marginTop: spacing[12], marginBottom: spacing[4], color: colors.neutral[700] }}>
-        Users to Promote ({nonAdminUsers.length})
+        Regular Users ({nonAdminUsers.length})
       </h3>
       {nonAdminUsers.length === 0 ? (
         <p style={{ color: colors.neutral[600], textAlign: 'center', padding: spacing[4] }}>
-          All users are already admins!
+          No regular users to manage!
         </p>
       ) : (
         <TableWrapper>
@@ -222,36 +302,57 @@ export const AdminUsers = () => {
               <Th>Email</Th>
               <Th>Role</Th>
               <Th>Joined</Th>
-              <Th>Action</Th>
+              <Th>Actions</Th>
             </Tr>
           </thead>
           <tbody>
-            {nonAdminUsers.map(user => (
-              <Tr key={user._id}>
-                <Td><strong>{user.name}</strong></Td>
-                <Td>{user.email}</Td>
-                <Td>
-                  <RoleBadge $isAdmin={false}>
-                    User
-                  </RoleBadge>
-                </Td>
-                <Td>{formatDate(user.createdAt)}</Td>
-                <Td>
-                  <ActionButton
-                    appearance="primary"
-                    icon={<PersonAdd24Filled />}
-                    onClick={() => {
-                      if (window.confirm(`Make ${user.name} (${user.email}) an admin?`)) {
-                        handlePromoteAdmin(user.email);
-                      }
-                    }}
-                    disabled={promoting === user.email}
-                  >
-                    {promoting === user.email ? 'Promoting...' : 'Make Admin'}
-                  </ActionButton>
-                </Td>
-              </Tr>
-            ))}
+            {nonAdminUsers.map(user => {
+              const isCurrentUser = isCurrentUserAction(user._id);
+              const isPromoting = loadingAction === `promote-${user.email}`;
+              const isDeleting = loadingAction === `delete-${user._id}`;
+              const isProcessing = isPromoting || isDeleting;
+
+              return (
+                <Tr key={user._id}>
+                  <Td><strong>{user.name}</strong></Td>
+                  <Td>{user.email}</Td>
+                  <Td>
+                    <RoleBadge $isAdmin={false}>
+                      User
+                    </RoleBadge>
+                  </Td>
+                  <Td>{formatDate(user.createdAt)}</Td>
+                  <Td>
+                    <ActionButtonGroup>
+                      <ActionButton
+                        appearance="primary"
+                        icon={<PersonAdd24Filled />}
+                        onClick={() => {
+                          if (window.confirm(`Make ${user.name} (${user.email}) an admin?`)) {
+                            handlePromoteAdmin(user.email);
+                          }
+                        }}
+                        disabled={isProcessing}
+                      >
+                        {isPromoting ? 'Promoting...' : 'Make Admin'}
+                      </ActionButton>
+                      <ActionButton
+                        appearance="outline"
+                        icon={<Delete24Filled />}
+                        onClick={() => {
+                          if (window.confirm(`Delete ${user.name} (${user.email})? This action cannot be undone.`)) {
+                            handleDeleteUser(user._id, user.name, user.email);
+                          }
+                        }}
+                        disabled={isProcessing}
+                      >
+                        {isDeleting ? 'Deleting...' : 'Delete'}
+                      </ActionButton>
+                    </ActionButtonGroup>
+                  </Td>
+                </Tr>
+              );
+            })}
           </tbody>
         </Table>
         </TableWrapper>

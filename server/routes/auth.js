@@ -312,4 +312,136 @@ router.post('/promote-to-admin', verify, async (req, res, next) => {
   }
 });
 
+/**
+ * POST /api/auth/demote-from-admin
+ * Demote an admin to regular user (Admin only)
+ * Body: { email: string }
+ */
+router.post('/demote-from-admin', verify, async (req, res, next) => {
+  try {
+    const { user: currentUser } = req;
+    const { email } = req.body;
+
+    // Check if current user is admin
+    if (currentUser.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only admins can demote users'
+      });
+    }
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    // Prevent demoting self
+    if (currentUser.email === email) {
+      return res.status(400).json({
+        success: false,
+        message: 'You cannot demote yourself'
+      });
+    }
+
+    // Find user
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Check if user is admin
+    if (user.role !== 'admin') {
+      return res.status(400).json({
+        success: false,
+        message: 'User is not an admin'
+      });
+    }
+
+    // Demote to regular user
+    user.role = 'user';
+    await user.save();
+
+    console.log(`✅ User demoted from admin: ${email} (by ${currentUser.email})`);
+
+    res.json({
+      success: true,
+      message: `✅ User ${email} has been demoted to regular user!`,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error demoting user:', error.message);
+    next({
+      status: 500,
+      message: 'Failed to demote user',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * DELETE /api/auth/users/:userId
+ * Delete a user (Admin only)
+ * Cannot delete own account
+ */
+router.delete('/users/:userId', verify, async (req, res, next) => {
+  try {
+    const { user: currentUser } = req;
+    const { userId } = req.params;
+
+    // Check if current user is admin
+    if (currentUser.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only admins can delete users'
+      });
+    }
+
+    // Prevent deleting self
+    if (currentUser._id.toString() === userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'You cannot delete your own account'
+      });
+    }
+
+    // Find and delete user
+    const user = await User.findByIdAndDelete(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    console.log(`✅ User deleted: ${user.email} (by ${currentUser.email})`);
+
+    res.json({
+      success: true,
+      message: `✅ User ${user.email} has been deleted!`,
+      deletedUser: {
+        id: user._id,
+        name: user.name,
+        email: user.email
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error deleting user:', error.message);
+    next({
+      status: 500,
+      message: 'Failed to delete user',
+      details: error.message
+    });
+  }
+});
+
 export default router;

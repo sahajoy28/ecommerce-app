@@ -451,6 +451,7 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
 
   // Category list from API
   const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
+  const [categoryDetails, setCategoryDetails] = useState<Record<string, any>>({});
   const [customCategory, setCustomCategory] = useState('');
   const [showCustomCategory, setShowCustomCategory] = useState(false);
 
@@ -467,6 +468,7 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
     rangeUnit?: string;
   }
   const [customFilterDefs, setCustomFilterDefs] = useState<FilterDef[]>([]);
+  const [categorySpecificFilters, setCategorySpecificFilters] = useState<FilterDef[]>([]);
   const [customFilterValues, setCustomFilterValues] = useState<Record<string, any>>(initialData?.customFilters || {});
 
   const isEditing = !!initialData;
@@ -476,6 +478,12 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
     productsApi.get<any>('/categories').then((res: any) => {
       const names = (res.categories || []).map((c: any) => c.name).filter(Boolean);
       setCategoryOptions(names);
+      // Store category details for quick lookup
+      const details: Record<string, any> = {};
+      (res.categories || []).forEach((c: any) => {
+        details[c.name] = c;
+      });
+      setCategoryDetails(details);
       // If editing a product with a category not in the list, show custom input
       if (initialData?.category && !names.includes(initialData.category)) {
         setShowCustomCategory(true);
@@ -488,6 +496,24 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
       setCustomFilterDefs(res.filters || []);
     }).catch(() => {});
   }, []);
+
+  // Fetch category-specific filters when category changes
+  useEffect(() => {
+    if (category && !showCustomCategory && categoryDetails[category]) {
+      const catDetails = categoryDetails[category];
+      if (catDetails.appliedFilters && Array.isArray(catDetails.appliedFilters)) {
+        // Filter customFilterDefs to show only category-specific ones
+        const filtered = customFilterDefs.filter(fd => 
+          catDetails.appliedFilters.some((cf: any) => cf._id === fd._id)
+        );
+        setCategorySpecificFilters(filtered);
+      } else {
+        setCategorySpecificFilters([]);
+      }
+    } else {
+      setCategorySpecificFilters([]);
+    }
+  }, [category, categoryDetails, customFilterDefs, showCustomCategory]);
 
   // Reset form when initialData changes (e.g. switching between edit targets)
   useEffect(() => {
@@ -746,9 +772,43 @@ export const ProductForm = ({ onSubmit, initialData, isLoading = false }: Produc
       </FormGroup>
 
       {/* Custom Filter Values */}
-      {customFilterDefs.length > 0 && (
+      {categorySpecificFilters.length > 0 && (
         <FormGroup>
-          <Label>🔍 Custom Filter Values</Label>
+          <Label>🎯 Category Filters</Label>
+          <SpecSection>
+            {categorySpecificFilters.map(fd => (
+              <FormGroup key={fd._id}>
+                <Label>{fd.icon} {fd.name}</Label>
+                {fd.type === 'select' || fd.type === 'checkbox' ? (
+                  <SelectField
+                    value={customFilterValues[fd.slug] || ''}
+                    onChange={(e) => setCustomFilterValues(prev => ({ ...prev, [fd.slug]: e.target.value || undefined }))}
+                    disabled={isLoading}
+                  >
+                    <option value="">— Select —</option>
+                    {fd.options.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </SelectField>
+                ) : fd.type === 'range' ? (
+                  <Input
+                    type="number"
+                    value={customFilterValues[fd.slug] || ''}
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => setCustomFilterValues(prev => ({ ...prev, [fd.slug]: event.target.value ? Number(event.target.value) : undefined }))}
+                    placeholder={`${fd.rangeMin ?? 0} – ${fd.rangeMax ?? 100}${fd.rangeUnit ? ` ${fd.rangeUnit}` : ''}`}
+                    disabled={isLoading}
+                  />
+                ) : null}
+              </FormGroup>
+            ))}
+          </SpecSection>
+        </FormGroup>
+      )}
+
+      {/* General Custom Filter Values (if no category-specific filters) */}
+      {categorySpecificFilters.length === 0 && customFilterDefs.length > 0 && (
+        <FormGroup>
+          <Label>🔍 Additional Filter Values</Label>
           <SpecSection>
             {customFilterDefs.map(fd => (
               <FormGroup key={fd._id}>

@@ -40,6 +40,14 @@ const categorySchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  appliedFilters: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'CustomFilter'
+  }],
+  description: {
+    type: String,
+    default: ''
+  },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'

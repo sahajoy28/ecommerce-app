@@ -4,6 +4,7 @@ import { Spinner, Button } from "@fluentui/react-components";
 import { useAppSelector, useAppDispatch } from "../app/hooks";
 import { ProductCard } from "../components/ProductCard";
 import { FilterSidebar } from "../components/FilterSidebar";
+import { CategorySelector } from "../components/CategorySelector";
 import { fetchProducts, filterByCategory, clearError } from "../features/products/productsSlice";
 import { ProductLoader } from "../components/LoadingStates";
 import { useSearchParams, useNavigate } from "react-router-dom";
@@ -299,6 +300,9 @@ export const CatalogPage = () => {
           )}
         </HeaderControls>
       </Header>
+
+      {/* Category Selector */}
+      <CategorySelector />
 
       {/* Main Content */}
       <MainContainer>
