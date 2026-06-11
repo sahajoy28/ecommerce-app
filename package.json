@@ -14,7 +14,12 @@
     "build": "npm run build --workspace=client",
     "vercel-build": "cd client && npm install && npm run build",
     "preview": "npm run preview --workspace=client",
-    "install-all": "npm install"
+    "install-all": "npm install",
+    "check-db": "node check-db.js",
+    "check-products": "node check-products.js",
+    "fetch-local-data": "node fetch-local-data.js",
+    "create-admin": "node server/createAdmin.js",
+    "seed": "node server/seedProducts.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

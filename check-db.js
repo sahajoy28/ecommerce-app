@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
-dotenv.config({ path: './server/.env' });
+dotenv.config();
 
 const AdminProductSchema = new mongoose.Schema({
   title: String,
