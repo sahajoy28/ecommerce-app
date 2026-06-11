@@ -84,8 +84,8 @@ const MainContainer = styled.div`
   position: relative;
 `;
 
-const Overlay = styled.div<{ isOpen: boolean }>`
-  display: ${props => props.isOpen ? 'block' : 'none'};
+const Overlay = styled.div<{ $isOpen: boolean }>`
+  display: ${props => props.$isOpen ? 'block' : 'none'};
   position: fixed;
   top: 72px;
   left: 0;
@@ -94,10 +94,10 @@ const Overlay = styled.div<{ isOpen: boolean }>`
   background: rgba(0, 0, 0, 0.3);
   z-index: 98;
   transition: opacity ${transitions.base};
-  opacity: ${props => props.isOpen ? 1 : 0};
+  opacity: ${props => props.$isOpen ? 1 : 0};
 `;
 
-const SidebarWrapper = styled.div<{ isOpen: boolean }>`
+const SidebarWrapper = styled.div<{ $isOpen: boolean }>`
   position: fixed;
   left: 0;
   top: 72px;
@@ -107,10 +107,10 @@ const SidebarWrapper = styled.div<{ isOpen: boolean }>`
   min-width: 240px;
   background: var(--color-neutral-0, ${colors.neutral[0]});
   border-right: 1px solid var(--color-neutral-200, ${colors.neutral[200]});
-  box-shadow: ${props => props.isOpen ? shadows.lg : 'none'};
+  box-shadow: ${props => props.$isOpen ? shadows.lg : 'none'};
   z-index: 100;
   overflow-y: auto;
-  transform: translateX(${props => props.isOpen ? '0' : '-100%'});
+  transform: translateX(${props => props.$isOpen ? '0' : '-100%'});
   transition: transform ${transitions.base};
   padding: ${spacing[3]};
 
@@ -134,7 +134,7 @@ const SidebarWrapper = styled.div<{ isOpen: boolean }>`
     max-width: none;
     min-width: 0;
     /* On mobile, when sidebar is not open hide it completely to avoid layout shift */
-    display: ${props => props.isOpen ? 'block' : 'none'};
+    display: ${props => props.$isOpen ? 'block' : 'none'};
   }
 `;
 
@@ -306,9 +306,9 @@ export const CatalogPage = () => {
 
       {/* Main Content */}
       <MainContainer>
-        <Overlay isOpen={showFilters} onClick={() => filterToggle?.closeFilters()} />
+        <Overlay $isOpen={showFilters} onClick={() => filterToggle?.closeFilters()} />
         
-        <SidebarWrapper isOpen={showFilters}>
+        <SidebarWrapper $isOpen={showFilters}>
           <FilterSidebar />
         </SidebarWrapper>
 

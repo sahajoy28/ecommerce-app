@@ -6,8 +6,8 @@ const StarContainer = styled.div`
   align-items: center;
 `;
 
-const Star = styled.span<{ filled: boolean; $size?: string }>`
-  color: ${props => props.filled ? "#ffc107" : "#e0e0e0"};
+const Star = styled.span<{ $filled: boolean; $size?: string }>`
+  color: ${props => props.$filled ? "#ffc107" : "#e0e0e0"};
   font-size: ${props => props.$size || "16px"};
   cursor: pointer;
   transition: all 0.2s ease;
@@ -37,7 +37,7 @@ export const RatingDisplay = ({ rating = 0, count, size = "16px", showText = tru
   return (
     <StarContainer>
       {stars.map(star => (
-        <Star key={star} filled={star <= Math.round(safeRating)} $size={size}>
+        <Star key={star} $filled={star <= Math.round(safeRating)} $size={size}>
           ★
         </Star>
       ))}
@@ -64,7 +64,7 @@ export const RatingInput = ({ value, onChange, size = "24px" }: RatingInputProps
       {stars.map(star => (
         <Star 
           key={star} 
-          filled={star <= value} 
+          $filled={star <= value} 
           $size={size}
           onClick={() => onChange(star)}
           style={{ cursor: "pointer" }}
