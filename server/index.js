@@ -17,18 +17,20 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Select appropriate MongoDB connection based on environment
+// Use MONGO_URI for both local and production
 const getMongoURI = () => {
+  const uri = process.env.MONGO_URI;
+  if (!uri) {
+    console.warn('⚠️ MONGO_URI not set - running in API-only mode');
+    return null;
+  }
   const env = process.env.NODE_ENV || 'development';
   if (env === 'production') {
-    const prodUri = process.env.MONGO_URI_PROD;
-    console.log('🌐 Using PRODUCTION MongoDB Atlas');
-    return prodUri;
+    console.log('🌐 Using MongoDB Atlas (Production)');
   } else {
-    const devUri = process.env.MONGO_URI;
-    console.log('💻 Using LOCAL MongoDB (Development)');
-    return devUri;
+    console.log('💻 Using MongoDB (Development)');
   }
+  return uri;
 };
 
 // Connect to MongoDB
@@ -40,19 +42,11 @@ const connectDB = async () => {
   try {
     const mongoUri = getMongoURI();
     if (!mongoUri) {
-      console.warn('⚠️ MONGO_URI not set - running in API-only mode');
       return;
     }
     
-    // Configure connection options - only use certificate for production (Atlas)
-    const connectOptions = {};
-    const env = process.env.NODE_ENV || 'development';
-    
-    if (env === 'production') {
-      connectOptions.tlsCertificateKeyFile = './server/certs/client-cert.pem';
-    }
-    
-    await mongoose.connect(mongoUri, connectOptions);
+    // Standard connection with username/password in the URI
+    await mongoose.connect(mongoUri);
     dbConnected = true;
     console.log('🔗 Connected to MongoDB');
     // Seed default categories on first connect
